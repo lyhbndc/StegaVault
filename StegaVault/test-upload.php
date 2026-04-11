@@ -13,7 +13,8 @@ $_SESSION['email'] = 'admin@test.com';
 
 require_once 'includes/db.php';
 
-echo "<!DOCTYPE html><html><head><title>Upload Diagnostic</title>";
+echo "<!DOCTYPE html><html><head>
+    <link rel="icon" type="image/png" href="Assets/favicon.png"><title>Upload Diagnostic</title>";
 echo "<style>
     body { font-family: Arial; padding: 20px; background: #f5f5f5; }
     .box { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #2196f3; }

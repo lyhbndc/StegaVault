@@ -4,7 +4,8 @@
  * File: check-gd.php
  */
 
-echo "<!DOCTYPE html><html><head><title>GD Library Check</title>";
+echo "<!DOCTYPE html><html><head>
+    <link rel="icon" type="image/png" href="Assets/favicon.png"><title>GD Library Check</title>";
 echo "<style>
     body { font-family: Arial; padding: 20px; background: #f5f5f5; max-width: 800px; margin: 0 auto; }
     .box { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }

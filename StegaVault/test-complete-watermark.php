@@ -11,7 +11,8 @@ session_start();
 require_once 'includes/db.php';
 require_once 'includes/watermark.php';
 
-echo "<!DOCTYPE html><html><head><title>Complete Watermark Test</title>";
+echo "<!DOCTYPE html><html><head>
+    <link rel="icon" type="image/png" href="Assets/favicon.png"><title>Complete Watermark Test</title>";
 echo "<style>
     body { font-family: Arial; padding: 20px; background: #f5f5f5; max-width: 1200px; margin: 0 auto; }
     .test { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }

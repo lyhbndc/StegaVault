@@ -13,6 +13,7 @@ require_once __DIR__ . '/includes/db.php';
 echo "<!DOCTYPE html>
 <html>
 <head>
+    <link rel="icon" type="image/png" href="Assets/favicon.png">
     <title>Cryptographic Watermark Test - StegaVault</title>
     <style>
         body {

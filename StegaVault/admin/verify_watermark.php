@@ -70,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['watermarked_file']))
 <html lang="en">
 
 <head>
+    <link rel="icon" type="image/png" href="../Assets/favicon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watermark Verification - StegaVault</title>

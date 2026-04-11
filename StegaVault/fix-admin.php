@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="icon" type="image/png" href="Assets/favicon.png">
     <title>Fix Admin User - StegaVault</title>
     <style>
         body {

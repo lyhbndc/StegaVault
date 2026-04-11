@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="icon" type="image/png" href="Assets/favicon.png">
     <title>StegaVault - Login Test</title>
     <style>
         body {

@@ -78,6 +78,7 @@ if (empty($email) || empty($token)) {
 <!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
+    <link rel="icon" type="image/png" href="../Assets/favicon.png">
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Email Verification - StegaVault</title>

@@ -31,6 +31,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
 <!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
+    <link rel="icon" type="image/png" href="../Assets/favicon.png">
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Two-Factor Authentication - StegaVault</title>
