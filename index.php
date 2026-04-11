@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <?php
 echo "Welcome To PHP APP<br>";
 
@@ -31,3 +32,6 @@ if ($result->num_rows > 0) {
 
 $conn->close();
 ?>
+=======
+<?php echo '🚀 StegaVault is working!'; ?>
+>>>>>>> f02258f (Initial commit - PHP project setup on EC2)
