@@ -1,0 +1,9 @@
+{
+    "require": {
+        "phpmailer/phpmailer": "^7.0",
+        "phpgangsta/googleauthenticator": "dev-master",
+        "tecnickcom/tcpdf": "^6.7",
+        "setasign/fpdi": "^2.6",
+        "setasign/fpdi-tcpdf": "^2.3"
+    }
+}

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+</head>
+<body>
+    <div id="userStatusChart"></div>
+    <script>
+        const statusChartData = {"labels":["Active","Pending","Locked","Expired"],"values":[2,0,0,0]};
+        const axisColor = '#64748b';
+        const gridColor = 'rgba(148,163,184,0.25)';
+        var userStatusOptions = {
+            chart: { type: 'bar', height: '100%', fontFamily: 'Inter, sans-serif', toolbar: { show: false }, background: 'transparent' },
+            series: [{ name: 'Users', data: statusChartData.values }],
+            xaxis: { categories: statusChartData.labels, labels: { style: { colors: axisColor } } },
+            yaxis: { labels: { style: { colors: axisColor } } },
+            colors: ['#10b981', '#f59e0b', '#f43f5e', '#ef4444'],
+            plotOptions: { bar: { borderRadius: 6, distributed: true } },
+            dataLabels: { enabled: false },
+            legend: { show: false },
+            grid: { borderColor: gridColor, strokeDashArray: 4 },
+            theme: { mode: 'light' }
+        };
+        try {
+            new ApexCharts(document.querySelector("#userStatusChart"), userStatusOptions).render();
+            document.write("<h1>Success</h1>");
+        } catch (e) {
+            document.write("<h1>Error: " + e.message + "</h1>");
+        }
+    </script>
+</body>
+</html>
