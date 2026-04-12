@@ -354,6 +354,14 @@ $user = [
 
             for (let i = 0; i < totalFiles; i++) {
                 const file = files[i];
+                
+                // Client-side size check (50MB)
+                const maxSizeBytes = 50 * 1024 * 1024;
+                if (file.size > maxSizeBytes) {
+                    showMessage(`File too large: ${file.name} (Max 50MB)`, 'error');
+                    continue; // Skip this file and move to next
+                }
+
                 statusText.textContent = `Uploading ${file.name} (${i + 1}/${totalFiles})...`;
 
                 try {
@@ -514,7 +522,10 @@ $user = [
                     : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                 }`;
             messageBox.classList.remove('hidden');
-            setTimeout(() => messageBox.classList.add('hidden'), 5000);
+            
+            // Errors stay for 15 seconds, success stays for 5 seconds
+            const duration = type === 'error' ? 15000 : 5000;
+            setTimeout(() => messageBox.classList.add('hidden'), duration);
         }
     </script>
 
