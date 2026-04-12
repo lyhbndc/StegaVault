@@ -15,9 +15,11 @@
     const SecurityShield = {
         config: {
             text: "CONFIDENTIAL",
-            opacity: 0.04, // Very faint
-            density: 6, // Grid size
+            opacity: 0.04,
+            density: 6,
         },
+        origTitle: document.title,
+        protectionTimeout: null,
 
         init: function () {
             // this.createOverlay(); // Visual watermark removed per request
@@ -59,14 +61,33 @@
 
         attachEvents: function () {
             // Blur on focus loss (Tab switching, clicking outside)
-            window.addEventListener('blur', () => this.enableProtection());
+            window.addEventListener('blur', () => {
+                // Give a moment to see where focus went
+                setTimeout(() => {
+                    const ae = document.activeElement;
+                    if (ae && (ae.tagName === 'IFRAME' || ae.tagName === 'EMBED' || ae.tagName === 'OBJECT')) {
+                        console.log("StegaVault: Focus shifted to preview/viewer, suppressing protection.");
+                        return;
+                    }
+                    this.enableProtection();
+                }, 100);
+            });
 
-            // Blur on mouse leaving the window (e.g. going to taskbar/snipping tool)
-            document.documentElement.addEventListener('mouseleave', () => this.enableProtection());
+            // Blur on mouse leaving the window
+            document.documentElement.addEventListener('mouseleave', (e) => {
+                // Only enable if actually leaving the browser window context
+                if (e.relatedTarget === null) {
+                    this.enableProtection();
+                }
+            });
 
             // Blur on visibility change (switching tabs/minimizing)
             document.addEventListener('visibilitychange', () => {
-                if (document.hidden) this.enableProtection();
+                if (document.hidden) {
+                    this.enableProtection();
+                } else {
+                    this.disableProtection();
+                }
             });
 
             // Restore on focus/mouseenter
@@ -90,15 +111,27 @@
         },
 
         enableProtection: function () {
-            const filter = document.getElementById('privacy-filter');
-            if (filter) filter.style.display = 'flex';
-            document.title = "🔒 Secured";
+            if (this.protectionTimeout) clearTimeout(this.protectionTimeout);
+
+            // 500ms grace period to prevent flickering or blocking transient UI elements (like password prompts)
+            this.protectionTimeout = setTimeout(() => {
+                if (document.hasFocus()) return;
+
+                const filter = document.getElementById('privacy-filter');
+                if (filter) filter.style.display = 'flex';
+                this.origTitle = document.title;
+                document.title = "🔒 Secured";
+            }, 500);
         },
 
         disableProtection: function () {
+            if (this.protectionTimeout) clearTimeout(this.protectionTimeout);
+
             const filter = document.getElementById('privacy-filter');
             if (filter) filter.style.display = 'none';
-            document.title = "StegaVault - Dashboard";
+            if (this.origTitle && document.title === "🔒 Secured") {
+                document.title = this.origTitle;
+            }
         },
 
         disableRightClick: function () {

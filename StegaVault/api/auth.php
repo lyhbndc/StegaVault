@@ -134,6 +134,17 @@ if ($method === 'POST' && $action === 'login') {
             }
         }
 
+        // Check expiration date
+        if (isset($user['expiration_date']) && !empty($user['expiration_date'])) {
+            $expiration = new DateTime($user['expiration_date']);
+            $now = new DateTime();
+            if ($expiration < $now) {
+                // Optionally update status in DB to 'expired' if desired, 
+                // but checking dynamically is more reliable.
+                sendResponse(false, null, 'This account has expired. Please contact an administrator.', 403);
+            }
+        }
+
         // Verify password and lock account after 3 failed attempts
         if (!password_verify($password, $user['password_hash'])) {
             logAuthEvent($db, (int)$user['id'], 'login_failed', 'Failed login attempt', $user['role'] ?? null);

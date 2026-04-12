@@ -21,8 +21,13 @@ $user = [
     'role' => $_SESSION['role']
 ];
 
-// Get all users
-$stmt = $db->prepare("SELECT id, username, name, email, role, status, expiration_date, created_at FROM users ORDER BY created_at DESC");
+// Get all users with dynamic status check for expiration
+$stmt = $db->prepare("SELECT id, username, name, email, role, 
+    CASE 
+        WHEN expiration_date IS NOT NULL AND expiration_date < CURDATE() THEN 'expired' 
+        ELSE status 
+    END AS status, 
+    expiration_date, created_at FROM users ORDER BY created_at DESC");
 $stmt->execute();
 $users = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -917,8 +922,19 @@ foreach ($users as $u) {
             setStatusFilter('all');
         }
 
-        // Init count on load
-        document.addEventListener('DOMContentLoaded', filterUsers);
+        // Init on load
+        document.addEventListener('DOMContentLoaded', () => {
+            filterUsers();
+            
+            // Set minimum expiration date to tomorrow
+            const expirationInput = document.getElementById('userExpiration');
+            if (expirationInput) {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                expirationInput.setAttribute('min', tomorrowStr);
+            }
+        });
 
         function showMessage(message, type) {
             const box = document.getElementById('messageBox');

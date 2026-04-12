@@ -107,6 +107,15 @@ if ($method === 'POST' && $action === 'create') {
         $role = isset($input['role']) ? $input['role'] : 'employee';
         $expiration_date = isset($input['expiration_date']) && !empty($input['expiration_date']) ? $input['expiration_date'] : null;
 
+        // Validate expiration date (must be future)
+        if ($expiration_date) {
+            $expiryDate = new DateTime($expiration_date);
+            $today = new DateTime('today');
+            if ($expiryDate <= $today) {
+                sendResponse(false, null, 'Expiration date must be at least tomorrow.', 400);
+            }
+        }
+
         // Validate input
         if (empty($email) || empty($name) || empty($password) || empty($username)) {
             sendResponse(false, null, 'Email, username, name, and password are required', 400);
@@ -254,15 +263,43 @@ if ($method === 'PUT' && $action === 'update') {
 
         if (isset($input['expiration_date'])) {
             $expiration = !empty($input['expiration_date']) ? $input['expiration_date'] : null;
+            
+            // Validate if future
+            if ($expiration) {
+                $expiryDate = new DateTime($expiration);
+                $today = new DateTime('today');
+                if ($expiryDate <= $today) {
+                    sendResponse(false, null, 'Expiration date must be at least tomorrow.', 400);
+                }
+                
+                // If providing a future expiration date, and status isn't explicitly changed, 
+                // or if it was 'expired', set it back to 'active'
+                if (!isset($input['status']) || $input['status'] === 'expired') {
+                    // Check current status to see if it needs reactivation
+                    $stmt = $db->prepare("SELECT status FROM users WHERE id = ?");
+                    $stmt->bind_param('i', $targetUserId);
+                    $stmt->execute();
+                    $currStatus = $stmt->get_result()->fetch_assoc()['status'] ?? '';
+                    
+                    if ($currStatus === 'expired') {
+                        $updates[] = "status = 'active'";
+                    }
+                }
+            }
+            
             $updates[] = "expiration_date = ?";
             $params[] = $expiration;
             $types .= 's';
         }
-
+        
+        // Handle explicit status change (if not already handled by reactivation)
         if (isset($input['status'])) {
-            $updates[] = "status = ?";
-            $params[] = $input['status'];
-            $types .= 's';
+            // Only add to updates if not already set by the reactivation logic above
+            if (!in_array("status = 'active'", $updates)) {
+                $updates[] = "status = ?";
+                $params[] = $input['status'];
+                $types .= 's';
+            }
         }
 
         if (!empty($role)) {
