@@ -10,6 +10,8 @@ session_start();
 
 // Set JSON header
 header('Content-Type: application/json');
+ini_set('memory_limit', '512M');
+ini_set('max_execution_time', '300');
 
 // Include database
 require_once __DIR__ . '/../includes/db.php';
@@ -211,6 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdfProtectError = null;
             $protectedPdfPath = PdfSecurity::protectPdfWithPassword($file['tmp_name'], $pdfPassword, $pdfProtectError);
             if ($protectedPdfPath === false) {
+                error_log("PDF Security Error: " . ($pdfProtectError ?: 'Unknown error'));
                 http_response_code(400);
                 echo json_encode(['success' => false, 'error' => $pdfProtectError ?: 'Failed to apply PDF password.']);
                 exit;

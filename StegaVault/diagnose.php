@@ -51,6 +51,17 @@ echo "Exists: " . (is_dir($uploadDir) ? 'YES' : 'NO') . "\n";
 echo "Writable: " . (is_writable($uploadDir) ? 'YES' : 'NO') . "\n";
 echo "Readable: " . (is_readable($uploadDir) ? 'YES' : 'NO') . "\n";
 
+$tmpDir = __DIR__ . '/tmp/';
+echo "\n--- Temp Directory ---\n";
+echo "Path: $tmpDir\n";
+echo "Exists: " . (is_dir($tmpDir) ? 'YES' : 'NO') . "\n";
+echo "Writable: " . (is_writable($tmpDir) ? 'YES' : 'NO') . "\n";
+if (!is_dir($tmpDir)) {
+    echo ">>> FIX: Run 'mkdir " . $tmpDir . " && chmod 777 " . $tmpDir . "' <<<\n";
+} elseif (!is_writable($tmpDir)) {
+    echo ">>> FIX: Run 'chmod 777 " . $tmpDir . "' <<<\n";
+}
+
 // Test write
 $testFile = $uploadDir . 'write_test_' . time() . '.tmp';
 $writeResult = file_put_contents($testFile, 'test');
