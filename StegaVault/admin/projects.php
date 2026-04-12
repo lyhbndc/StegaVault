@@ -31,6 +31,16 @@ $stmt = $db->prepare("SELECT p.*, u.name as creator_name, COUNT(DISTINCT pm.user
 $stmt->execute();
 $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
+$activeProjects = [];
+$inactiveProjects = [];
+foreach ($projects as $proj) {
+    if (($proj['status'] ?? 'active') === 'inactive') {
+        $inactiveProjects[] = $proj;
+    } else {
+        $activeProjects[] = $proj;
+    }
+}
+
 // Get all users for member selection
 $usersResult = $db->query("SELECT id, name, email, role FROM users WHERE role != 'admin' ORDER BY name");
 $users = $usersResult->fetch_all(MYSQLI_ASSOC);
@@ -313,36 +323,68 @@ endforeach; ?>
                 </div>
 
                 <nav class="flex flex-col gap-1 p-3">
-                    <?php if (count($projects) === 0): ?>
+                    <?php if (count($activeProjects) === 0 && count($inactiveProjects) === 0): ?>
                         <div class="px-3 py-8 text-center">
                             <span class="material-symbols-outlined text-3xl text-slate-300 dark:text-slate-600 block mb-2">folder_off</span>
                             <p class="text-slate-400 dark:text-slate-500 text-xs">No projects yet</p>
                         </div>
-                    <?php
-endif; ?>
-                    <?php foreach ($projects as $proj): ?>
-                        <?php $isActive = $selectedProject && $selectedProject['id'] == $proj['id']; ?>
-                        <div class="relative group/item">
-                            <a href="?project_id=<?php echo $proj['id']; ?>"
-                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors pr-9 <?php echo $isActive ? 'bg-primary text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'; ?>">
-                                <div class="size-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                                    style="background-color: <?php echo htmlspecialchars($proj['color'] ?? '#667eea'); ?>20;">
-                                    <span class="material-symbols-outlined text-[18px]" style="color: <?php echo htmlspecialchars($proj['color'] ?? '#667eea'); ?>">folder</span>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-semibold truncate"><?php echo htmlspecialchars($proj['name']); ?></p>
-                                    <p class="text-xs <?php echo $isActive ? 'text-white/70' : 'text-slate-500 dark:text-slate-500'; ?>"><?php echo $proj['member_count']; ?> member<?php echo $proj['member_count'] != 1 ? 's' : ''; ?></p>
-                                </div>
-                            </a>
-                            <button
-                                onclick="event.preventDefault(); event.stopPropagation(); openProjectMenu(event, <?php echo $proj['id']; ?>, '<?php echo addslashes(htmlspecialchars($proj['name'])); ?>')"
-                                class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md <?php echo $isActive ? 'text-white/70 hover:bg-white/20' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700'; ?> transition-colors opacity-0 group-hover/item:opacity-100 focus:opacity-100"
-                                title="More options">
-                                <span class="material-symbols-outlined text-[16px]">more_vert</span>
-                            </button>
+                    <?php endif; ?>
+
+                    <?php if (count($activeProjects) > 0): ?>
+                        <div class="px-3 py-2 mb-1">
+                            <h4 class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Active Projects</h4>
                         </div>
-                    <?php
-endforeach; ?>
+                        <?php foreach ($activeProjects as $proj): ?>
+                            <?php $isActive = $selectedProject && $selectedProject['id'] == $proj['id']; ?>
+                            <div class="relative group/item">
+                                <a href="?project_id=<?php echo $proj['id']; ?>"
+                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors pr-9 <?php echo $isActive ? 'bg-primary text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'; ?>">
+                                    <div class="size-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                        style="background-color: <?php echo htmlspecialchars($proj['color'] ?? '#667eea'); ?>20;">
+                                        <span class="material-symbols-outlined text-[18px]" style="color: <?php echo htmlspecialchars($proj['color'] ?? '#667eea'); ?>">folder</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold truncate"><?php echo htmlspecialchars($proj['name']); ?></p>
+                                        <p class="text-xs <?php echo $isActive ? 'text-white/70' : 'text-slate-500 dark:text-slate-500'; ?>"><?php echo $proj['member_count']; ?> member<?php echo $proj['member_count'] != 1 ? 's' : ''; ?></p>
+                                    </div>
+                                </a>
+                                <button
+                                    onclick="event.preventDefault(); event.stopPropagation(); openProjectMenu(event, <?php echo $proj['id']; ?>, '<?php echo addslashes(htmlspecialchars($proj['name'])); ?>', 'active')"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md <?php echo $isActive ? 'text-white/70 hover:bg-white/20' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700'; ?> transition-colors opacity-0 group-hover/item:opacity-100 focus:opacity-100"
+                                    title="More options">
+                                    <span class="material-symbols-outlined text-[16px]">more_vert</span>
+                                </button>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+
+                    <?php if (count($inactiveProjects) > 0): ?>
+                        <div class="px-3 py-2 mt-4 mb-1 border-t border-slate-100 dark:border-slate-800/50 pt-4">
+                            <h4 class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Inactive Projects</h4>
+                        </div>
+                        <?php foreach ($inactiveProjects as $proj): ?>
+                            <?php $isActive = $selectedProject && $selectedProject['id'] == $proj['id']; ?>
+                            <div class="relative group/item">
+                                <a href="?project_id=<?php echo $proj['id']; ?>"
+                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors pr-9 opacity-60 grayscale-[0.5] <?php echo $isActive ? 'bg-primary text-white grayscale-0 opacity-100' : 'text-slate-500 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:opacity-100 hover:grayscale-0'; ?>">
+                                    <div class="size-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                        style="background-color: <?php echo htmlspecialchars($proj['color'] ?? '#667eea'); ?>10;">
+                                        <span class="material-symbols-outlined text-[18px]" style="color: <?php echo htmlspecialchars($proj['color'] ?? '#667eea'); ?>;">folder_off</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold truncate"><?php echo htmlspecialchars($proj['name']); ?></p>
+                                        <p class="text-xs <?php echo $isActive ? 'text-white/70' : 'text-slate-500 dark:text-slate-600'; ?>">Inactive</p>
+                                    </div>
+                                </a>
+                                <button
+                                    onclick="event.preventDefault(); event.stopPropagation(); openProjectMenu(event, <?php echo $proj['id']; ?>, '<?php echo addslashes(htmlspecialchars($proj['name'])); ?>', 'inactive')"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md <?php echo $isActive ? 'text-white/70 hover:bg-white/20' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700'; ?> transition-colors opacity-0 group-hover/item:opacity-100 focus:opacity-100"
+                                    title="More options">
+                                    <span class="material-symbols-outlined text-[16px]">more_vert</span>
+                                </button>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </nav>
             </aside>
 
@@ -357,7 +399,11 @@ endforeach; ?>
                             <div>
                                 <div class="flex items-center gap-2 mb-1">
                                     <span class="size-3 rounded-full" style="background-color: <?php echo htmlspecialchars($selectedProject['color'] ?? '#667eea'); ?>"></span>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wide capitalize"><?php echo $selectedProject['status']; ?></span>
+                                    <?php if (($selectedProject['status'] ?? 'active') === 'inactive'): ?>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 uppercase tracking-wide">Inactive</span>
+                                    <?php else: ?>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wide">Active</span>
+                                    <?php endif; ?>
                                     <span class="text-xs text-slate-400 dark:text-slate-500">Created <?php echo date('M d, Y', strtotime($selectedProject['created_at'])); ?></span>
                                 </div>
                                 <h1 class="text-slate-900 dark:text-white text-2xl font-bold"><?php echo htmlspecialchars($selectedProject['name']); ?></h1>
@@ -1646,11 +1692,26 @@ endif; ?>
             // ─── Project context menu ─────────────────────────────
             let _projMenuId = null;
             let _projMenuName = null;
+            let _projMenuStatus = 'active';
 
-            function openProjectMenu(event, projectId, projectName) {
+            function openProjectMenu(event, projectId, projectName, status = 'active') {
                 _projMenuId = projectId;
                 _projMenuName = projectName;
+                _projMenuStatus = status;
+                
                 const menu = document.getElementById('projectContextMenu');
+                const toggleBtn = document.getElementById('projectToggleStatusBtn');
+                const toggleIcon = toggleBtn.querySelector('span');
+                const toggleText = toggleBtn.querySelector('p');
+
+                if (_projMenuStatus === 'active') {
+                    toggleIcon.textContent = 'visibility_off';
+                    toggleText.textContent = 'Mark as Inactive';
+                } else {
+                    toggleIcon.textContent = 'visibility';
+                    toggleText.textContent = 'Mark as Active';
+                }
+
                 menu.classList.remove('hidden');
                 const btn = event.currentTarget;
                 const rect = btn.getBoundingClientRect();
@@ -1713,6 +1774,36 @@ endif; ?>
                 } finally {
                     btn.disabled = false;
                     btn.textContent = 'Rename';
+                }
+            }
+
+            // ─── Toggle Project Status ────────────────────────────
+            async function projectToggleStatus() {
+                closeProjectMenu();
+                const newStatus = (_projMenuStatus === 'active') ? 'inactive' : 'active';
+                const confirmMsg = newStatus === 'inactive' 
+                    ? `Deactivate project "${_projMenuName}"? Employees will no longer see it until reactivated.`
+                    : `Reactivate project "${_projMenuName}"? It will become visible to all members again.`;
+                
+                if (!confirm(confirmMsg)) return;
+
+                try {
+                    const fd = new FormData();
+                    fd.append('action', 'update-status');
+                    fd.append('project_id', _projMenuId);
+                    fd.append('status', newStatus);
+                    const res = await fetch('../api/projects.php', {
+                        method: 'POST',
+                        body: fd
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.error || 'Failed to update status.');
+                    }
+                } catch {
+                    alert('Network error.');
                 }
             }
 
@@ -1872,6 +1963,11 @@ endif; ?>
                 class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                 <span class="material-symbols-outlined text-[18px] text-slate-400">edit</span>
                 Rename
+            </button>
+            <button id="projectToggleStatusBtn" onclick="projectToggleStatus()"
+                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined text-[18px] text-slate-400">visibility_off</span>
+                <p>Mark as Inactive</p>
             </button>
             <div class="border-t border-slate-100 dark:border-slate-800 mx-2"></div>
             <button onclick="projectDelete()"

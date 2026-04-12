@@ -324,7 +324,7 @@ if ($action === 'my-projects') {
                    pm.role as user_role
             FROM projects p
             JOIN project_members pm ON p.id = pm.project_id
-            WHERE pm.user_id = ? AND p.status = 'active'
+            WHERE pm.user_id = ? " . (($_SESSION['role'] ?? '') === 'admin' ? "" : "AND p.status = 'active'") . "
             ORDER BY p.updated_at DESC
         ");
 
@@ -359,7 +359,6 @@ if ($action === 'dashboard-projects') {
                        (SELECT COUNT(*) FROM project_members pm2 WHERE pm2.project_id = p.id) as member_count,
                        'admin' as user_role
                 FROM projects p
-                WHERE p.status = 'active'
                 ORDER BY p.updated_at DESC
             ");
         }
@@ -371,10 +370,11 @@ if ($action === 'dashboard-projects') {
                        pm.role as user_role
                 FROM projects p
                 JOIN project_members pm ON p.id = pm.project_id
-                WHERE pm.user_id = ? AND p.status = 'active'
+                WHERE pm.user_id = ? AND (p.status = 'active' OR ? = 'admin')
                 ORDER BY p.updated_at DESC
             ");
-            $stmt->bind_param('i', $userId);
+            $role = $_SESSION['role'] ?? 'user';
+            $stmt->bind_param('is', $userId, $role);
         }
 
         $stmt->execute();
@@ -399,6 +399,16 @@ if ($action === 'dashboard-projects') {
 if ($action === 'files') {
     try {
         $projectId = (int)($_GET['project_id'] ?? 0);
+        if (!$projectId) throw new Exception('Project ID is required');
+
+        // Enforcement: Non-admins cannot access inactive projects
+        $checkStmt = $db->prepare("SELECT status FROM projects WHERE id = ?");
+        $checkStmt->bind_param('i', $projectId);
+        $checkStmt->execute();
+        $projStatus = $checkStmt->get_result()->fetch_assoc()['status'] ?? 'active';
+        if ($projStatus === 'inactive' && ($_SESSION['role'] ?? '') !== 'admin') {
+            throw new Exception('This project is currently inactive.');
+        }
 
         // Basic access check: Must be member or admin
         $stmt = $db->prepare("SELECT role FROM project_members WHERE project_id = ? AND user_id = ?");
@@ -448,6 +458,15 @@ if ($action === 'files') {
 if ($action === 'members') {
     try {
         $projectId = (int)($_GET['project_id'] ?? 0);
+
+        // Enforcement: Non-admins cannot access inactive projects
+        $checkStmt = $db->prepare("SELECT status FROM projects WHERE id = ?");
+        $checkStmt->bind_param('i', $projectId);
+        $checkStmt->execute();
+        $projStatus = $checkStmt->get_result()->fetch_assoc()['status'] ?? 'active';
+        if ($projStatus === 'inactive' && ($_SESSION['role'] ?? '') !== 'admin') {
+            throw new Exception('This project is currently inactive.');
+        }
 
         // Validate access
         $stmt = $db->prepare("SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?");
@@ -1050,5 +1069,38 @@ if ($action === 'update-description') {
     }
 }
 
-// Unknown action
+// ============================================
+// UPDATE PROJECT STATUS
+// ============================================
+if ($action === 'update-status') {
+    try {
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+            echo json_encode(['success' => false, 'error' => 'Access denied']);
+            exit;
+        }
+        $projectId = (int)($_POST['project_id'] ?? 0);
+        $status = $_POST['status'] ?? 'active';
+        if (!in_array($status, ['active', 'inactive'])) {
+            echo json_encode(['success' => false, 'error' => 'Invalid status']);
+            exit;
+        }
+        if ($projectId <= 0) {
+            echo json_encode(['success' => false, 'error' => 'Invalid project ID']);
+            exit;
+        }
+        $stmt = $db->prepare("UPDATE projects SET status = ? WHERE id = ?");
+        $stmt->bind_param('si', $status, $projectId);
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Status updated to ' . $status]);
+        }
+        else {
+            echo json_encode(['success' => false, 'error' => 'Failed to update status']);
+        }
+        exit;
+    }
+    catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => 'Exception: ' . $e->getMessage()]);
+        exit;
+    }
+}
 echo json_encode(['success' => false, 'error' => 'Unknown action: ' . $action, 'received_post' => $_POST]);
