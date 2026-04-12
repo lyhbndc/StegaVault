@@ -14,6 +14,27 @@ echo "upload_max_filesize: " . ini_get('upload_max_filesize') . "\n";
 echo "post_max_size: " . ini_get('post_max_size') . "\n";
 echo "memory_limit: " . ini_get('memory_limit') . "\n\n";
 
+// --- Extensions Check ---
+echo "--- Extensions ---\n";
+$extensions = ['openssl', 'curl', 'gd', 'mbstring', 'finfo', 'pdo_pgsql'];
+foreach ($extensions as $ext) {
+    if ($ext === 'finfo') {
+        echo "finfo: " . (function_exists('finfo_open') ? 'YES' : 'NO') . "\n";
+    } else {
+        echo "$ext: " . (extension_loaded($ext) ? 'YES' : 'NO') . "\n";
+    }
+}
+
+if (!extension_loaded('curl')) {
+    echo ">>> ALERT: PHP-CURL is MISSING. This causes the 'Undefined constant CURLOPT_CONNECTTIMEOUT' error. <<<\n";
+    echo ">>> FIX: Run 'sudo apt-get install php-curl' on your EC2 and restart Apache/Nginx. <<<\n";
+}
+if (!extension_loaded('gd')) {
+    echo ">>> ALERT: PHP-GD is MISSING. Image watermarking will fail. <<<\n";
+    echo ">>> FIX: Run 'sudo apt-get install php-gd' on your EC2. <<<\n";
+}
+echo "\n";
+
 // --- OpenSSL Check ---
 echo "--- OpenSSL ---\n";
 echo "Loaded: " . (extension_loaded('openssl') ? 'YES' : 'NO') . "\n";
