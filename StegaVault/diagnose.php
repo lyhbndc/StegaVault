@@ -8,7 +8,11 @@ header('Content-Type: text/plain');
 
 echo "=== StegaVault Server Diagnostic ===\n\n";
 echo "Timestamp: " . date('Y-m-d H:i:s T') . "\n";
-echo "PHP Version: " . phpversion() . "\n\n";
+echo "PHP Version: " . phpversion() . "\n";
+echo "Active php.ini: " . php_ini_loaded_file() . "\n";
+echo "upload_max_filesize: " . ini_get('upload_max_filesize') . "\n";
+echo "post_max_size: " . ini_get('post_max_size') . "\n";
+echo "memory_limit: " . ini_get('memory_limit') . "\n\n";
 
 // --- OpenSSL Check ---
 echo "--- OpenSSL ---\n";

@@ -251,10 +251,9 @@ $user = [
                             <span class="material-symbols-outlined text-4xl text-primary">upload_file</span>
                         </div>
                         <h3 class="text-slate-900 dark:text-white text-lg font-bold mb-1">Drag & Drop Files Here</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm mb-6">Supported: PNG, MP4, PDF, Word
-                            (.doc/.docx), Excel (.xls/.xlsx) &bull; Max 50MB</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm mb-6">Supported: PNG, JPG, MP4, PDF, Office Docs (Word, Excel, PPT) &bull; Max 50MB</p>
                         <input type="file" id="fileInput" class="hidden"
-                            accept="image/png,video/mp4,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.doc,.docx,.xls,.xlsx,.pdf"
+                            accept="image/png,image/jpeg,image/jpg,image/webp,video/mp4,video/quicktime,video/x-msvideo,video/mpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain"
                             multiple>
                         <button id="browseBtn"
                             class="px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
