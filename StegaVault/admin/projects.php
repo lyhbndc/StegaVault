@@ -1689,6 +1689,53 @@ endif; ?>
                 }
             }
 
+            // ─── Custom UI Helpers (Toasts & Modals) ───────────────
+            function showToast(message, type = 'info') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `sv-toast ${type}`;
+                
+                const icons = {
+                    success: 'check_circle',
+                    error: 'error',
+                    info: 'info'
+                };
+                const colors = {
+                    success: 'text-emerald-500',
+                    error: 'text-red-500',
+                    info: 'text-primary'
+                };
+
+                toast.innerHTML = `
+                    <span class="material-symbols-outlined ${colors[type]}">${icons[type]}</span>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-slate-900 dark:text-white">${message}</p>
+                    </div>
+                `;
+                
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-10px)';
+                    setTimeout(() => toast.remove(), 300);
+                }, 4000);
+            }
+
+            let _confirmCallback = null;
+            function svConfirm(title, message, callback) {
+                const modal = document.getElementById('customConfirmModal');
+                document.getElementById('confirmModalTitle').textContent = title;
+                document.getElementById('confirmModalMessage').textContent = message;
+                modal.classList.remove('hidden');
+                _confirmCallback = callback;
+            }
+
+            function closeSvConfirm(confirmed) {
+                document.getElementById('customConfirmModal').classList.add('hidden');
+                if (confirmed && _confirmCallback) _confirmCallback();
+                _confirmCallback = null;
+            }
+
             // ─── Project context menu ─────────────────────────────
             let _projMenuId = null;
             let _projMenuName = null;
@@ -1767,9 +1814,11 @@ endif; ?>
                         // If this is the active project redirect keeps the right id
                         location.reload();
                     } else {
+                        console.error('Rename project error:', data);
                         errEl.textContent = data.error || 'Failed to rename.';
                     }
-                } catch {
+                } catch (e) {
+                    console.error('Rename project network error:', e);
                     errEl.textContent = 'Network error.';
                 } finally {
                     btn.disabled = false;
@@ -1778,33 +1827,37 @@ endif; ?>
             }
 
             // ─── Toggle Project Status ────────────────────────────
-            async function projectToggleStatus() {
+            function projectToggleStatus() {
                 closeProjectMenu();
                 const newStatus = (_projMenuStatus === 'active') ? 'inactive' : 'active';
-                const confirmMsg = newStatus === 'inactive' 
+                const title = newStatus === 'inactive' ? 'Deactivate Project' : 'Reactivate Project';
+                const message = newStatus === 'inactive' 
                     ? `Deactivate project "${_projMenuName}"? Employees will no longer see it until reactivated.`
                     : `Reactivate project "${_projMenuName}"? It will become visible to all members again.`;
                 
-                if (!confirm(confirmMsg)) return;
-
-                try {
-                    const fd = new FormData();
-                    fd.append('action', 'update-status');
-                    fd.append('project_id', _projMenuId);
-                    fd.append('status', newStatus);
-                    const res = await fetch('../api/projects.php', {
-                        method: 'POST',
-                        body: fd
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert(data.error || 'Failed to update status.');
+                svConfirm(title, message, async () => {
+                    try {
+                        const fd = new FormData();
+                        fd.append('action', 'update-status');
+                        fd.append('project_id', _projMenuId);
+                        fd.append('status', newStatus);
+                        const res = await fetch('../api/projects.php', {
+                            method: 'POST',
+                            body: fd
+                        });
+                        const data = await res.json();
+                        console.log('[Status Update Debug]', data);
+                        if (data.success) {
+                            showToast(data.message || 'Updated successfully', 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            showToast(data.error || 'Failed to update status', 'error');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        showToast('Network error while updating status.', 'error');
                     }
-                } catch {
-                    alert('Network error.');
-                }
+                });
             }
 
             // ─── Delete project (from menu) ───────────────────────
@@ -1866,9 +1919,11 @@ endif; ?>
                         // Reload the current pane (stays in same folder)
                         loadPane(_adminCurrentFolderId);
                     } else {
+                        console.error('Create folder error:', data);
                         errEl.textContent = data.error || 'Failed to create folder.';
                     }
                 } catch (e) {
+                    console.error('Create folder network error:', e);
                     errEl.textContent = 'Network error. Please try again.';
                 } finally {
                     btn.disabled = false;
@@ -1944,14 +1999,40 @@ endif; ?>
                         closeAddMemberModal();
                         location.reload();
                     } else {
+                        console.error('Add member error:', data);
                         errEl.textContent = data.error || 'Failed to add member.';
                     }
                 } catch (e) {
+                    console.error('Add member network error:', e);
                     errEl.textContent = 'Network error. Please try again.';
                 }
             }
             // ────────────────────────────────────────────────────────────
         </script>
+
+        <div id="toast-container"></div>
+
+        <!-- ═══════════════════════════════════════
+             CUSTOM CONFIRM MODAL
+        ═══════════════════════════════════════ -->
+        <div id="customConfirmModal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeSvConfirm(false)"></div>
+            <div class="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-sm p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="size-10 rounded-xl bg-amber-400/10 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-amber-500">help</span>
+                    </div>
+                    <h3 id="confirmModalTitle" class="text-slate-900 dark:text-white font-bold text-lg">Are you sure?</h3>
+                </div>
+                <p id="confirmModalMessage" class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6"></p>
+                <div class="flex items-center justify-end gap-3">
+                    <button onclick="closeSvConfirm(false)"
+                        class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancel</button>
+                    <button onclick="closeSvConfirm(true)"
+                        class="px-5 py-2 rounded-xl text-sm font-bold bg-primary hover:bg-primary/90 text-white transition-colors shadow-sm">Confirm</button>
+                </div>
+            </div>
+        </div>
 
         <!-- ═══════════════════════════════════════
          PROJECT CONTEXT MENU

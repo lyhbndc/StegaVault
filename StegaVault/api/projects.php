@@ -1094,7 +1094,7 @@ if ($action === 'update-status') {
             echo json_encode(['success' => true, 'message' => 'Status updated to ' . $status]);
         }
         else {
-            echo json_encode(['success' => false, 'error' => 'Failed to update status']);
+            echo json_encode(['success' => false, 'error' => 'Failed to update status: ' . $db->error]);
         }
         exit;
     }
