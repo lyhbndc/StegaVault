@@ -65,20 +65,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['suspect_file'])) {
 
                 $userId = $extractedData['crypto']['public']['user_id'];
                 $stmt = $db->prepare("SELECT id, email FROM users WHERE id = ?");
-                $stmt->bind_param('i', $userId);
-                $stmt->execute();
-                $result = $stmt->get_result();
+                
+                if ($stmt) {
+                    $stmt->bind_param('i', $userId);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
 
-                if ($result->num_rows > 0) {
-                    $watermarkUser = $result->fetch_assoc();
-                    $userData = [
-                        'id' => $watermarkUser['id'],
-                        'email' => $watermarkUser['email']
-                    ];
-                    $cryptoVerification = CryptoWatermark::verifyWatermark($extractedData['crypto'], $userData);
-                    if ($cryptoVerification && $cryptoVerification['valid'] === true) {
-                        CryptoWatermark::logVerification($db, $extractedData['crypto']['signature']);
+                    if ($result && $result->num_rows > 0) {
+                        $watermarkUser = $result->fetch_assoc();
+                        $userData = [
+                            'id' => $watermarkUser['id'],
+                            'email' => $watermarkUser['email']
+                        ];
+                        $cryptoVerification = CryptoWatermark::verifyWatermark($extractedData['crypto'], $userData);
+                        if ($cryptoVerification && $cryptoVerification['valid'] === true) {
+                            @CryptoWatermark::logVerification($db, $extractedData['crypto']['signature']);
+                        }
                     }
+                } else {
+                    // Suppress DB errors here but flag that crypto verification was skipped
+                    $hasCrypto = false; 
+                    error_log("Forensic Analysis: DB unreachable for crypto verification");
                 }
             }
         }
