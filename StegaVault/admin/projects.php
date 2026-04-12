@@ -1398,60 +1398,63 @@ endif; ?>
                     });
                     const data = await response.json();
                     if (data.success) {
-                        alert('Project created successfully!');
-                        location.reload();
+                        showToast('Project created successfully!', 'success');
+                        setTimeout(() => location.reload(), 1000);
                     } else {
-                        alert('Error: ' + data.error);
+                        showToast('Error: ' + data.error, 'error');
                     }
                 } catch (error) {
-                    alert('Error: ' + error.message);
+                    showToast('Error: ' + error.message, 'error');
                 }
             }
 
             async function deleteProject(id) {
-                if (!confirm('Are you sure you want to delete this project?')) return;
-                const formData = new FormData();
-                formData.append('action', 'delete');
-                formData.append('project_id', id);
+                svConfirm('Delete Project', 'Are you sure you want to permanentely delete this project and all its files?', async () => {
+                    const formData = new FormData();
+                    formData.append('action', 'delete');
+                    formData.append('project_id', id);
 
-                try {
-                    const response = await fetch('../api/projects.php', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        alert('Project deleted!');
-                        location.href = 'projects.php';
-                    } else {
-                        alert('Error: ' + data.error);
+                    try {
+                        const response = await fetch('../api/projects.php', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            showToast('Project deleted successfully', 'success');
+                            setTimeout(() => location.href = 'projects.php', 1000);
+                        } else {
+                            showToast('Error: ' + data.error, 'error');
+                        }
+                    } catch (error) {
+                        showToast('Error: ' + error.message, 'error');
                     }
-                } catch (error) {
-                    alert('Error: ' + error.message);
-                }
+                });
             }
 
             async function removeMember(projectId, userId) {
-                if (!confirm('Remove this member?')) return;
-                const formData = new FormData();
-                formData.append('action', 'remove_member');
-                formData.append('project_id', projectId);
-                formData.append('user_id', userId);
+                svConfirm('Remove Member', 'Are you sure you want to remove this member from the project?', async () => {
+                    const formData = new FormData();
+                    formData.append('action', 'remove_member');
+                    formData.append('project_id', projectId);
+                    formData.append('user_id', userId);
 
-                try {
-                    const response = await fetch('../api/projects.php', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Error: ' + data.error);
+                    try {
+                        const response = await fetch('../api/projects.php', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            showToast('Member removed', 'success');
+                            setTimeout(() => location.reload(), 800);
+                        } else {
+                            showToast('Error: ' + data.error, 'error');
+                        }
+                    } catch (error) {
+                        showToast('Error: ' + error.message, 'error');
                     }
-                } catch (error) {
-                    alert('Error: ' + error.message);
-                }
+                });
             }
             // ─── Folder context menu ─────────────────────────────
             let _folderMenuId = null;
@@ -1546,33 +1549,35 @@ endif; ?>
 
             async function folderMenuDelete() {
                 closeFolderMenu();
-                if (!confirm(`Delete folder "${_folderMenuName}"? Files inside will be moved to the project root.`)) return;
-                try {
-                    const fd = new FormData();
-                    fd.append('action', 'delete-folder');
-                    fd.append('folder_id', _folderMenuId);
-                    fd.append('project_id', currentProjectId);
-                    const res = await fetch('../api/projects.php', {
-                        method: 'POST',
-                        body: fd
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        // If we're inside the deleted folder (or a child), return to grid
-                        const inTrail = _adminFolderTrail.some(c => c.id === _folderMenuId);
-                        if (inTrail) {
-                            adminShowFolderGrid();
-                        } else if (_adminCurrentFolderId) {
-                            loadPane(_adminCurrentFolderId);
+                svConfirm('Delete Folder', `Delete folder "${_folderMenuName}"? Files inside will be moved to the project root.`, async () => {
+                    try {
+                        const fd = new FormData();
+                        fd.append('action', 'delete-folder');
+                        fd.append('folder_id', _folderMenuId);
+                        fd.append('project_id', currentProjectId);
+                        const res = await fetch('../api/projects.php', {
+                            method: 'POST',
+                            body: fd
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            showToast('Folder deleted', 'success');
+                            // If we're inside the deleted folder (or a child), return to grid
+                            setTimeout(() => {
+                                const inTrail = _adminFolderTrail.some(c => c.id === _folderMenuId);
+                                if (inTrail) {
+                                    adminShowFolderGrid();
+                                } else {
+                                    loadPane(_adminCurrentFolderId);
+                                }
+                            }, 500);
                         } else {
-                            loadPane(_adminCurrentFolderId);
+                            showToast(data.error || 'Failed to delete folder.', 'error');
                         }
-                    } else {
-                        alert(data.error || 'Failed to delete folder.');
+                    } catch {
+                        showToast('Network error while deleting folder.', 'error');
                     }
-                } catch {
-                    alert('Network error.');
-                }
+                });
             }
 
             // ─── File context menu ─────────────────────────────
@@ -1811,14 +1816,16 @@ endif; ?>
                     const data = await res.json();
                     if (data.success) {
                         closeRenameProjectModal();
-                        // If this is the active project redirect keeps the right id
-                        location.reload();
+                        showToast('Project renamed successfully', 'success');
+                        setTimeout(() => location.reload(), 800);
                     } else {
                         console.error('Rename project error:', data);
+                        showToast(data.error || 'Failed to rename.', 'error');
                         errEl.textContent = data.error || 'Failed to rename.';
                     }
                 } catch (e) {
                     console.error('Rename project network error:', e);
+                    showToast('Network error.', 'error');
                     errEl.textContent = 'Network error.';
                 } finally {
                     btn.disabled = false;
@@ -1916,14 +1923,16 @@ endif; ?>
 
                     if (data.success) {
                         closeAdminCreateFolderModal();
-                        // Reload the current pane (stays in same folder)
+                        showToast('Folder created', 'success');
                         loadPane(_adminCurrentFolderId);
                     } else {
                         console.error('Create folder error:', data);
+                        showToast(data.error || 'Failed to create folder.', 'error');
                         errEl.textContent = data.error || 'Failed to create folder.';
                     }
                 } catch (e) {
                     console.error('Create folder network error:', e);
+                    showToast('Network error.', 'error');
                     errEl.textContent = 'Network error. Please try again.';
                 } finally {
                     btn.disabled = false;
@@ -1997,13 +2006,16 @@ endif; ?>
                     const data = await res.json();
                     if (data.success) {
                         closeAddMemberModal();
-                        location.reload();
+                        showToast('Team member added', 'success');
+                        setTimeout(() => location.reload(), 1000);
                     } else {
                         console.error('Add member error:', data);
+                        showToast(data.error || 'Failed to add member.', 'error');
                         errEl.textContent = data.error || 'Failed to add member.';
                     }
                 } catch (e) {
                     console.error('Add member network error:', e);
+                    showToast('Network error.', 'error');
                     errEl.textContent = 'Network error. Please try again.';
                 }
             }
