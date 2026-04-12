@@ -63,7 +63,14 @@ if ($isVideo && !$storedMime)
     $storedMime = 'video/mp4';
 $serveMime = $storedMime ?: 'application/octet-stream';
 
-// ── Serve raw encrypted file if unprotected ────────────────────────────────────
+// ── Decrypt to temp file or memory ────────────────────────────────────────────
+$decryptedContent = Encryption::decryptFileContent($originalPath);
+if ($decryptedContent === false) {
+    http_response_code(500);
+    die('Decryption failed');
+}
+
+// ── Serve raw decrypted file if NO watermark required ─────────────────────────
 if ((int) $file['watermarked'] === 0) {
     try {
         $updF = $db->prepare("UPDATE files SET download_count = download_count + 1 WHERE id = ?");
@@ -72,20 +79,13 @@ if ((int) $file['watermarked'] === 0) {
     } catch (Exception $e) {
     }
 
-        ob_end_clean(); // Discard any whitespace/output from includes
-    header('Content-Type: application/octet-stream');
+    ob_end_clean(); // Discard any whitespace/output from includes
+    header('Content-Type: ' . $serveMime);
     header('Content-Disposition: attachment; filename="' . str_replace('"', '', $file['original_name']) . '"');
-    header('Content-Length: ' . filesize($originalPath));
+    header('Content-Length: ' . strlen($decryptedContent));
     header('Cache-Control: private');
-    readfile($originalPath);
+    echo $decryptedContent;
     exit;
-}
-
-// ── Decrypt to temp file WITH extension (critical for GD on macOS/Windows) ───
-$decryptedContent = Encryption::decryptFileContent($originalPath);
-if ($decryptedContent === false) {
-    http_response_code(500);
-    die('Decryption failed');
 }
 
 // sys_get_temp_dir() works on both macOS (/tmp) and Windows (C:\Windows\Temp)

@@ -484,7 +484,14 @@ class Watermark
     {
         try {
             $watermarkData = is_array($data) ? json_encode($data) : $data;
-            $payload = "\n[STEGAVAULT_DOC_WM]" . base64_encode($watermarkData) . "[/STEGAVAULT_DOC_WM]\n";
+            $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+            $isPdf = ($ext === 'pdf');
+            
+            if ($isPdf) {
+                $payload = "\n% [STEGAVAULT_DOC_WM]" . base64_encode($watermarkData) . "[/STEGAVAULT_DOC_WM]\n";
+            } else {
+                $payload = "\n[STEGAVAULT_DOC_WM]" . base64_encode($watermarkData) . "[/STEGAVAULT_DOC_WM]\n";
+            }
 
             if (!copy($filePath, $outputPath)) {
                 return false;

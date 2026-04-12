@@ -199,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Optional: apply PDF open-password before storage encryption.
     if ($mimeType === 'application/pdf') {
-        $pdfPassword = isset($_POST['pdf_password']) ? trim((string) $_POST['pdf_password']) : '';
+        $pdfPassword = isset($_POST['pdf_password']) ? (string) $_POST['pdf_password'] : '';
 
         if ($pdfPassword !== '') {
             if (strlen($pdfPassword) < 4 || strlen($pdfPassword) > 64) {
@@ -237,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Save to database
     $originalName = trim($file['name']);
-    $fileSize = $file['size'];
+    $fileSize = ($tempProtectedPdfPath && file_exists($tempProtectedPdfPath)) ? filesize($tempProtectedPdfPath) : $file['size'];
     $relativePath = 'uploads/' . $filename;
 
     // Step 1: insert core fields (no nullable FK columns to avoid MySQLi null-int issues)

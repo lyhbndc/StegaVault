@@ -26,7 +26,7 @@ class PdfSecurity
             return false;
         }
 
-        $password = trim((string) $userPassword);
+        $password = (string) $userPassword;
         if ($password === '') {
             $error = 'PDF password is empty.';
             return false;
@@ -67,8 +67,8 @@ class PdfSecurity
                 $pdf->useTemplate($templateId);
             }
 
-            // Allow only viewing by default; printing/copying requires owner permissions.
-            $pdf->SetProtection([], $password, null, 2);
+            // Allow viewing, printing and copying; other modifications require owner permissions.
+            $pdf->SetProtection(['print', 'copy', 'print-high'], $password, null, 2);
 
             $tmpDir = __DIR__ . '/../tmp/';
             if (!is_dir($tmpDir)) @mkdir($tmpDir, 0777, true);
