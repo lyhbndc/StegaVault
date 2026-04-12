@@ -246,5 +246,7 @@ $user = [
             }).join('');
         }
     </script>
+    <script src="../js/security-shield.js"></script>
 </body>
 </html>
+

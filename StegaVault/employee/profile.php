@@ -294,5 +294,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             </div>
         </div>
     </div>
+    <script src="../js/security-shield.js"></script>
 </body>
 </html>
+

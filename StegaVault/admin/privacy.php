@@ -280,6 +280,6 @@
             <a href="privacy.php" class="hover:text-primary transition-colors font-semibold text-primary/70">Privacy Policy</a>
         </div>
     </footer>
+    <script src="../js/security-shield.js"></script>
 </body>
-
 </html>

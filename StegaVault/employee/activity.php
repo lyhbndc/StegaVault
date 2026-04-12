@@ -212,6 +212,6 @@ function formatActionText($action, $desc)
             }
         });
     </script>
+    <script src="../js/security-shield.js"></script>
 </body>
-
 </html>

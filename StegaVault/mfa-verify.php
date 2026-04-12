@@ -1,17 +1,29 @@
 <?php
 /**
- * StegaVault - MFA Verification Gate
+ * StegaVault - MFA Verification Interface
  * File: mfa-verify.php
  */
-session_start();
 
-// If no pending MFA, redirect to login
+session_start();
+require_once 'includes/db.php';
+
+// Check if there is a pending MFA session
 if (!isset($_SESSION['pending_mfa_user_id'])) {
-    header('Location: admin/login.php');
+    header('Location: index.html');
     exit;
 }
 
-$redirectStr = isset($_GET['redirect']) ? htmlspecialchars($_GET['redirect']) : 'admin/dashboard.php';
+$portal = $_SESSION['pending_mfa_portal'] ?? 'employee';
+$redirectStr = '';
+
+if ($portal === 'admin') {
+    $redirectStr = 'admin/dashboard.php';
+} elseif ($portal === 'collaborator') {
+    $redirectStr = 'collaborator/dashboard.php';
+} else {
+    $redirectStr = 'employee/dashboard.php';
+}
+
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="en">
@@ -136,5 +148,6 @@ $redirectStr = isset($_GET['redirect']) ? htmlspecialchars($_GET['redirect']) : 
             }
         });
     </script>
+    <script src="js/security-shield.js"></script>
 </body>
 </html>

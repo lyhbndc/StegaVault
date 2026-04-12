@@ -2126,6 +2126,6 @@ $userId = $user['id'];
             }
         });
     </script>
+    <script src="../js/security-shield.js"></script>
 </body>
-
 </html>

@@ -312,6 +312,6 @@ $isWatermarked = (int) ($file['watermarked'] ?? 0) === 1;
             document.getElementById('dropdownBackdrop').classList.add('hidden');
         }
     </script>
+    <script src="../js/security-shield.js"></script>
 </body>
-
 </html>

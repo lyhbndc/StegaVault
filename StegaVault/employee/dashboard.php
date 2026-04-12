@@ -654,6 +654,6 @@ if (!preg_match('/^#[0-9a-fA-F]{6}$/', $themeColor)) $themeColor = '#667eea';
             }
         });
     </script>
+    <script src="../js/security-shield.js"></script>
 </body>
-
 </html>

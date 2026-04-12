@@ -573,6 +573,6 @@ $recentFiles = $db->query("
     </script>
 
     <?php include '../includes/settings_modal.php'; ?>
+    <script src="../js/security-shield.js"></script>
 </body>
-
 </html>

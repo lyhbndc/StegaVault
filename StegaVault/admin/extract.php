@@ -493,6 +493,6 @@ function safe_html($value, $default = 'N/A')
             </div>
         </aside>
     </div>
+    <script src="../js/security-shield.js"></script>
 </body>
-
 </html>

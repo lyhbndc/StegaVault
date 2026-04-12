@@ -259,6 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['watermarked_file']))
             }
         });
     </script>
+    <script src="../js/security-shield.js"></script>
 </body>
 
 </html>

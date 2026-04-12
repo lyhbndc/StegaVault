@@ -442,5 +442,6 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
             }
         });
     </script>
+    <script src="../js/security-shield.js"></script>
 </body>
 </html>

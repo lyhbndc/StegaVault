@@ -11,7 +11,6 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Set headers
-header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
@@ -27,6 +26,7 @@ $action = isset($_GET['action']) ? $_GET['action'] : '';
 // Response helper
 function sendResponse($success, $data = null, $error = null, $code = 200)
 {
+    header('Content-Type: application/json');
     http_response_code($code);
     echo json_encode([
         'success' => $success,
@@ -174,6 +174,7 @@ if ($method === 'POST' && $action === 'login') {
 
         if ($mfaResult && $mfaResult['is_mfa_enabled']) {
             $_SESSION['pending_mfa_user_id'] = $user['id'];
+            $_SESSION['pending_mfa_portal'] = $portal; // Store the portal for redirection on cancel
             
             // Store original redirect details if needed, or simply return require_mfa
             sendResponse(true, [
@@ -293,9 +294,27 @@ if ($method === 'POST' && $action === 'register') {
 // ============================================
 // LOGOUT
 // ============================================
-if ($method === 'POST' && $action === 'logout') {
+if ($action === 'logout') {
+    $portal = $_SESSION['pending_mfa_portal'] ?? ($_GET['from'] ?? 'admin');
+    
+    // Explicitly destroy the session
     session_destroy();
-    sendResponse(true, ['message' => 'Logged out successfully']);
+    
+    // Ensure no JSON content-type header is set if we are redirecting
+    if ($method === 'GET') {
+        $location = '../admin/login.php';
+        if ($portal === 'employee') {
+            $location = '../employee/login.php';
+        } elseif ($portal === 'collaborator') {
+            $location = '../collaborator/login.php';
+        }
+        
+        header("Location: $location");
+        exit;
+    } else {
+        // Only return JSON if it's a POST request (typical logout button)
+        sendResponse(true, ['message' => 'Logged out successfully']);
+    }
 }
 
 // ============================================
