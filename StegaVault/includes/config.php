@@ -5,10 +5,10 @@
  * File: includes/config.php
  */
 
-// Database Configuration (Supabase PostgreSQL)
-define('DB_HOST', 'db.dknxptrhnjpcymvvmdpj.supabase.co');
+// Database Configuration (Supabase PostgreSQL via IPv4 Session Pooler)
+define('DB_HOST', 'aws-1-ap-southeast-2.pooler.supabase.com');
 define('DB_PORT', '5432');
-define('DB_USER', 'postgres');
+define('DB_USER', 'postgres.dknxptrhnjpcymvvmdpj');
 define('DB_PASS', 'OwlOpsCo432');
 define('DB_NAME', 'postgres');
 
@@ -43,10 +43,10 @@ function isApiRequest(): bool
 function getLoginRedirectByRole(string $role): string
 {
     return match ($role) {
-            'admin' => '/StegaVault/admin/login.php',
-            'collaborator' => '/StegaVault/collaborator/login.php',
-            default => '/StegaVault/employee/login.php',
-        };
+        'admin' => '/StegaVault/admin/login.php',
+        'collaborator' => '/StegaVault/collaborator/login.php',
+        default => '/StegaVault/employee/login.php',
+    };
 }
 
 function destroyCurrentSession(): void
@@ -63,7 +63,7 @@ function destroyCurrentSession(): void
 
 if (isset($_SESSION['user_id'])) {
     $now = time();
-    $lastActivity = isset($_SESSION['last_activity']) ? (int)$_SESSION['last_activity'] : $now;
+    $lastActivity = isset($_SESSION['last_activity']) ? (int) $_SESSION['last_activity'] : $now;
 
     if (($now - $lastActivity) > SESSION_IDLE_TIMEOUT_SECONDS) {
         $role = $_SESSION['role'] ?? 'employee';
