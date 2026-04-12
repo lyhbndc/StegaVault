@@ -219,7 +219,7 @@ if ($isImage) {
             error_log('CryptoWatermark log skipped: ' . $e->getMessage());
         }
 
-        $updF = $db->prepare("UPDATE files SET download_count = download_count + 1, watermarked = 1 WHERE id = ?");
+        $updF = $db->prepare("UPDATE files SET download_count = download_count + 1, watermarked = TRUE WHERE id = ?");
         $updF->bind_param('i', $fileId);
         $updF->execute();
     } catch (Exception $e) {
@@ -281,7 +281,7 @@ if ($isImage) {
             error_log('CryptoWatermark log skipped: ' . $e->getMessage());
         }
 
-        $updF = $db->prepare("UPDATE files SET download_count = download_count + 1, watermarked = 1 WHERE id = ?");
+        $updF = $db->prepare("UPDATE files SET download_count = download_count + 1, watermarked = TRUE WHERE id = ?");
         $updF->bind_param('i', $fileId);
         $updF->execute();
     } catch (Exception $e) {

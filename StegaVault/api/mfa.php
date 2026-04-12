@@ -48,7 +48,7 @@ function storeRecoveryCodes($userId, $codes) {
     global $db;
     
     // Clear old unused codes
-    $stmt = $db->prepare("DELETE FROM mfa_recovery_codes WHERE user_id = ? AND used = 0");
+    $stmt = $db->prepare("DELETE FROM mfa_recovery_codes WHERE user_id = ? AND used = FALSE");
     $stmt->bind_param('i', $userId);
     $stmt->execute();
     
@@ -106,7 +106,7 @@ if ($method === 'POST' && $action === 'verify_setup') {
     $checkResult = $ga->verifyCode($secret, $code, 2); // 2 = 2*30sec clock tolerance
     
     if ($checkResult) {
-        $stmt = $db->prepare("UPDATE users SET mfa_secret = ?, is_mfa_enabled = 1 WHERE id = ?");
+        $stmt = $db->prepare("UPDATE users SET mfa_secret = ?, is_mfa_enabled = TRUE WHERE id = ?");
         $stmt->bind_param('si', $secret, $_SESSION['user_id']);
         if ($stmt->execute()) {
             // Generate and store recovery codes
@@ -132,12 +132,12 @@ if ($method === 'POST' && $action === 'disable') {
         sendResponse(false, null, 'Not authenticated', 401);
     }
     
-    $stmt = $db->prepare("UPDATE users SET mfa_secret = NULL, is_mfa_enabled = 0 WHERE id = ?");
+    $stmt = $db->prepare("UPDATE users SET mfa_secret = NULL, is_mfa_enabled = FALSE WHERE id = ?");
     $stmt->bind_param('i', $_SESSION['user_id']);
     if ($stmt->execute()) {
         sendResponse(true, ['message' => 'MFA disabled']);
     } else {
-        sendResponse(false, null, 'Database error: ' . ($db->error ?: 'Unknown error'), 500);
+        sendResponse(false, null, 'Database error', 500);
     }
 }
 

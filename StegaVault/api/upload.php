@@ -232,13 +232,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $relativePath = 'uploads/' . $filename;
 
     // Step 1: insert core fields (no nullable FK columns to avoid MySQLi null-int issues)
-    $requireWatermark = isset($_POST['require_watermark']) ? (int) $_POST['require_watermark'] : 1;
+    $requireWatermark = (isset($_POST['require_watermark']) && $_POST['require_watermark'] == '0') ? false : true;
 
     $stmt = $db->prepare("
         INSERT INTO files (user_id, filename, original_name, file_path, file_size, mime_type, watermarked, upload_date)
         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
     ");
-    $stmt->bind_param('isssisi', $userId, $filename, $originalName, $relativePath, $fileSize, $mimeType, $requireWatermark);
+    // Use 'b' for boolean in my shim might works better, or just rely on PHP bool type
+    $stmt->bind_param('isssisb', $userId, $filename, $originalName, $relativePath, $fileSize, $mimeType, $requireWatermark);
 
     if (!$stmt->execute()) {
         if (file_exists($filepath)) {
