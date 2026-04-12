@@ -85,12 +85,27 @@
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Change Password</h3>
                 </div>
                 <div class="space-y-2">
-                    <input id="settingsCurPass" type="password" placeholder="Current password"
-                        class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" />
-                    <input id="settingsNewPass" type="password" placeholder="New password (min 6 chars)"
-                        class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" />
-                    <input id="settingsConfPass" type="password" placeholder="Confirm new password"
-                        class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" />
+                    <div class="relative">
+                        <input id="settingsCurPass" type="password" placeholder="Current password"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 pr-10 text-slate-900 dark:text-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" />
+                        <button type="button" onclick="toggleSettingsPassword('settingsCurPass', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <input id="settingsNewPass" type="password" placeholder="New password (min 12 chars)"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 pr-10 text-slate-900 dark:text-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" />
+                        <button type="button" onclick="toggleSettingsPassword('settingsNewPass', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <input id="settingsConfPass" type="password" placeholder="Confirm new password"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 pr-10 text-slate-900 dark:text-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" />
+                        <button type="button" onclick="toggleSettingsPassword('settingsConfPass', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+                        </button>
+                    </div>
                     <button onclick="changePassword()"
                         class="w-full py-2 px-4 bg-slate-800 dark:bg-slate-700 hover:bg-primary text-white text-xs font-bold rounded-xl transition-all">
                         Change Password
@@ -336,6 +351,20 @@
 
 <script>
     function openSettings() {
+        // Reset password fields and visibility on open
+        document.getElementById('settingsCurPass').value = '';
+        document.getElementById('settingsNewPass').value = '';
+        document.getElementById('settingsConfPass').value = '';
+        
+        ['settingsCurPass', 'settingsNewPass', 'settingsConfPass'].forEach(id => {
+            const el = document.getElementById(id);
+            el.type = 'password';
+            const btn = el.nextElementSibling;
+            if (btn && btn.querySelector('span')) {
+                btn.querySelector('span').textContent = 'visibility_off';
+            }
+        });
+
         document.getElementById('settingsBackdrop').classList.remove('hidden');
         setTimeout(() => document.getElementById('settingsPanel').classList.replace('-translate-x-full', 'translate-x-0'), 10);
     }
@@ -416,6 +445,18 @@
             }
         } catch {
             showSettingsToast('Network error', false);
+        }
+    }
+
+    function toggleSettingsPassword(id, btn) {
+        const input = document.getElementById(id);
+        const icon = btn.querySelector('span');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.textContent = 'visibility';
+        } else {
+            input.type = 'password';
+            icon.textContent = 'visibility_off';
         }
     }
 

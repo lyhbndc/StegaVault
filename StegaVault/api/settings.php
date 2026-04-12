@@ -54,8 +54,8 @@ if ($action === 'change_password') {
         echo json_encode(['success' => false, 'error' => 'New passwords do not match']);
         exit;
     }
-    if (strlen($newPass) < 6) {
-        echo json_encode(['success' => false, 'error' => 'New password must be at least 6 characters']);
+    if (strlen($newPass) < 12) {
+        echo json_encode(['success' => false, 'error' => 'New password must be at least 12 characters']);
         exit;
     }
 
