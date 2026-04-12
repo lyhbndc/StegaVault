@@ -17,7 +17,8 @@ $redirectTo = 'employee/login.php'; // Default to employee login
 
 if (empty($token)) {
     $message = 'Invalid activation link. Please check your email and try again.';
-} else {
+}
+else {
     // Find user with matching activation token
     $stmt = $db->prepare("
         SELECT id, name, email, role, status, activation_token 
@@ -30,7 +31,8 @@ if (empty($token)) {
 
     if ($result->num_rows === 0) {
         $message = 'Invalid activation link. The token may have already been used or is incorrect.';
-    } else {
+    }
+    else {
         $user = $result->fetch_assoc();
 
         // Check if already activated
@@ -54,7 +56,7 @@ if (empty($token)) {
         else {
             $stmt = $db->prepare("
                 UPDATE users 
-                SET status = 'active', activation_token = NULL, is_verified = 1 
+                SET status = 'active', activation_token = NULL, is_verified = TRUE 
                 WHERE id = ?
             ");
             $stmt->bind_param('i', $user['id']);
@@ -78,7 +80,8 @@ if (empty($token)) {
                         $redirectTo = 'employee/login.php';
                         break;
                 }
-            } else {
+            }
+            else {
                 $message = 'An error occurred during activation. Please try again or contact support.';
             }
         }
@@ -91,13 +94,15 @@ if (empty($token)) {
 <html class="dark" lang="en">
 
 <head>
-    <link rel="icon" type="image/png" href="Assets/favicon.png">
+    <link rel="icon" type="image/png" href="icon.png">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Account Activation - StegaVault</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -133,9 +138,11 @@ if (empty($token)) {
         <!-- Card -->
         <div class="bg-surface-dark border border-border-dark rounded-2xl shadow-2xl overflow-hidden">
             <!-- Header -->
-            <div class="<?php echo $success ? 'bg-gradient-to-r from-green-600 to-emerald-600' : 'bg-gradient-to-r from-red-600 to-rose-600'; ?> p-8 text-center">
+            <div
+                class="<?php echo $success ? 'bg-gradient-to-r from-green-600 to-emerald-600' : 'bg-gradient-to-r from-red-600 to-rose-600'; ?> p-8 text-center">
                 <div class="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-full mb-4">
-                    <span class="material-symbols-outlined text-white text-5xl" style="font-variation-settings: 'FILL' 1;">
+                    <span class="material-symbols-outlined text-white text-5xl"
+                        style="font-variation-settings: 'FILL' 1;">
                         <?php echo $success ? 'check_circle' : 'error'; ?>
                     </span>
                 </div>
@@ -153,32 +160,37 @@ if (empty($token)) {
                 </div>
 
                 <?php if ($success): ?>
-                    <!-- Success Actions -->
-                    <div class="space-y-3">
-                        <a href="<?php echo $redirectTo; ?>" class="block w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white text-center font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-primary/20">
-                            <span class="flex items-center justify-center gap-2">
-                                <span class="material-symbols-outlined">login</span>
-                                <?php echo ($redirectTo === 'admin/login.php') ? 'Login to Admin Panel' : (($redirectTo === 'collaborator/login.php') ? 'Login as Collaborator' : 'Login to StegaVault'); ?>
-                            </span>
-                        </a>
-                    </div>
-                <?php else: ?>
-                    <!-- Error Actions -->
-                    <div class="space-y-3">
-                        <a href="employee/login.php" class="block w-full bg-slate-700 hover:bg-slate-600 text-white text-center font-bold py-3 px-6 rounded-xl transition-all">
-                            <span class="flex items-center justify-center gap-2">
-                                <span class="material-symbols-outlined">arrow_back</span>
-                                Back to Login
-                            </span>
-                        </a>
-                    </div>
-                <?php endif; ?>
+                <!-- Success Actions -->
+                <div class="space-y-3">
+                    <a href="<?php echo $redirectTo; ?>"
+                        class="block w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white text-center font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-primary/20">
+                        <span class="flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">login</span>
+                            <?php echo ($redirectTo === 'admin/login.php') ? 'Login to Admin Panel' : (($redirectTo === 'collaborator/login.php') ? 'Login as Collaborator' : 'Login to StegaVault'); ?>
+                        </span>
+                    </a>
+                </div>
+                <?php
+else: ?>
+                <!-- Error Actions -->
+                <div class="space-y-3">
+                    <a href="employee/login.php"
+                        class="block w-full bg-slate-700 hover:bg-slate-600 text-white text-center font-bold py-3 px-6 rounded-xl transition-all">
+                        <span class="flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">arrow_back</span>
+                            Back to Login
+                        </span>
+                    </a>
+                </div>
+                <?php
+endif; ?>
             </div>
 
             <!-- Footer -->
             <div class="bg-card-dark/50 border-t border-border-dark px-8 py-4 text-center">
                 <p class="text-slate-500 text-xs">
-                    Need help? Contact <a href="mailto:support@stegavault.com" class="text-primary hover:underline">support@stegavault.com</a>
+                    Need help? Contact <a href="mailto:support@stegavault.com"
+                        class="text-primary hover:underline">support@stegavault.com</a>
                 </p>
             </div>
         </div>

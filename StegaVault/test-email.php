@@ -17,7 +17,7 @@ if (!$isCLI) {
     echo "<!DOCTYPE html>
     <html>
     <head>
-    <link rel="icon" type="image/png" href="Assets/favicon.png">
+    <link rel="icon" type="image/png" href="icon.png">
         <title>StegaVault Email Test</title>
         <style>
             body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; background: #f5f5f5; }

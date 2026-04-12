@@ -15,7 +15,7 @@ $_SESSION['email'] = 'test@test.com';
 require_once 'includes/watermark.php';
 
 echo "<!DOCTYPE html><html><head>
-    <link rel="icon" type="image/png" href="Assets/favicon.png"><title>Ultimate Watermark Test</title>";
+    <link rel="icon" type="image/png" href="icon.png"><title>Ultimate Watermark Test</title>";
 echo "<style>
     body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
     .box { background: #2d2d2d; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 4px solid #007acc; }

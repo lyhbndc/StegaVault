@@ -152,7 +152,7 @@ $generatedAt = date('F j, Y \a\t g:i A');
 <html class="dark" lang="en">
 
 <head>
-    <link rel="icon" type="image/png" href="../Assets/favicon.png">
+    <link rel="icon" type="image/png" href="../icon.png">
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Generate Report - StegaVault</title>
@@ -1345,7 +1345,7 @@ Active Projects: <?php echo $activeProjects; ?>`;
 
                 const userTables = document.querySelectorAll('#sec-users table');
                 userTables.forEach((table) => {
-                    const titleElem = table.closest('.section-tablap').sElementSibling;
+                    const titleElem = table.closest('.section-table-wrap').previousElementSibling;
                     const roleTitle = titleElem ? titleElem.innerText : '';
 
                     if (roleTitle) {
@@ -1376,7 +1376,7 @@ Active Projects: <?php echo $activeProjects; ?>`;
 
                 // ── FOOTER PAGE NUMBERS ──
                 const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1;= pag i++) {
+                for (let i = 1; i <= pageCount; i++) {
                     doc.setPage(i);
                     doc.setFontSize(8);
                     doc.setTextColor(148, 163, 184);
@@ -1394,7 +1394,7 @@ Active Projects: <?php echo $activeProjects; ?>`;
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
-
+        }
     </script>
 
     <?php include '../includes/settings_modal.php'; ?>

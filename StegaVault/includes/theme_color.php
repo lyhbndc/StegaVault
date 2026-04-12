@@ -3,7 +3,7 @@
 /**
  * StegaVault - Theme Color CSS Variable Injector
  * Include this in <head>
-    <link rel="icon" type="image/png" href="../Assets/favicon.png"> of every employee page that uses tailwind primary color.
+    <link rel="icon" type="image/png" href="../icon.png"> of every employee page that uses tailwind primary color.
  * Requires: $db, $userId to be set.
  */
 

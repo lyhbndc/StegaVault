@@ -36,7 +36,7 @@ class Database
         catch (PDOException $e) {
             die(json_encode([
                 'success' => false,
-                'error' => 'Database connection failed. Please check your database settings.',
+                'error' => 'DB_ERROR: ' . $e->getMessage(),
                 'details' => $e->getMessage()
             ]));
         }
@@ -193,4 +193,4 @@ catch (Exception $e) {
         'success' => false,
         'error' => 'Failed to initialize database: ' . $e->getMessage()
     ]));
-}
+} 

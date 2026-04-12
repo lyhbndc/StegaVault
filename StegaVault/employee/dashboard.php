@@ -51,7 +51,7 @@ if (!preg_match('/^#[0-9a-fA-F]{6}$/', $themeColor)) $themeColor = '#667eea';
 <html class="dark" lang="en">
 
 <head>
-    <link rel="icon" type="image/png" href="../Assets/favicon.png">
+    <link rel="icon" type="image/png" href="../icon.png">
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Employee Dashboard - StegaVault</title>

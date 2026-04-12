@@ -6,10 +6,10 @@
  */
 
 // Database Configuration (Supabase PostgreSQL)
-define('DB_HOST', 'db.scghhuzaphvmilbcpqsm.supabase.co');
+define('DB_HOST', 'db.dknxptrhnjpcymvvmdpj.supabase.co');
 define('DB_PORT', '5432');
 define('DB_USER', 'postgres');
-define('DB_PASS', '@OwlopsCo432');
+define('DB_PASS', 'OwlOpsCo432');
 define('DB_NAME', 'postgres');
 
 // Site Configuration
