@@ -6,6 +6,7 @@
  */
 
 session_start();
+ob_start(); // Buffer all output to prevent "Headers already sent" corruption
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/ActivityLogger.php';
 require_once __DIR__ . '/../includes/Encryption.php';
@@ -71,8 +72,9 @@ if ((int) $file['watermarked'] === 0) {
     } catch (Exception $e) {
     }
 
+        ob_end_clean(); // Discard any whitespace/output from includes
     header('Content-Type: application/octet-stream');
-    header('Content-Disposition: attachment; filename="' . $file['original_name'] . '"');
+    header('Content-Disposition: attachment; filename="' . str_replace('"', '', $file['original_name']) . '"');
     header('Content-Length: ' . filesize($originalPath));
     header('Cache-Control: private');
     readfile($originalPath);
@@ -225,8 +227,11 @@ if ($isImage) {
     }
 
     $baseName = pathinfo($file['original_name'], PATHINFO_FILENAME);
+    $safeName = str_replace('"', '', $baseName . '_watermarked.png');
+    
+    ob_end_clean(); // Discard any whitespace/output from includes
     header('Content-Type: image/png');
-    header('Content-Disposition: attachment; filename="' . $baseName . '_watermarked.png"');
+    header('Content-Disposition: attachment; filename="' . $safeName . '"');
     header('Content-Length: ' . filesize($watermarkedPath));
     header('Cache-Control: no-cache, must-revalidate');
     header('Pragma: public');
@@ -283,8 +288,9 @@ if ($isImage) {
         error_log('Watermark DB error (non-fatal): ' . $e->getMessage());
     }
 
+    ob_end_clean(); // Discard any whitespace/output from includes
     header('Content-Type: ' . $serveMime);
-    header('Content-Disposition: attachment; filename="' . $file['original_name'] . '"');
+    header('Content-Disposition: attachment; filename="' . str_replace('"', '', $file['original_name']) . '"');
     header('Content-Length: ' . filesize($watermarkedPath));
     header('Cache-Control: private');
     readfile($watermarkedPath);

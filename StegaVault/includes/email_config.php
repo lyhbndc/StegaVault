@@ -126,4 +126,3 @@ return [
     'password' => 'your-mailgun-password',
 ],
 */
-?>
