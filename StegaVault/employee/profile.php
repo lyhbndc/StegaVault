@@ -41,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     } elseif ($newPassword !== $confirmPassword) {
         $message = 'New passwords do not match';
         $messageType = 'error';
-    } elseif (strlen($newPassword) < 6) {
-        $message = 'Password must be at least 6 characters';
+    } elseif (strlen($newPassword) < 12) {
+        $message = 'Password must be at least 12 characters';
         $messageType = 'error';
     } elseif (!password_verify($currentPassword, $userDetails['password_hash'])) {
         $message = 'Current password is incorrect';
@@ -70,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - StegaVault</title>
     <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <style>
         .employee-header {
             background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
@@ -205,6 +206,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+        
+        .password-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .password-toggle-btn {
+            position: absolute;
+            right: 12px;
+            cursor: pointer;
+            color: #888;
+            background: none;
+            border: none;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+        
+        .password-toggle-btn:hover {
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -275,18 +300,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 <form method="POST">
                     <div class="form-group">
                         <label for="current_password">Current Password</label>
-                        <input type="password" id="current_password" name="current_password" required>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="current_password" name="current_password" required>
+                            <button type="button" class="password-toggle-btn material-symbols-outlined" onclick="togglePasswordVisibility('current_password', this)">visibility_off</button>
+                        </div>
                     </div>
                     
                     <div class="form-group">
                         <label for="new_password">New Password</label>
-                        <input type="password" id="new_password" name="new_password" minlength="6" required>
-                        <small style="color: #666;">Minimum 6 characters</small>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="new_password" name="new_password" minlength="12" required>
+                            <button type="button" class="password-toggle-btn material-symbols-outlined" onclick="togglePasswordVisibility('new_password', this)">visibility_off</button>
+                        </div>
+                        <small style="color: #666;">Minimum 12 characters</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="confirm_password">Confirm New Password</label>
-                        <input type="password" id="confirm_password" name="confirm_password" minlength="6" required>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="confirm_password" name="confirm_password" minlength="12" required>
+                            <button type="button" class="password-toggle-btn material-symbols-outlined" onclick="togglePasswordVisibility('confirm_password', this)">visibility_off</button>
+                        </div>
                     </div>
                     
                     <button type="submit" name="change_password" class="btn-submit">Change Password</button>
@@ -295,6 +329,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
         </div>
     </div>
     <script src="../js/security-shield.js"></script>
+    <script>
+        function togglePasswordVisibility(fieldId, btnElement) {
+            const input = document.getElementById(fieldId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btnElement.textContent = 'visibility';
+            } else {
+                input.type = 'password';
+                btnElement.textContent = 'visibility_off';
+            }
+        }
+    </script>
 </body>
 </html>
 

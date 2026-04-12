@@ -125,8 +125,8 @@ if ($method === 'POST' && $action === 'create') {
             sendResponse(false, null, 'Invalid email format', 400);
         }
 
-        if (strlen($password) < 6) {
-            sendResponse(false, null, 'Password must be at least 6 characters', 400);
+        if (strlen($password) < 12) {
+            sendResponse(false, null, 'Password must be at least 12 characters', 400);
         }
 
         // Validate role
@@ -312,8 +312,8 @@ if ($method === 'PUT' && $action === 'update') {
         }
 
         if (!empty($newPassword)) {
-            if (strlen($newPassword) < 6) {
-                sendResponse(false, null, 'Password must be at least 6 characters', 400);
+            if (strlen($newPassword) < 12) {
+                sendResponse(false, null, 'Password must be at least 12 characters', 400);
             }
             $passwordHash = password_hash($newPassword, PASSWORD_BCRYPT);
             $updates[] = "password_hash = ?";

@@ -24,7 +24,7 @@ $user = [
 // Get all users with dynamic status check for expiration
 $stmt = $db->prepare("SELECT id, username, name, email, role, 
     CASE 
-        WHEN expiration_date IS NOT NULL AND expiration_date < CURDATE() THEN 'expired' 
+        WHEN expiration_date IS NOT NULL AND expiration_date < CURRENT_DATE THEN 'expired' 
         ELSE status 
     END AS status, 
     expiration_date, created_at FROM users ORDER BY created_at DESC");
@@ -535,7 +535,7 @@ foreach ($users as $u) {
                                         *</label>
                                     <div class="relative">
                                         <input id="userPassword" name="password" type="password"
-                                            placeholder="Min. 6 characters" minlength="6"
+                                            placeholder="Min. 12 characters" minlength="12"
                                             class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 pr-12 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
                                             oninput="checkPwPolicy()" />
                                         <button type="button" onclick="togglePassword()"
@@ -559,7 +559,7 @@ foreach ($users as $u) {
                                             class="flex items-center gap-2 text-xs text-slate-500 transition-colors">
                                             <span
                                                 class="material-symbols-outlined text-[14px]">radio_button_unchecked</span>
-                                            6–25 characters
+                                            12–25 characters
                                         </div>
                                         <div id="pwRule-upper"
                                             class="flex items-center gap-2 text-xs text-slate-500 transition-colors">
@@ -966,7 +966,7 @@ foreach ($users as $u) {
         // ── Password Policy Live Checker ─────────────────────────
         const rules = [{
                 id: 'pwRule-len',
-                test: p => p.length >= 6 && p.length <= 25
+                test: p => p.length >= 12 && p.length <= 25
             },
             {
                 id: 'pwRule-upper',
