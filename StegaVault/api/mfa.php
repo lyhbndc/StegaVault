@@ -119,7 +119,7 @@ if ($method === 'POST' && $action === 'verify_setup') {
                 'recovery_codes' => $recoveryCodes
             ]);
         } else {
-            sendResponse(false, null, 'Database error', 500);
+            sendResponse(false, null, 'Database error: ' . ($db->error ?: 'Unknown error'), 500);
         }
     } else {
         sendResponse(false, null, 'Invalid verification code', 400);
@@ -137,7 +137,7 @@ if ($method === 'POST' && $action === 'disable') {
     if ($stmt->execute()) {
         sendResponse(true, ['message' => 'MFA disabled']);
     } else {
-        sendResponse(false, null, 'Database error', 500);
+        sendResponse(false, null, 'Database error: ' . ($db->error ?: 'Unknown error'), 500);
     }
 }
 
