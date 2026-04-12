@@ -789,7 +789,7 @@ endif; ?>
                             ${_adminCurrentFolderId ? 'This folder is empty' : 'No files yet'}
                         </p>
                         <p class="text-slate-400 dark:text-slate-500 text-xs mb-4">Drag &amp; drop files here, or click Upload</p>
-                        <button onclick="document.getElementById('fileInput').click()"
+                        <button onclick="openFolderUploadModal()"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white text-xs font-bold rounded-lg transition-all border border-primary/20">
                             <span class="material-symbols-outlined text-[15px]">cloud_upload</span>Browse Files
                         </button>

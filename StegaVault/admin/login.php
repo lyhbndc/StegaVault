@@ -29,8 +29,10 @@ if (isset($_SESSION['user_id'])) {
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Admin Secure Login - StegaVault</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -72,17 +74,21 @@ if (isset($_SESSION['user_id'])) {
     </div>
 
     <!-- Header -->
-    <header class="relative z-10 w-full px-6 py-6 lg:px-12 flex items-center justify-between border-b border-white/5 bg-background-dark/50 backdrop-blur-md">
+    <header
+        class="relative z-10 w-full px-6 py-6 lg:px-12 flex items-center justify-between border-b border-white/5 bg-background-dark/50 backdrop-blur-md">
         <div class="flex items-center gap-3">
             <div class="bg-primary p-2 rounded-lg shadow-glow">
                 <span class="material-symbols-outlined text-white text-2xl">shield</span>
             </div>
-            <h2 class="text-white text-xl font-bold tracking-tight">Peanut Gallery Media <span class="text-primary/80 font-medium">Inc.</span></h2>
+            <h2 class="text-white text-xl font-bold tracking-tight">Peanut Gallery Media <span
+                    class="text-primary/80 font-medium">Inc.</span></h2>
         </div>
         <div class="flex items-center gap-4">
-            <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+            <div
+                class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                 <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
                 <span class="text-[10px] uppercase tracking-widest font-bold text-emerald-500">Systems Nominal</span>
@@ -95,14 +101,18 @@ if (isset($_SESSION['user_id'])) {
         <div class="w-full max-w-[440px]">
             <!-- Hero Visual -->
             <div class="mb-8 relative group">
-                <div class="absolute -inset-1 bg-gradient-to-r from-primary to-blue-400 rounded-xl blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+                <div
+                    class="absolute -inset-1 bg-gradient-to-r from-primary to-blue-400 rounded-xl blur opacity-20 group-hover:opacity-30 transition duration-1000">
+                </div>
                 <div class="relative w-full h-32 rounded-xl overflow-hidden border border-white/10 bg-slate-card">
                     <div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-500/10"></div>
                     <div class="absolute inset-0 flex items-center justify-center">
                         <span class="material-symbols-outlined text-6xl text-primary/30">admin_panel_settings</span>
                     </div>
                     <div class="absolute bottom-4 left-4">
-                        <span class="text-[10px] text-primary font-bold uppercase tracking-widest px-2 py-0.5 bg-primary/10 border border-primary/20 rounded">Admin Access</span>
+                        <span
+                            class="text-[10px] text-primary font-bold uppercase tracking-widest px-2 py-0.5 bg-primary/10 border border-primary/20 rounded">Admin
+                            Access</span>
                     </div>
                 </div>
             </div>
@@ -116,15 +126,19 @@ if (isset($_SESSION['user_id'])) {
             <!-- Login Form Card -->
             <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl">
                 <!-- Error Message -->
-                <div id="errorMsg" style="display: none;" class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm"></div>
+                <div id="errorMsg" style="display: none;"
+                    class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm"></div>
 
                 <form id="authForm" class="space-y-6">
                     <!-- Name Field (hidden by default) -->
                     <div id="nameField" style="display: none;" class="space-y-2">
                         <label class="block text-white text-sm font-medium">Full Name</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
-                            <input id="name" class="w-full pl-12 pr-4 py-4 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="John Doe" type="text" />
+                            <span
+                                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
+                            <input id="name"
+                                class="w-full pl-12 pr-4 py-4 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
+                                placeholder="John Doe" type="text" />
                         </div>
                     </div>
 
@@ -132,8 +146,11 @@ if (isset($_SESSION['user_id'])) {
                     <div class="space-y-2">
                         <label class="block text-white text-sm font-medium">Admin Email</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">alternate_email</span>
-                            <input id="email" required class="w-full pl-12 pr-4 py-4 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="admin@company.com" type="email" />
+                            <span
+                                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">alternate_email</span>
+                            <input id="email" required
+                                class="w-full pl-12 pr-4 py-4 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
+                                placeholder="admin@company.com" type="email" />
                         </div>
                     </div>
 
@@ -141,32 +158,57 @@ if (isset($_SESSION['user_id'])) {
                     <div class="space-y-2">
                         <label class="block text-white text-sm font-medium">Password</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
-                            <input id="password" required class="w-full pl-12 pr-12 py-4 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="••••••••" type="password" oninput="checkPwPolicy()" />
-                            <button type="button" onclick="togglePassword()" class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors">visibility_off</button>
+                            <span
+                                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
+                            <input id="password" required
+                                class="w-full pl-12 pr-12 py-4 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
+                                placeholder="••••••••" type="password" oninput="checkPwPolicy()" />
+                            <button type="button" onclick="togglePassword()"
+                                class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors">visibility_off</button>
                         </div>
 
                         <!-- Password Policy Panel (shown only during registration) -->
-                        <div id="pwPolicyPanel" class="hidden mt-2 p-4 bg-white/5 border border-white/10 rounded-xl space-y-2">
-                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Password Requirements</p>
+                        <div id="pwPolicyPanel"
+                            class="hidden mt-2 p-4 bg-white/5 border border-white/10 rounded-xl space-y-2">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Password
+                                Requirements</p>
 
                             <!-- Strength bar -->
                             <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-2">
-                                <div id="pwStrengthBar" class="h-full rounded-full transition-all duration-300 w-0 bg-red-500"></div>
+                                <div id="pwStrengthBar"
+                                    class="h-full rounded-full transition-all duration-300 w-0 bg-red-500"></div>
                             </div>
 
-                            <div id="pwRule-len" class="flex items-center gap-2 text-xs text-slate-500 transition-colors"><span class="material-symbols-outlined text-[14px]">radio_button_unchecked</span> 12–25 characters</div>
-                            <div id="pwRule-upper" class="flex items-center gap-2 text-xs text-slate-500 transition-colors"><span class="material-symbols-outlined text-[14px]">radio_button_unchecked</span> At least one uppercase letter</div>
-                            <div id="pwRule-lower" class="flex items-center gap-2 text-xs text-slate-500 transition-colors"><span class="material-symbols-outlined text-[14px]">radio_button_unchecked</span> At least one lowercase letter</div>
-                            <div id="pwRule-num" class="flex items-center gap-2 text-xs text-slate-500 transition-colors"><span class="material-symbols-outlined text-[14px]">radio_button_unchecked</span> At least one number</div>
-                            <div id="pwRule-sym" class="flex items-center gap-2 text-xs text-slate-500 transition-colors"><span class="material-symbols-outlined text-[14px]">radio_button_unchecked</span> At least one special character (!@#$%…)</div>
+                            <div id="pwRule-len"
+                                class="flex items-center gap-2 text-xs text-slate-500 transition-colors"><span
+                                    class="material-symbols-outlined text-[14px]">radio_button_unchecked</span> 12–25
+                                characters</div>
+                            <div id="pwRule-upper"
+                                class="flex items-center gap-2 text-xs text-slate-500 transition-colors"><span
+                                    class="material-symbols-outlined text-[14px]">radio_button_unchecked</span> At least
+                                one uppercase letter</div>
+                            <div id="pwRule-lower"
+                                class="flex items-center gap-2 text-xs text-slate-500 transition-colors"><span
+                                    class="material-symbols-outlined text-[14px]">radio_button_unchecked</span> At least
+                                one lowercase letter</div>
+                            <div id="pwRule-num"
+                                class="flex items-center gap-2 text-xs text-slate-500 transition-colors"><span
+                                    class="material-symbols-outlined text-[14px]">radio_button_unchecked</span> At least
+                                one number</div>
+                            <div id="pwRule-sym"
+                                class="flex items-center gap-2 text-xs text-slate-500 transition-colors"><span
+                                    class="material-symbols-outlined text-[14px]">radio_button_unchecked</span> At least
+                                one special character (!@#$%…)</div>
                         </div>
                     </div>
 
                     <!-- Submit Button -->
-                    <button id="submitBtn" class="w-full py-4 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold text-base transition-all shadow-glow flex items-center justify-center gap-2 group" type="submit">
+                    <button id="submitBtn"
+                        class="w-full py-4 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold text-base transition-all shadow-glow flex items-center justify-center gap-2 group"
+                        type="submit">
                         <span id="submitText">Sign In to Dashboard</span>
-                        <span class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        <span
+                            class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
                     </button>
                 </form>
 
@@ -187,7 +229,8 @@ if (isset($_SESSION['user_id'])) {
 
                 <!-- Employee Login Link -->
                 <div class="mt-6 text-center">
-                    <a href="../employee/login.php" class="text-xs text-slate-500 hover:text-primary transition-colors flex items-center justify-center gap-1">
+                    <a href="../employee/login.php"
+                        class="text-xs text-slate-500 hover:text-primary transition-colors flex items-center justify-center gap-1">
                         Are you an employee? <span class="font-semibold">Employee Login →</span>
                     </a>
                 </div>
@@ -195,7 +238,8 @@ if (isset($_SESSION['user_id'])) {
 
             <!-- Compliance Notice -->
             <div class="mt-12 text-center max-w-sm mx-auto">
-                <div class="inline-flex items-center justify-center px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full mb-4">
+                <div
+                    class="inline-flex items-center justify-center px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full mb-4">
                     <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider flex items-center gap-1.5">
                         <span class="material-symbols-outlined text-sm">warning</span> Restricted Access
                     </span>
@@ -208,11 +252,12 @@ if (isset($_SESSION['user_id'])) {
     </main>
 
     <!-- Footer -->
-    <footer class="relative z-10 w-full px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-white/5 text-[12px] text-slate-500">
+    <footer
+        class="relative z-10 w-full px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-white/5 text-[12px] text-slate-500">
         <p>© <?php echo date('Y'); ?> Peanut Gallery Media Inc. All rights reserved.</p>
         <div class="flex items-center gap-6">
-            <a href="privacy.php" class="hover:text-primary transition-colors">Privacy Policy</a>
-            <a href="terms.php" class="hover:text-primary transition-colors">Terms of Service</a>
+            <a href="privacy-policy.php" class="hover:text-primary transition-colors">Privacy Policy</a>
+            <a href="terms-of-service.php" class="hover:text-primary transition-colors">Terms of Service</a>
         </div>
     </footer>
 
@@ -355,25 +400,25 @@ if (isset($_SESSION['user_id'])) {
         });
         // ── Password Policy Live Checker ─────────────────────────
         const rules = [{
-                id: 'pwRule-len',
-                test: p => p.length >= 12 && p.length <= 25
-            },
-            {
-                id: 'pwRule-upper',
-                test: p => /[A-Z]/.test(p)
-            },
-            {
-                id: 'pwRule-lower',
-                test: p => /[a-z]/.test(p)
-            },
-            {
-                id: 'pwRule-num',
-                test: p => /[0-9]/.test(p)
-            },
-            {
-                id: 'pwRule-sym',
-                test: p => /[\W_]/.test(p)
-            },
+            id: 'pwRule-len',
+            test: p => p.length >= 12 && p.length <= 25
+        },
+        {
+            id: 'pwRule-upper',
+            test: p => /[A-Z]/.test(p)
+        },
+        {
+            id: 'pwRule-lower',
+            test: p => /[a-z]/.test(p)
+        },
+        {
+            id: 'pwRule-num',
+            test: p => /[0-9]/.test(p)
+        },
+        {
+            id: 'pwRule-sym',
+            test: p => /[\W_]/.test(p)
+        },
         ];
         const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-yellow-400', 'bg-emerald-500'];
         const strengthWidths = ['w-1/5', 'w-2/5', 'w-3/5', 'w-4/5', 'w-full'];

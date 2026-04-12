@@ -30,8 +30,10 @@ if (isset($_SESSION['user_id'])) {
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Employee Login - StegaVault</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -73,17 +75,21 @@ if (isset($_SESSION['user_id'])) {
     </div>
 
     <!-- Header -->
-    <header class="relative z-10 w-full px-6 py-6 lg:px-12 flex items-center justify-between border-b border-white/5 bg-background-dark/50 backdrop-blur-md">
+    <header
+        class="relative z-10 w-full px-6 py-6 lg:px-12 flex items-center justify-between border-b border-white/5 bg-background-dark/50 backdrop-blur-md">
         <div class="flex items-center gap-3">
             <div class="bg-primary p-2 rounded-lg shadow-glow">
                 <span class="material-symbols-outlined text-white text-2xl">shield</span>
             </div>
-            <h2 class="text-white text-xl font-bold tracking-tight">Peanut Gallery Media <span class="text-primary/80 font-medium">Inc.</span></h2>
+            <h2 class="text-white text-xl font-bold tracking-tight">Peanut Gallery Media <span
+                    class="text-primary/80 font-medium">Inc.</span></h2>
         </div>
         <div class="flex items-center gap-4">
-            <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+            <div
+                class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                 <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
                 <span class="text-[10px] uppercase tracking-widest font-bold text-emerald-500">Systems Nominal</span>
@@ -96,14 +102,18 @@ if (isset($_SESSION['user_id'])) {
         <div class="w-full max-w-[440px]">
             <!-- Hero Visual -->
             <div class="mb-8 relative group">
-                <div class="absolute -inset-1 bg-gradient-to-r from-primary to-teal-400 rounded-xl blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+                <div
+                    class="absolute -inset-1 bg-gradient-to-r from-primary to-teal-400 rounded-xl blur opacity-20 group-hover:opacity-30 transition duration-1000">
+                </div>
                 <div class="relative w-full h-32 rounded-xl overflow-hidden border border-white/10 bg-slate-card">
                     <div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-teal-500/10"></div>
                     <div class="absolute inset-0 flex items-center justify-center">
                         <span class="material-symbols-outlined text-6xl text-primary/30">person</span>
                     </div>
                     <div class="absolute bottom-4 left-4">
-                        <span class="text-[10px] text-primary font-bold uppercase tracking-widest px-2 py-0.5 bg-primary/10 border border-primary/20 rounded">Employee Portal</span>
+                        <span
+                            class="text-[10px] text-primary font-bold uppercase tracking-widest px-2 py-0.5 bg-primary/10 border border-primary/20 rounded">Employee
+                            Portal</span>
                     </div>
                 </div>
             </div>
@@ -117,14 +127,16 @@ if (isset($_SESSION['user_id'])) {
             <!-- Login Form Card -->
             <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl">
                 <!-- Error Message -->
-                <div id="errorMsg" style="display: none;" class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm"></div>
+                <div id="errorMsg" style="display: none;"
+                    class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm"></div>
 
                 <form id="loginForm" class="space-y-6">
                     <!-- Email Field -->
                     <div class="space-y-2">
                         <label class="block text-white text-sm font-medium">Email Address</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">alternate_email</span>
+                            <span
+                                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">alternate_email</span>
                             <input type="email" id="email" name="email" required autofocus
                                 class="w-full pl-12 pr-4 py-4 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
                                 placeholder="your@email.com" />
@@ -135,11 +147,13 @@ if (isset($_SESSION['user_id'])) {
                     <div class="space-y-2">
                         <label class="block text-white text-sm font-medium">Password</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
+                            <span
+                                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
                             <input type="password" id="password" name="password" required
                                 class="w-full pl-12 pr-12 py-4 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
                                 placeholder="••••••••" />
-                            <button type="button" onclick="togglePassword()" class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors">visibility_off</button>
+                            <button type="button" onclick="togglePassword()"
+                                class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors">visibility_off</button>
                         </div>
 
                     </div>
@@ -148,7 +162,8 @@ if (isset($_SESSION['user_id'])) {
                     <button id="submitBtn" type="submit"
                         class="w-full py-4 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold text-base transition-all shadow-glow flex items-center justify-center gap-2 group">
                         <span id="submitText">Login to Portal</span>
-                        <span class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        <span
+                            class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
                     </button>
                 </form>
 
@@ -176,7 +191,8 @@ if (isset($_SESSION['user_id'])) {
 
                 <!-- Admin Login Link -->
                 <div class="mt-6 text-center">
-                    <a href="../collaborator/login.php" class="text-xs text-slate-500 hover:text-primary transition-colors flex items-center justify-center gap-1">
+                    <a href="../collaborator/login.php"
+                        class="text-xs text-slate-500 hover:text-primary transition-colors flex items-center justify-center gap-1">
                         Are you a Collaborator? <span class="font-semibold">Collaborator Login →</span>
                     </a>
                 </div>
@@ -184,7 +200,8 @@ if (isset($_SESSION['user_id'])) {
 
             <!-- Compliance Notice -->
             <div class="mt-12 text-center max-w-sm mx-auto">
-                <div class="inline-flex items-center justify-center px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full mb-4">
+                <div
+                    class="inline-flex items-center justify-center px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full mb-4">
                     <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider flex items-center gap-1.5">
                         <span class="material-symbols-outlined text-sm">warning</span> Restricted Access
                     </span>
@@ -197,11 +214,12 @@ if (isset($_SESSION['user_id'])) {
     </main>
 
     <!-- Footer -->
-    <footer class="relative z-10 w-full px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-white/5 text-[12px] text-slate-500">
+    <footer
+        class="relative z-10 w-full px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-white/5 text-[12px] text-slate-500">
         <p>© 2024 StegaVault Systems. All rights reserved.</p>
         <div class="flex items-center gap-6">
-            <span>Privacy Policy</span>
-            <span>Security Standards</span>
+            <a href="privacy-policy.php" class="hover:text-primary transition-colors">Privacy Policy</a>
+            <a href="terms-of-service.php" class="hover:text-primary transition-colors">Terms of Service</a>
         </div>
     </footer>
 
