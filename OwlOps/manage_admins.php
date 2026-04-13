@@ -211,6 +211,7 @@ if ($appsResult) {
 
             <form id="adminForm" onsubmit="handleFormSubmit(event)" class="p-8 space-y-6">
                 <input type="hidden" id="adminType" name="type" value="super">
+                <input type="hidden" id="adminId" name="id" value="">
                 
                 <div class="space-y-2">
                     <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Full Name</label>
@@ -233,8 +234,11 @@ if ($appsResult) {
                 </div>
 
                 <div class="space-y-2">
-                    <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Initial Password</label>
-                    <input type="password" id="adminPassword" required class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="••••••••••••" />
+                    <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">
+                        <span id="passwordLabel">Initial Password</span>
+                        <span id="passwordHint" class="hidden font-normal text-slate-600 lowercase tracking-normal">(Leave blank to keep current)</span>
+                    </label>
+                    <input type="password" id="adminPassword" class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="••••••••••••" />
                 </div>
 
                 <div class="pt-4 flex gap-4">
@@ -248,6 +252,8 @@ if ($appsResult) {
     <script>
         let currentTab = 'super';
         const webAppNameMap = <?php echo json_encode(array_column($webApps, 'name', 'id')); ?>;
+        let superAdminsList = [];
+        let appAdminsList = [];
 
         async function fetchAdmins() {
             try {
@@ -257,8 +263,14 @@ if ($appsResult) {
                 const superData = await superRes.json();
                 const appData = await appRes.json();
 
-                if (superData.success) renderSuperAdmins(superData.data.admins);
-                if (appData.success) renderAppAdmins(appData.data.admins);
+                if (superData.success) {
+                    superAdminsList = superData.data.admins;
+                    renderSuperAdmins(superAdminsList);
+                }
+                if (appData.success) {
+                    appAdminsList = appData.data.admins;
+                    renderAppAdmins(appAdminsList);
+                }
             } catch (err) {
                 console.error('Failed to fetch admins:', err);
             }
@@ -283,11 +295,16 @@ if ($appsResult) {
                         <p class="text-slate-500 text-xs">${new Date(a.created_at).toLocaleDateString()}</p>
                     </td>
                     <td class="px-6 py-5 text-right">
-                        ${a.id != <?php echo $user['id']; ?> ? `
-                            <button onclick="deleteAdmin('super', ${a.id})" class="p-2 text-slate-600 hover:text-red-400 transition-colors">
-                                <span class="material-symbols-outlined text-xl">delete</span>
+                        <div class="flex items-center justify-end gap-2">
+                            <button onclick="editAdmin('super', ${a.id})" class="p-2 text-slate-600 hover:text-white transition-colors">
+                                <span class="material-symbols-outlined text-xl">edit</span>
                             </button>
-                        ` : '<span class="text-[10px] text-primary/50 font-bold uppercase tracking-widest italic pr-2">You</span>'}
+                            ${a.id != <?php echo $user['id']; ?> ? `
+                                <button onclick="deleteAdmin('super', ${a.id})" class="p-2 text-slate-600 hover:text-red-400 transition-colors">
+                                    <span class="material-symbols-outlined text-xl">delete</span>
+                                </button>
+                            ` : '<span class="text-[10px] text-primary/50 font-bold uppercase tracking-widest italic pr-2">You</span>'}
+                        </div>
                     </td>
                 </tr>
             `).join('') : `
@@ -317,9 +334,14 @@ if ($appsResult) {
                         </div>
                     </td>
                     <td class="px-6 py-5 text-right">
-                        <button onclick="deleteAdmin('app', ${a.id})" class="p-2 text-slate-600 hover:text-red-400 transition-colors">
-                            <span class="material-symbols-outlined text-xl">delete</span>
-                        </button>
+                        <div class="flex items-center justify-end gap-2">
+                            <button onclick="editAdmin('app', ${a.id})" class="p-2 text-slate-600 hover:text-white transition-colors">
+                                <span class="material-symbols-outlined text-xl">edit</span>
+                            </button>
+                            <button onclick="deleteAdmin('app', ${a.id})" class="p-2 text-slate-600 hover:text-red-400 transition-colors">
+                                <span class="material-symbols-outlined text-xl">delete</span>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('') : `
@@ -340,16 +362,34 @@ if ($appsResult) {
             document.getElementById('content-app').classList.toggle('hidden', tab !== 'app');
         }
 
-        function openCreateModal(type) {
+        function openCreateModal(type, existingData = null) {
             const modal = document.getElementById('adminModal');
             const inner = modal.children[0];
+            const form = document.getElementById('adminForm');
             
+            form.reset();
             document.getElementById('adminType').value = type;
-            document.getElementById('modalTitle').textContent = type === 'super' ? 'New Super Admin' : 'New App Admin';
-            document.getElementById('modalSubtitle').textContent = type === 'super' ? 'Grant global administrative privileges.' : 'Assign admin rights to a specific environment.';
+            document.getElementById('adminId').value = existingData ? existingData.id : '';
+            
+            const isEdit = !!existingData;
+            
+            document.getElementById('modalTitle').textContent = isEdit ? `Edit ${type === 'super' ? 'Super' : 'App'} Admin` : `New ${type === 'super' ? 'Super' : 'App'} Admin`;
+            document.getElementById('modalSubtitle').textContent = isEdit ? 'Update account details and permissions.' : (type === 'super' ? 'Grant global administrative privileges.' : 'Assign admin rights to a specific environment.');
             document.getElementById('modalIcon').textContent = type === 'super' ? 'shield_person' : 'person_add';
             document.getElementById('appScopeField').classList.toggle('hidden', type !== 'app');
-            document.getElementById('submitBtn').textContent = type === 'super' ? 'Create Super Admin' : 'Create Admin';
+            document.getElementById('submitBtn').textContent = isEdit ? 'Save Changes' : `Create ${type === 'super' ? 'Super Admin' : 'Admin'}`;
+            
+            document.getElementById('passwordLabel').textContent = isEdit ? 'New Password' : 'Initial Password';
+            document.getElementById('passwordHint').classList.toggle('hidden', !isEdit);
+            document.getElementById('adminPassword').required = !isEdit;
+
+            if (isEdit) {
+                document.getElementById('adminName').value = existingData.name;
+                document.getElementById('adminEmail').value = existingData.email;
+                if (type === 'app' && existingData.web_app_id) {
+                    document.getElementById('adminWebAppId').value = existingData.web_app_id;
+                }
+            }
 
             modal.classList.remove('hidden');
             setTimeout(() => {
@@ -358,6 +398,12 @@ if ($appsResult) {
                 inner.classList.remove('scale-95');
                 inner.classList.add('scale-100');
             }, 10);
+        }
+
+        function editAdmin(type, id) {
+            const list = type === 'super' ? superAdminsList : appAdminsList;
+            const admin = list.find(a => a.id == id);
+            if (admin) openCreateModal(type, admin);
         }
 
         function closeModal() {
@@ -376,11 +422,21 @@ if ($appsResult) {
         async function handleFormSubmit(e) {
             e.preventDefault();
             const type = document.getElementById('adminType').value;
-            const action = type === 'super' ? 'create_super_admin' : 'create_app_admin';
+            const id = document.getElementById('adminId').value;
+            const isEdit = !!id;
+            
+            let action = '';
+            if (isEdit) {
+                action = type === 'super' ? 'update_super_admin' : 'update_app_admin';
+            } else {
+                action = type === 'super' ? 'create_super_admin' : 'create_app_admin';
+            }
+            
             const btn = document.getElementById('submitBtn');
             const originalText = btn.textContent;
 
             const payload = {
+                id: id,
                 name: document.getElementById('adminName').value,
                 email: document.getElementById('adminEmail').value,
                 password: document.getElementById('adminPassword').value,
@@ -395,7 +451,7 @@ if ($appsResult) {
 
             try {
                 const res = await fetch(`../StegaVault/api/super_management.php?action=${action}`, {
-                    method: 'POST',
+                    method: 'POST', // API supports POST for updates too
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
@@ -404,7 +460,7 @@ if ($appsResult) {
                     closeModal();
                     fetchAdmins();
                 } else {
-                    alert(data.error || 'Failed to create administrator');
+                    alert(data.error || 'Operation failed');
                 }
             } catch (err) {
                 alert('Connection error. Check console.');

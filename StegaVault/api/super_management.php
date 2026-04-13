@@ -86,6 +86,32 @@ if ($action === 'delete_super_admin' && $method === 'DELETE') {
     }
 }
 
+if ($action === 'update_super_admin' && ($method === 'POST' || $method === 'PUT')) {
+    $id = intval($input['id'] ?? 0);
+    $email = trim($input['email'] ?? '');
+    $name = trim($input['name'] ?? '');
+    $password = $input['password'] ?? '';
+
+    if ($id <= 0 || !$email || !$name) {
+        sendResponse(false, null, 'ID, Email, and Name are required', 400);
+    }
+
+    if ($password) {
+        $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+        $stmt = $db->prepare("UPDATE super_admins SET email = ?, name = ?, password_hash = ? WHERE id = ?");
+        $stmt->bind_param('sssi', $email, $name, $passwordHash, $id);
+    } else {
+        $stmt = $db->prepare("UPDATE super_admins SET email = ?, name = ? WHERE id = ?");
+        $stmt->bind_param('ssi', $email, $name, $id);
+    }
+
+    if ($stmt->execute()) {
+        sendResponse(true, ['message' => 'Super Admin updated successfully']);
+    } else {
+        sendResponse(false, null, 'Failed to update Super Admin', 500);
+    }
+}
+
 // ============================================
 // APP ADMIN MANAGEMENT (In 'users' table)
 // ============================================
@@ -136,6 +162,33 @@ if ($action === 'delete_app_admin' && $method === 'DELETE') {
         sendResponse(true, ['message' => 'App Admin deleted successfully']);
     } else {
         sendResponse(false, null, 'Failed to delete App Admin', 500);
+    }
+}
+
+if ($action === 'update_app_admin' && ($method === 'POST' || $method === 'PUT')) {
+    $id = intval($input['id'] ?? 0);
+    $email = trim($input['email'] ?? '');
+    $name = trim($input['name'] ?? '');
+    $password = $input['password'] ?? '';
+    $web_app_id = isset($input['web_app_id']) ? (empty($input['web_app_id']) ? null : intval($input['web_app_id'])) : null;
+
+    if ($id <= 0 || !$email || !$name) {
+        sendResponse(false, null, 'ID, Email, and Name are required', 400);
+    }
+
+    if ($password) {
+        $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+        $stmt = $db->prepare("UPDATE users SET email = ?, name = ?, password_hash = ?, web_app_id = ? WHERE id = ? AND role = 'admin'");
+        $stmt->bind_param('ssssi', $email, $name, $passwordHash, $web_app_id, $id);
+    } else {
+        $stmt = $db->prepare("UPDATE users SET email = ?, name = ?, web_app_id = ? WHERE id = ? AND role = 'admin'");
+        $stmt->bind_param('ssiii', $email, $name, $web_app_id, $id);
+    }
+
+    if ($stmt->execute()) {
+        sendResponse(true, ['message' => 'App Admin updated successfully']);
+    } else {
+        sendResponse(false, null, 'Failed to update App Admin', 500);
     }
 }
 
