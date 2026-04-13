@@ -349,7 +349,7 @@ if ($appsResult) {
                     <td class="px-6 py-5">
                         <div class="inline-flex items-center gap-2 px-2.5 py-1 bg-white/5 border border-white/10 rounded-full">
                             <span class="size-1.5 rounded-full bg-blue-500"></span>
-                            <span class="text-[10px] text-slate-300 font-bold uppercase tracking-widest">${webAppNameMap[a.web_app_id] || 'Global / Common'}</span>
+                            <span class="text-[10px] text-slate-300 font-bold uppercase tracking-widest">${webAppNameMap[a.web_app_id] || 'StegaVault'}</span>
                         </div>
                     </td>
                     <td class="px-6 py-5 text-right">
