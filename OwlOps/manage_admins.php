@@ -226,9 +226,10 @@ if ($appsResult) {
                 <div id="appScopeField" class="hidden space-y-2">
                     <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Application Scope</label>
                     <select id="adminWebAppId" class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
-                        <option value="">Global / No Specific App</option>
                         <?php foreach ($webApps as $app): ?>
-                            <option value="<?php echo $app['id']; ?>"><?php echo htmlspecialchars($app['name']); ?></option>
+                            <?php if (stripos($app['name'], 'stegavault') !== false): ?>
+                                <option value="<?php echo $app['id']; ?>"><?php echo htmlspecialchars($app['name']); ?></option>
+                            <?php endif; ?>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -238,7 +239,25 @@ if ($appsResult) {
                         <span id="passwordLabel">Initial Password</span>
                         <span id="passwordHint" class="hidden font-normal text-slate-600 lowercase tracking-normal">(Leave blank to keep current)</span>
                     </label>
-                    <input type="password" id="adminPassword" class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="••••••••••••" />
+                    <div class="relative group">
+                        <input type="password" id="adminPassword" class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="Min 12 characters" />
+                        <button type="button" onclick="togglePasswordVisibility('adminPassword')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                            <span class="material-symbols-outlined text-[20px]">visibility</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Confirm Password</label>
+                    <div class="relative group">
+                        <input type="password" id="adminConfirmPassword" class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="••••••••••••" />
+                        <button type="button" onclick="togglePasswordVisibility('adminConfirmPassword')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                            <span class="material-symbols-outlined text-[20px]">visibility</span>
+                        </button>
+                    </div>
+                    <p id="passwordRequirementText" class="text-[10px] text-slate-500 italic mt-2">
+                        Requires: 12+ chars, uppercase, lowercase, number, and special character.
+                    </p>
                 </div>
 
                 <div class="pt-4 flex gap-4">
@@ -416,7 +435,25 @@ if ($appsResult) {
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
                 document.getElementById('adminForm').reset();
+                // Reset password input types
+                document.getElementById('adminPassword').type = 'password';
+                document.getElementById('adminConfirmPassword').type = 'password';
+                document.querySelectorAll('.group span.material-symbols-outlined').forEach(s => {
+                    if (s.textContent === 'visibility_off') s.textContent = 'visibility';
+                });
             }, 300);
+        }
+
+        function togglePasswordVisibility(id) {
+            const input = document.getElementById(id);
+            const btn = event.currentTarget.querySelector('.material-symbols-outlined');
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = 'visibility_off';
+            } else {
+                input.type = 'password';
+                btn.textContent = 'visibility';
+            }
         }
 
         async function handleFormSubmit(e) {
@@ -448,6 +485,28 @@ if ($appsResult) {
 
             btn.disabled = true;
             btn.innerHTML = '<span class="animate-spin material-symbols-outlined">progress_activity</span>';
+
+            const password = document.getElementById('adminPassword').value;
+            const confirm = document.getElementById('adminConfirmPassword').value;
+
+            // Password Complexity Validation (only if password is not empty - password might be optional for edits)
+            if (password || !isEdit) {
+                if (password !== confirm) {
+                    alert('Passwords do not match.');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                    return;
+                }
+
+                // Regex: 12+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special
+                const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+                if (!complexityRegex.test(password)) {
+                    alert('Password does not meet complexity requirements:\n- Minimum 12 characters\n- Uppercase, lowercase, number, and special character required.');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                    return;
+                }
+            }
 
             try {
                 const res = await fetch(`../StegaVault/api/super_management.php?action=${action}`, {
