@@ -39,8 +39,10 @@ if ($appsResult) {
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Manage Administrators - OwlOps</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script>
         tailwind.config = {
@@ -67,7 +69,13 @@ if ($appsResult) {
             background-color: #000000;
         }
 
-        h1, h2, h3, h4, h5, h6, .font-display {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .font-display {
             font-family: 'Space Grotesk', sans-serif;
         }
 
@@ -90,15 +98,18 @@ if ($appsResult) {
 
             <nav class="flex flex-col gap-2 flex-1">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Systems</p>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="dashboard.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                    href="dashboard.php">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
                     <p class="text-sm font-medium">Control Center</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-white border border-white/10" href="manage_admins.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-white border border-white/10"
+                    href="manage_admins.php">
                     <span class="material-symbols-outlined text-[20px] text-primary">admin_panel_settings</span>
                     <p class="text-sm font-medium">Manage Admins</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="backup.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                    href="backup.php">
                     <span class="material-symbols-outlined text-[20px]">backup</span>
                     <p class="text-sm font-medium">Backup & Restore</p>
                 </a>
@@ -106,15 +117,18 @@ if ($appsResult) {
 
             <div class="pt-6 border-t border-white/5">
                 <div class="flex items-center gap-3 px-3 py-2">
-                    <div class="size-8 rounded-full bg-primary flex items-center justify-center text-black font-bold text-xs">
+                    <div
+                        class="size-8 rounded-full bg-primary flex items-center justify-center text-black font-bold text-xs">
                         <?php echo strtoupper(substr($user['name'], 0, 1)); ?>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-white text-xs font-bold truncate"><?php echo htmlspecialchars($user['name']); ?></p>
+                        <p class="text-white text-xs font-bold truncate"><?php echo htmlspecialchars($user['name']); ?>
+                        </p>
                         <p class="text-slate-500 text-[10px] truncate">Super Admin</p>
                     </div>
                 </div>
-                <button onclick="logout()" class="w-full mt-4 flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors">
+                <button onclick="logout()"
+                    class="w-full mt-4 flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors">
                     <span class="material-symbols-outlined text-[20px]">logout</span>
                     <p class="text-sm font-medium">Sign Out</p>
                 </button>
@@ -134,13 +148,16 @@ if ($appsResult) {
             <header class="flex items-end justify-between">
                 <div>
                     <h2 class="text-4xl font-bold text-white font-display">Administrator Management</h2>
-                    <p class="text-slate-400 mt-2">Oversee global system owners and application-level administrators.</p>
+                    <p class="text-slate-400 mt-2">Oversee global system owners and application-level administrators.
+                    </p>
                 </div>
                 <div class="flex gap-4">
-                    <button onclick="openCreateModal('super')" class="px-5 py-2.5 bg-white hover:bg-slate-200 text-black rounded-xl font-bold text-sm transition-all shadow-lg flex items-center gap-2">
+                    <button onclick="openCreateModal('super')"
+                        class="px-5 py-2.5 bg-white hover:bg-slate-200 text-black rounded-xl font-bold text-sm transition-all shadow-lg flex items-center gap-2">
                         <span class="material-symbols-outlined text-lg">shield_person</span> New Super Admin
                     </button>
-                    <button onclick="openCreateModal('app')" class="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl font-bold text-sm transition-all flex items-center gap-2">
+                    <button onclick="openCreateModal('app')"
+                        class="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl font-bold text-sm transition-all flex items-center gap-2">
                         <span class="material-symbols-outlined text-lg">person_add</span> New App Admin
                     </button>
                 </div>
@@ -148,8 +165,12 @@ if ($appsResult) {
 
             <!-- Tabs -->
             <div class="flex border-b border-white/5 gap-8">
-                <button onclick="switchTab('super')" id="tab-super" class="pb-4 px-2 text-sm font-bold border-b-2 border-primary text-white transition-all">Super Admins</button>
-                <button onclick="switchTab('app')" id="tab-app" class="pb-4 px-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-white transition-all">App Administrators</button>
+                <button onclick="switchTab('super')" id="tab-super"
+                    class="pb-4 px-2 text-sm font-bold border-b-2 border-primary text-white transition-all">Super
+                    Admins</button>
+                <button onclick="switchTab('app')" id="tab-app"
+                    class="pb-4 px-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-white transition-all">App
+                    Administrators</button>
             </div>
 
             <!-- Content Area -->
@@ -158,10 +179,15 @@ if ($appsResult) {
                     <table class="w-full text-left">
                         <thead>
                             <tr class="bg-white/5 border-b border-white/10">
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Name</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Added Date</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                    Name</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                    Email</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                    Added Date</th>
+                                <th
+                                    class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">
+                                    Actions</th>
                             </tr>
                         </thead>
                         <tbody id="superAdminTable" class="divide-y divide-white/5">
@@ -176,10 +202,15 @@ if ($appsResult) {
                     <table class="w-full text-left">
                         <thead>
                             <tr class="bg-white/5 border-b border-white/10">
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Name</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Scope / App</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                    Name</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                    Email</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                    Scope / App</th>
+                                <th
+                                    class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">
+                                    Actions</th>
                             </tr>
                         </thead>
                         <tbody id="appAdminTable" class="divide-y divide-white/5">
@@ -192,12 +223,15 @@ if ($appsResult) {
     </main>
 
     <!-- Create/Edit Modal -->
-    <div id="adminModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
-        <div class="bg-slate-card border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-300">
+    <div id="adminModal"
+        class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div
+            class="bg-slate-card border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-300">
             <div class="p-8 border-b border-white/5 flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <div class="p-3 bg-primary/10 rounded-2xl">
-                        <span class="material-symbols-outlined text-primary text-2xl" id="modalIcon">shield_person</span>
+                        <span class="material-symbols-outlined text-primary text-2xl"
+                            id="modalIcon">shield_person</span>
                     </div>
                     <div>
                         <h3 class="text-2xl font-bold text-white font-display" id="modalTitle">New Super Admin</h3>
@@ -212,20 +246,27 @@ if ($appsResult) {
             <form id="adminForm" onsubmit="handleFormSubmit(event)" class="p-8 space-y-6">
                 <input type="hidden" id="adminType" name="type" value="super">
                 <input type="hidden" id="adminId" name="id" value="">
-                
+
                 <div class="space-y-2">
                     <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Full Name</label>
-                    <input type="text" id="adminName" required class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="e.g. Alexander Pierce" />
+                    <input type="text" id="adminName" required
+                        class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
+                        placeholder="e.g. Alexander Pierce" />
                 </div>
 
                 <div class="space-y-2">
-                    <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Email Address</label>
-                    <input type="email" id="adminEmail" required class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="name@company.com" />
+                    <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Email
+                        Address</label>
+                    <input type="email" id="adminEmail" required
+                        class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
+                        placeholder="name@company.com" />
                 </div>
 
                 <div id="appScopeField" class="hidden space-y-2">
-                    <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Application Scope</label>
-                    <select id="adminWebAppId" class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
+                    <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Application
+                        Scope</label>
+                    <select id="adminWebAppId"
+                        class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
                         <?php foreach ($webApps as $app): ?>
                             <?php if (stripos($app['name'], 'stegavault') !== false): ?>
                                 <option value="<?php echo $app['id']; ?>"><?php echo htmlspecialchars($app['name']); ?></option>
@@ -237,21 +278,30 @@ if ($appsResult) {
                 <div class="space-y-2">
                     <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">
                         <span id="passwordLabel">Initial Password</span>
-                        <span id="passwordHint" class="hidden font-normal text-slate-600 lowercase tracking-normal">(Leave blank to keep current)</span>
+                        <span id="passwordHint"
+                            class="hidden font-normal text-slate-600 lowercase tracking-normal">(Leave blank to keep
+                            current)</span>
                     </label>
                     <div class="relative group">
-                        <input type="password" id="adminPassword" class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="Min 12 characters" />
-                        <button type="button" onclick="togglePasswordVisibility('adminPassword')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                        <input type="password" id="adminPassword"
+                            class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
+                            placeholder="Min 12 characters" />
+                        <button type="button" onclick="togglePasswordVisibility('adminPassword')"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
                             <span class="material-symbols-outlined text-[20px]">visibility</span>
                         </button>
                     </div>
                 </div>
 
                 <div class="space-y-2">
-                    <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Confirm Password</label>
+                    <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Confirm
+                        Password</label>
                     <div class="relative group">
-                        <input type="password" id="adminConfirmPassword" class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="••••••••••••" />
-                        <button type="button" onclick="togglePasswordVisibility('adminConfirmPassword')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                        <input type="password" id="adminConfirmPassword"
+                            class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
+                            placeholder="••••••••••••" />
+                        <button type="button" onclick="togglePasswordVisibility('adminConfirmPassword')"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
                             <span class="material-symbols-outlined text-[20px]">visibility</span>
                         </button>
                     </div>
@@ -261,8 +311,11 @@ if ($appsResult) {
                 </div>
 
                 <div class="pt-4 flex gap-4">
-                    <button type="button" onclick="closeModal()" class="flex-1 px-5 py-4 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm">Cancel</button>
-                    <button type="submit" id="submitBtn" class="flex-1 px-5 py-4 bg-primary hover:bg-slate-200 text-black rounded-xl font-bold transition-all shadow-lg text-sm">Create Admin</button>
+                    <button type="button" onclick="closeModal()"
+                        class="flex-1 px-5 py-4 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm">Cancel</button>
+                    <button type="submit" id="submitBtn"
+                        class="flex-1 px-5 py-4 bg-primary hover:bg-slate-200 text-black rounded-xl font-bold transition-all shadow-lg text-sm">Create
+                        Admin</button>
                 </div>
             </form>
         </div>
@@ -278,7 +331,7 @@ if ($appsResult) {
             try {
                 const superRes = await fetch('../StegaVault/api/super_management.php?action=list_super_admins');
                 const appRes = await fetch('../StegaVault/api/super_management.php?action=list_app_admins');
-                
+
                 const superData = await superRes.json();
                 const appData = await appRes.json();
 
@@ -349,7 +402,7 @@ if ($appsResult) {
                     <td class="px-6 py-5">
                         <div class="inline-flex items-center gap-2 px-2.5 py-1 bg-white/5 border border-white/10 rounded-full">
                             <span class="size-1.5 rounded-full bg-blue-500"></span>
-                            <span class="text-[10px] text-slate-300 font-bold uppercase tracking-widest">${webAppNameMap[a.web_app_id] || 'StegaVault'}</span>
+                            <span class="text-[10px] text-slate-300 font-bold uppercase tracking-widest">${webAppNameMap[a.web_app_id] || 'Global / Common'}</span>
                         </div>
                     </td>
                     <td class="px-6 py-5 text-right">
@@ -385,19 +438,19 @@ if ($appsResult) {
             const modal = document.getElementById('adminModal');
             const inner = modal.children[0];
             const form = document.getElementById('adminForm');
-            
+
             form.reset();
             document.getElementById('adminType').value = type;
             document.getElementById('adminId').value = existingData ? existingData.id : '';
-            
+
             const isEdit = !!existingData;
-            
+
             document.getElementById('modalTitle').textContent = isEdit ? `Edit ${type === 'super' ? 'Super' : 'App'} Admin` : `New ${type === 'super' ? 'Super' : 'App'} Admin`;
             document.getElementById('modalSubtitle').textContent = isEdit ? 'Update account details and permissions.' : (type === 'super' ? 'Grant global administrative privileges.' : 'Assign admin rights to a specific environment.');
             document.getElementById('modalIcon').textContent = type === 'super' ? 'shield_person' : 'person_add';
             document.getElementById('appScopeField').classList.toggle('hidden', type !== 'app');
             document.getElementById('submitBtn').textContent = isEdit ? 'Save Changes' : `Create ${type === 'super' ? 'Super Admin' : 'Admin'}`;
-            
+
             document.getElementById('passwordLabel').textContent = isEdit ? 'New Password' : 'Initial Password';
             document.getElementById('passwordHint').classList.toggle('hidden', !isEdit);
             document.getElementById('adminPassword').required = !isEdit;
@@ -461,14 +514,14 @@ if ($appsResult) {
             const type = document.getElementById('adminType').value;
             const id = document.getElementById('adminId').value;
             const isEdit = !!id;
-            
+
             let action = '';
             if (isEdit) {
                 action = type === 'super' ? 'update_super_admin' : 'update_app_admin';
             } else {
                 action = type === 'super' ? 'create_super_admin' : 'create_app_admin';
             }
-            
+
             const btn = document.getElementById('submitBtn');
             const originalText = btn.textContent;
 
@@ -531,7 +584,7 @@ if ($appsResult) {
 
         async function deleteAdmin(type, id) {
             if (!confirm(`Are you sure you want to remove this ${type} administrator? This action is permanent.`)) return;
-            
+
             const action = type === 'super' ? 'delete_super_admin' : 'delete_app_admin';
             try {
                 const res = await fetch(`../StegaVault/api/super_management.php?action=${action}`, {
