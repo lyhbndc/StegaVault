@@ -206,8 +206,7 @@ if ($appsResult) {
                                     Name</th>
                                 <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                     Email</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    Scope / App</th>
+
                                 <th
                                     class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">
                                     Actions</th>
@@ -399,12 +398,7 @@ if ($appsResult) {
                     <td class="px-6 py-5">
                         <p class="text-slate-400 text-xs font-mono">${a.email}</p>
                     </td>
-                    <td class="px-6 py-5">
-                        <div class="inline-flex items-center gap-2 px-2.5 py-1 bg-white/5 border border-white/10 rounded-full">
-                            <span class="size-1.5 rounded-full bg-blue-500"></span>
-                            <span class="text-[10px] text-slate-300 font-bold uppercase tracking-widest">${webAppNameMap[a.web_app_id] || 'Global / Common'}</span>
-                        </div>
-                    </td>
+
                     <td class="px-6 py-5 text-right">
                         <div class="flex items-center justify-end gap-2">
                             <button onclick="editAdmin('app', ${a.id})" class="p-2 text-slate-600 hover:text-white transition-colors">
@@ -417,7 +411,7 @@ if ($appsResult) {
                     </td>
                 </tr>
             `).join('') : `
-                <tr><td colspan="4" class="px-6 py-12 text-center text-slate-600">No application administrators found.</td></tr>
+                <tr><td colspan="3" class="px-6 py-12 text-center text-slate-600">No application administrators found.</td></tr>
             `;
         }
 
