@@ -89,8 +89,8 @@ while ($row = $result->fetch_assoc()) {
         <div class="p-6 flex flex-col h-full gap-8">
             <div class="flex items-start justify-between">
                 <div>
-                    <h1 class="text-white text-base font-bold leading-tight font-display">Environment Admin</h1>
-                    <p class="text-primary text-xs font-semibold mt-1">Super Admin Mode</p>
+                    <h1 class="text-white text-base font-bold leading-tight font-display">OwlOps</h1>
+                    <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
                 </div>
             </div>
 
@@ -106,21 +106,29 @@ while ($row = $result->fetch_assoc()) {
             </div>
 
             <nav class="flex flex-col gap-2 flex-1 relative z-10">
-                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Management</p>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="app_dashboard.php">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Systems</p>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="dashboard.php">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
-                    <p class="text-sm font-medium">Overview</p>
+                    <p class="text-sm font-medium">Control Center</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/20 text-white border border-primary/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]" href="admins.php">
-                    <span class="material-symbols-outlined text-[20px] text-primary">admin_panel_settings</span>
-                    <p class="text-sm font-medium">App Admins</p>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="manage_admins.php">
+                    <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                    <p class="text-sm font-medium">Manage Admins</p>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="backup.php">
+                    <span class="material-symbols-outlined text-[20px]">backup</span>
+                    <p class="text-sm font-medium">Backup & Restore</p>
                 </a>
 
                 <div class="mt-8">
-                    <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Global</p>
-                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="dashboard.php">
-                        <span class="material-symbols-outlined text-[20px]">arrow_back</span>
-                        <p class="text-sm font-medium">Exit Environment</p>
+                    <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Environment</p>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="app_dashboard.php">
+                        <span class="material-symbols-outlined text-[20px]">monitoring</span>
+                        <p class="text-sm font-medium">App Overview</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/20 text-white border border-primary/30" href="admins.php">
+                        <span class="material-symbols-outlined text-[20px] text-primary">group</span>
+                        <p class="text-sm font-medium">App Admins</p>
                     </a>
                 </div>
             </nav>
