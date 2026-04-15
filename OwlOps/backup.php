@@ -303,7 +303,23 @@ $user = [
                 <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-sm text-red-300">
                     <strong>Selected:</strong> <span id="restoreSelectedLabel" class="font-mono"></span>
                 </div>
-                <p class="text-xs text-slate-400">Type <strong class="text-white">RESTORE</strong> to confirm:</p>
+
+                <!-- Full Restore toggle — only shown for database backups -->
+                <div id="fullRestoreToggleWrap" class="hidden">
+                    <label class="flex items-start gap-3 cursor-pointer p-3 rounded-xl border border-orange-500/20 bg-orange-500/5 hover:bg-orange-500/10 transition-all">
+                        <input id="fullRestoreCheckbox" type="checkbox" class="mt-0.5 accent-orange-500 w-4 h-4 flex-shrink-0" onchange="onFullRestoreToggle()" />
+                        <div>
+                            <p class="text-sm font-semibold text-orange-400">Full Restore (wipe &amp; reload)</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Truncates ALL tables first, then replays the backup. Existing data will be permanently deleted. Use for a clean slate.</p>
+                        </div>
+                    </label>
+                </div>
+
+                <div id="fullRestoreWarning" class="hidden bg-orange-500/10 border border-orange-500/40 rounded-xl p-3 text-xs text-orange-300">
+                    <strong>Warning:</strong> All current data will be wiped before the backup is loaded. This cannot be undone.
+                </div>
+
+                <p class="text-xs text-slate-400">Type <strong class="text-white" id="restoreConfirmWord">RESTORE</strong> to confirm:</p>
                 <input id="restoreConfirmInput" type="text" placeholder="RESTORE"
                     class="w-full px-4 py-3 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white placeholder:text-slate-600 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all" />
             </div>
@@ -641,12 +657,47 @@ $user = [
 
             const typeLabel = type === 'files' ? ' (Files)' : ' (Database)';
             document.getElementById('restoreSelectedLabel').textContent = label + typeLabel;
+
+            // Show Full Restore toggle only for database backups
+            const toggleWrap = document.getElementById('fullRestoreToggleWrap');
+            const checkbox   = document.getElementById('fullRestoreCheckbox');
+            if (type === 'database') {
+                toggleWrap.classList.remove('hidden');
+            } else {
+                toggleWrap.classList.add('hidden');
+                checkbox.checked = false;
+                document.getElementById('fullRestoreWarning').classList.add('hidden');
+                document.getElementById('restoreConfirmWord').textContent = 'RESTORE';
+                document.getElementById('restoreConfirmInput').placeholder = 'RESTORE';
+            }
+
             document.getElementById('restoreConfirmBox').classList.remove('hidden');
+            document.getElementById('restoreConfirmInput').value = '';
             document.getElementById('restoreConfirmInput').focus();
+        }
+
+        function onFullRestoreToggle() {
+            const checked = document.getElementById('fullRestoreCheckbox').checked;
+            document.getElementById('fullRestoreWarning').classList.toggle('hidden', !checked);
+            const word = checked ? 'FULL RESTORE' : 'RESTORE';
+            document.getElementById('restoreConfirmWord').textContent = word;
+            document.getElementById('restoreConfirmInput').placeholder = word;
+            document.getElementById('restoreConfirmInput').value = '';
         }
 
         function closeRestoreModal() {
             document.getElementById('restoreModal').classList.add('hidden');
+            // Reset state
+            selectedRestoreFile = null;
+            selectedRestoreType = 'database';
+            document.getElementById('restoreConfirmBox').classList.add('hidden');
+            document.getElementById('restoreConfirmInput').value = '';
+            document.getElementById('fullRestoreCheckbox').checked = false;
+            document.getElementById('fullRestoreToggleWrap').classList.add('hidden');
+            document.getElementById('fullRestoreWarning').classList.add('hidden');
+            document.getElementById('restoreConfirmWord').textContent = 'RESTORE';
+            document.getElementById('restoreConfirmInput').placeholder = 'RESTORE';
+            setRestoreMsg('', '');
         }
 
         async function executeRestore() {
@@ -654,9 +705,14 @@ $user = [
                 setRestoreMsg('error', 'Please select a backup first.');
                 return;
             }
-            const confirmVal = document.getElementById('restoreConfirmInput').value.trim();
-            if (confirmVal !== 'RESTORE') {
-                setRestoreMsg('error', 'Type RESTORE (uppercase) to confirm.');
+
+            const isFullRestore = selectedRestoreType === 'database'
+                && document.getElementById('fullRestoreCheckbox').checked;
+            const requiredWord  = isFullRestore ? 'FULL RESTORE' : 'RESTORE';
+            const confirmVal    = document.getElementById('restoreConfirmInput').value.trim();
+
+            if (confirmVal !== requiredWord) {
+                setRestoreMsg('error', `Type ${requiredWord} (uppercase) to confirm.`);
                 return;
             }
 
@@ -665,7 +721,14 @@ $user = [
             btn.textContent = 'Restoring...';
             setRestoreMsg('', '');
 
-            const apiAction = selectedRestoreType === 'files' ? 'restore_files' : 'restore';
+            let apiAction;
+            if (selectedRestoreType === 'files') {
+                apiAction = 'restore_files';
+            } else if (isFullRestore) {
+                apiAction = 'full_restore';
+            } else {
+                apiAction = 'restore';
+            }
 
             try {
                 const res  = await fetch(`${API}?action=${apiAction}`, {
@@ -676,11 +739,16 @@ $user = [
                 const data = await res.json();
 
                 if (data.success) {
-                    const detail = selectedRestoreType === 'files'
-                        ? 'Files restored to uploads/ folder.'
-                        : `Database restored. ${data.data.statements} statements executed.`;
+                    let detail;
+                    if (selectedRestoreType === 'files') {
+                        detail = 'Files restored to uploads/ folder.';
+                    } else if (isFullRestore) {
+                        detail = `Full restore complete. ${data.data.tables} tables wiped & ${data.data.statements} statements executed.`;
+                    } else {
+                        detail = `Database restored. ${data.data.statements} statements executed.`;
+                    }
                     setRestoreMsg('success', detail);
-                    setTimeout(closeRestoreModal, 3000);
+                    setTimeout(closeRestoreModal, 3500);
                 } else {
                     setRestoreMsg('error', 'Restore failed: ' + data.error);
                 }

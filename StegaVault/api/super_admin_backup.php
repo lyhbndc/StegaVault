@@ -269,38 +269,70 @@ if ($method === 'POST' && $action === 'create_files') {
             sendResponse(false, null, 'Uploads directory not found at: ' . UPLOADS_DIR, 500);
         }
 
-        set_time_limit(300); // large uploads folders can take a while
+        set_time_limit(300);
 
         $timestamp   = date('Ymd_His');
         $backupId    = 'SV-FILES-' . date('Ymd-Hi') . '-' . strtolower(substr(bin2hex(random_bytes(2)), 0, 4));
         $zipFilename = 'files_' . $timestamp . '.zip';
         $zipFilepath = BACKUP_DIR . $zipFilename;
 
-        $zip = new ZipArchive();
-        if ($zip->open($zipFilepath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            sendResponse(false, null, 'Could not create ZIP file at: ' . $zipFilepath, 500);
-        }
-
         $fileCount = 0;
-        $iterator  = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(UPLOADS_DIR, RecursiveDirectoryIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::LEAVES_ONLY
-        );
 
-        foreach ($iterator as $file) {
-            if (!$file->isReadable()) continue;
+        if (class_exists('ZipArchive')) {
+            // ── Method 1: PHP ZipArchive ─────────────────────
+            $zip = new ZipArchive();
+            if ($zip->open($zipFilepath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+                sendResponse(false, null, 'Could not create ZIP file at: ' . $zipFilepath, 500);
+            }
 
-            $realPath     = $file->getRealPath();
-            $relativePath = 'uploads/' . ltrim(substr($realPath, strlen(UPLOADS_DIR)), '/\\');
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator(UPLOADS_DIR, RecursiveDirectoryIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::LEAVES_ONLY
+            );
+            foreach ($iterator as $file) {
+                if (!$file->isReadable()) continue;
+                $realPath     = $file->getRealPath();
+                $relativePath = 'uploads/' . ltrim(substr($realPath, strlen(UPLOADS_DIR)), '/\\');
+                $zip->addFile($realPath, $relativePath);
+                $fileCount++;
+            }
+            $zip->close();
 
-            $zip->addFile($realPath, $relativePath);
-            $fileCount++;
+        } elseif (function_exists('exec')) {
+            // ── Method 2: shell zip command ──────────────────
+            $uploadsParent = dirname(UPLOADS_DIR);
+            $uploadsFolder = basename(rtrim(UPLOADS_DIR, '/\\'));
+            $cmd = 'cd ' . escapeshellarg($uploadsParent)
+                . ' && zip -r ' . escapeshellarg($zipFilepath)
+                . ' ' . escapeshellarg($uploadsFolder)
+                . ' 2>&1';
+            exec($cmd, $cmdOutput, $returnCode);
+
+            if ($returnCode !== 0) {
+                sendResponse(false, null,
+                    'zip command failed (exit ' . $returnCode . '). '
+                    . 'Install php-zip: sudo apt-get install php-zip && sudo systemctl restart php8.x-fpm (replace 8.x with your PHP version). '
+                    . 'Output: ' . implode(' ', $cmdOutput),
+                    500
+                );
+            }
+
+            // Count files for metadata
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator(UPLOADS_DIR, RecursiveDirectoryIterator::SKIP_DOTS)
+            );
+            foreach ($iterator as $file) { if ($file->isFile()) $fileCount++; }
+
+        } else {
+            sendResponse(false, null,
+                'Neither ZipArchive nor exec() is available. '
+                . 'Run: sudo apt-get install php-zip && sudo systemctl restart php8.x-fpm (replace 8.x with your PHP version)',
+                500
+            );
         }
-
-        $zip->close();
 
         if (!file_exists($zipFilepath)) {
-            sendResponse(false, null, 'ZIP file was not created. Check PHP permissions on the uploads folder.', 500);
+            sendResponse(false, null, 'ZIP file was not created. Check server permissions.', 500);
         }
 
         $filesize = filesize($zipFilepath);
@@ -488,19 +520,33 @@ if ($method === 'POST' && $action === 'restore_files') {
     $filepath = BACKUP_DIR . $filename;
     if (!file_exists($filepath)) sendResponse(false, null, 'Backup file not found', 404);
 
-    if (!class_exists('ZipArchive')) {
-        sendResponse(false, null, 'ZipArchive PHP extension is not enabled on this server.', 500);
-    }
-
-    $zip = new ZipArchive();
-    if ($zip->open($filepath) !== true) {
-        sendResponse(false, null, 'Cannot open ZIP archive', 500);
-    }
-
-    // Extract to parent of uploads/ so the 'uploads/' prefix in the zip lands correctly
     $extractTo = dirname(UPLOADS_DIR);
-    $zip->extractTo($extractTo);
-    $zip->close();
+
+    if (class_exists('ZipArchive')) {
+        $zip = new ZipArchive();
+        if ($zip->open($filepath) !== true) {
+            sendResponse(false, null, 'Cannot open ZIP archive', 500);
+        }
+        $zip->extractTo($extractTo);
+        $zip->close();
+
+    } elseif (function_exists('exec')) {
+        $cmd = 'unzip -o ' . escapeshellarg($filepath) . ' -d ' . escapeshellarg($extractTo) . ' 2>&1';
+        exec($cmd, $cmdOutput, $returnCode);
+        if ($returnCode !== 0) {
+            sendResponse(false, null,
+                'unzip failed. Run: sudo apt-get install php-zip && sudo systemctl restart php8.x-fpm (replace 8.x with your PHP version). '
+                . 'Output: ' . implode(' ', $cmdOutput),
+                500
+            );
+        }
+    } else {
+        sendResponse(false, null,
+            'Neither ZipArchive nor exec() is available. '
+            . 'Run: sudo apt-get install php-zip && sudo systemctl restart php8.x-fpm (replace 8.x with your PHP version)',
+            500
+        );
+    }
 
     SuperAdminLogger::log('backup_files_restored', 'backup', ['filename' => $filename]);
 
@@ -508,6 +554,92 @@ if ($method === 'POST' && $action === 'restore_files') {
         'message'  => 'Files restored successfully',
         'filename' => $filename,
     ]);
+}
+
+// ─────────────────────────────────────────────
+// FULL RESTORE (truncate all tables first)
+// ─────────────────────────────────────────────
+if ($method === 'POST' && $action === 'full_restore') {
+    $input    = json_decode(file_get_contents('php://input'), true) ?? [];
+    $filename = basename($input['filename'] ?? '');
+
+    if (empty($filename)) sendResponse(false, null, 'No filename specified', 400);
+    if (!str_ends_with($filename, '.sql')) sendResponse(false, null, 'Only .sql backups can be fully restored', 400);
+
+    $filepath = BACKUP_DIR . $filename;
+    if (!file_exists($filepath)) sendResponse(false, null, 'Backup file not found', 404);
+
+    try {
+        $pdo = $db->getConnection();
+
+        // 1. Discover all public tables to truncate
+        $tablesStmt = $pdo->query(
+            "SELECT tablename FROM pg_catalog.pg_tables
+             WHERE schemaname = 'public'
+             ORDER BY tablename"
+        );
+        $tables = $tablesStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (empty($tables)) {
+            sendResponse(false, null, 'No tables found in public schema', 500);
+        }
+
+        // 2. Parse INSERT statements from backup file
+        $sql        = file_get_contents($filepath);
+        $lines      = explode("\n", $sql);
+        $statements = [];
+        $current    = '';
+
+        foreach ($lines as $line) {
+            $trimmed = trim($line);
+            if ($trimmed === '' || strpos($trimmed, '--') === 0) continue;
+
+            $current .= ' ' . $trimmed;
+
+            if (substr(rtrim($current), -1) === ';') {
+                $stmt = trim($current);
+                if (!in_array(strtoupper($stmt), ['BEGIN;', 'COMMIT;', 'ROLLBACK;'])) {
+                    $statements[] = $stmt;
+                }
+                $current = '';
+            }
+        }
+
+        $pdo->beginTransaction();
+
+        // 3. Truncate all public tables (cascade to handle FK constraints)
+        $quotedTables = array_map(fn($t) => '"' . $t . '"', $tables);
+        $truncateSql  = 'TRUNCATE TABLE ' . implode(', ', $quotedTables) . ' RESTART IDENTITY CASCADE';
+        $pdo->exec($truncateSql);
+
+        // 4. Replay all INSERT statements
+        $executed = 0;
+        foreach ($statements as $stmt) {
+            $pdo->exec($stmt);
+            $executed++;
+        }
+
+        $pdo->commit();
+
+        SuperAdminLogger::log('backup_db_full_restored', 'backup', [
+            'filename'   => $filename,
+            'tables'     => count($tables),
+            'statements' => $executed,
+        ]);
+
+        sendResponse(true, [
+            'message'    => 'Full restore complete. All tables were wiped and reloaded.',
+            'filename'   => $filename,
+            'tables'     => count($tables),
+            'statements' => $executed,
+        ]);
+
+    } catch (Exception $e) {
+        if (isset($pdo) && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        sendResponse(false, null, 'Full restore failed: ' . $e->getMessage(), 500);
+    }
 }
 
 // ─────────────────────────────────────────────
