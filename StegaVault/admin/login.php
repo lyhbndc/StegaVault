@@ -256,8 +256,8 @@ if (isset($_SESSION['user_id'])) {
         class="relative z-10 w-full px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-white/5 text-[12px] text-slate-500">
         <p>© <?php echo date('Y'); ?> Peanut Gallery Media Inc. All rights reserved.</p>
         <div class="flex items-center gap-6">
-            <a href="../privacy-policy.php" target="_blank" class="hover:text-primary transition-colors">Privacy Policy</a>
-            <a href="../terms-of-service.php" target="_blank" class="hover:text-primary transition-colors">Terms of Service</a>
+            <a href="../privacy-policy.php" class="hover:text-primary transition-colors">Privacy Policy</a>
+            <a href="../terms-of-service.php" class="hover:text-primary transition-colors">Terms of Service</a>
         </div>
     </footer>
 
