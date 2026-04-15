@@ -153,8 +153,12 @@ if (isset($_SESSION['user_id'])) {
     </main>
 
     <!-- Footer -->
-    <footer class="relative z-10 w-full px-6 py-8 flex items-center justify-center border-t border-white/5 text-[12px] text-slate-500">
+    <footer class="relative z-10 w-full px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-white/5 text-[12px] text-slate-500">
         <p>© <?php echo date('Y'); ?> StegaVault. Global Administration System.</p>
+        <div class="flex items-center gap-6">
+            <a href="../StegaVault/admin/privacy-policy.php" target="_blank" class="hover:text-white transition-colors">Privacy Policy</a>
+            <a href="../StegaVault/admin/terms-of-service.php" target="_blank" class="hover:text-white transition-colors">Terms of Service</a>
+        </div>
     </footer>
 
     <script>
