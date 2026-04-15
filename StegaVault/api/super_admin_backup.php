@@ -20,6 +20,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'super_admin') {
 }
 
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/SuperAdminLogger.php';
 
 $action = $_GET['action'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
@@ -33,6 +34,9 @@ define('BACKUP_META', BACKUP_DIR . 'backups_meta.json');
 if (!is_dir(BACKUP_DIR)) {
     @mkdir(BACKUP_DIR, 0755, true);
 }
+
+// Uploads directory to back up
+define('UPLOADS_DIR', dirname(__DIR__) . '/uploads/');
 
 // Verify the directory is actually writable before doing anything
 if (!is_writable(BACKUP_DIR)) {
@@ -229,6 +233,14 @@ if ($method === 'POST' && $action === 'create') {
         $meta = array_slice($meta, 0, 30);
         saveMeta($meta);
 
+        SuperAdminLogger::log('backup_db_created', 'backup', [
+            'backup_id' => $backupId,
+            'filename'  => $dbFilename,
+            'tables'    => count($tables),
+            'rows'      => $totalRows,
+            'size'      => formatBytes($filesize),
+        ]);
+
         sendResponse(true, [
             'backup_id'  => $backupId,
             'filename'   => $dbFilename,
@@ -241,6 +253,90 @@ if ($method === 'POST' && $action === 'create') {
 
     } catch (Exception $e) {
         sendResponse(false, null, 'Backup failed: ' . $e->getMessage(), 500);
+    }
+}
+
+// ─────────────────────────────────────────────
+// CREATE FILES BACKUP (uploads/ folder → .zip)
+// ─────────────────────────────────────────────
+if ($method === 'POST' && $action === 'create_files') {
+    try {
+        if (!class_exists('ZipArchive')) {
+            sendResponse(false, null, 'ZipArchive PHP extension is not enabled on this server.', 500);
+        }
+
+        if (!is_dir(UPLOADS_DIR)) {
+            sendResponse(false, null, 'Uploads directory not found at: ' . UPLOADS_DIR, 500);
+        }
+
+        set_time_limit(300); // large uploads folders can take a while
+
+        $timestamp   = date('Ymd_His');
+        $backupId    = 'SV-FILES-' . date('Ymd-Hi') . '-' . strtolower(substr(bin2hex(random_bytes(2)), 0, 4));
+        $zipFilename = 'files_' . $timestamp . '.zip';
+        $zipFilepath = BACKUP_DIR . $zipFilename;
+
+        $zip = new ZipArchive();
+        if ($zip->open($zipFilepath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            sendResponse(false, null, 'Could not create ZIP file at: ' . $zipFilepath, 500);
+        }
+
+        $fileCount = 0;
+        $iterator  = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(UPLOADS_DIR, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
+        foreach ($iterator as $file) {
+            if (!$file->isReadable()) continue;
+
+            $realPath     = $file->getRealPath();
+            $relativePath = 'uploads/' . ltrim(substr($realPath, strlen(UPLOADS_DIR)), '/\\');
+
+            $zip->addFile($realPath, $relativePath);
+            $fileCount++;
+        }
+
+        $zip->close();
+
+        if (!file_exists($zipFilepath)) {
+            sendResponse(false, null, 'ZIP file was not created. Check PHP permissions on the uploads folder.', 500);
+        }
+
+        $filesize = filesize($zipFilepath);
+
+        // Save metadata
+        $meta = loadMeta();
+        array_unshift($meta, [
+            'id'           => $backupId,
+            'filename'     => $zipFilename,
+            'type'         => 'files',
+            'size'         => $filesize,
+            'size_label'   => formatBytes($filesize),
+            'files'        => $fileCount,
+            'created_at'   => date('Y-m-d H:i:s'),
+            'created_by'   => $_SESSION['name'],
+        ]);
+        $meta = array_slice($meta, 0, 30);
+        saveMeta($meta);
+
+        SuperAdminLogger::log('backup_files_created', 'backup', [
+            'backup_id' => $backupId,
+            'filename'  => $zipFilename,
+            'files'     => $fileCount,
+            'size'      => formatBytes($filesize),
+        ]);
+
+        sendResponse(true, [
+            'backup_id' => $backupId,
+            'filename'  => $zipFilename,
+            'size'      => formatBytes($filesize),
+            'files'     => $fileCount,
+            'message'   => 'Files backup created successfully',
+        ]);
+
+    } catch (Exception $e) {
+        sendResponse(false, null, 'Files backup failed: ' . $e->getMessage(), 500);
     }
 }
 
@@ -270,8 +366,8 @@ if ($method === 'GET' && $action === 'download') {
         sendResponse(false, null, 'No file specified', 400);
     }
 
-    // Only allow .sql files from the backup directory
-    if (!preg_match('/^db_\d{8}_\d{6}\.sql$/', $filename)) {
+    // Only allow known backup file patterns
+    if (!preg_match('/^(db|files)_[\w\-]+\.(sql|zip)$/', $filename)) {
         header('Content-Type: application/json');
         sendResponse(false, null, 'Invalid filename', 400);
     }
@@ -308,6 +404,7 @@ if ($method === 'POST' && $action === 'delete') {
     $meta = array_values(array_filter($meta, fn($b) => $b['filename'] !== $filename));
     saveMeta($meta);
 
+    SuperAdminLogger::log('backup_deleted', 'backup', ['filename' => $filename]);
     sendResponse(true, ['message' => 'Backup deleted']);
 }
 
@@ -358,6 +455,11 @@ if ($method === 'POST' && $action === 'restore') {
 
         $pdo->commit();
 
+        SuperAdminLogger::log('backup_db_restored', 'backup', [
+            'filename'   => $filename,
+            'statements' => $executed,
+        ]);
+
         sendResponse(true, [
             'message'    => 'Database restored successfully',
             'statements' => $executed,
@@ -370,6 +472,67 @@ if ($method === 'POST' && $action === 'restore') {
         }
         sendResponse(false, null, 'Restore failed: ' . $e->getMessage(), 500);
     }
+}
+
+// ─────────────────────────────────────────────
+// RESTORE FILES BACKUP (.zip → uploads/)
+// ─────────────────────────────────────────────
+if ($method === 'POST' && $action === 'restore_files') {
+    $input    = json_decode(file_get_contents('php://input'), true) ?? [];
+    $filename = basename($input['filename'] ?? '');
+
+    if (empty($filename) || !str_ends_with($filename, '.zip')) {
+        sendResponse(false, null, 'Not a valid files backup', 400);
+    }
+
+    $filepath = BACKUP_DIR . $filename;
+    if (!file_exists($filepath)) sendResponse(false, null, 'Backup file not found', 404);
+
+    if (!class_exists('ZipArchive')) {
+        sendResponse(false, null, 'ZipArchive PHP extension is not enabled on this server.', 500);
+    }
+
+    $zip = new ZipArchive();
+    if ($zip->open($filepath) !== true) {
+        sendResponse(false, null, 'Cannot open ZIP archive', 500);
+    }
+
+    // Extract to parent of uploads/ so the 'uploads/' prefix in the zip lands correctly
+    $extractTo = dirname(UPLOADS_DIR);
+    $zip->extractTo($extractTo);
+    $zip->close();
+
+    SuperAdminLogger::log('backup_files_restored', 'backup', ['filename' => $filename]);
+
+    sendResponse(true, [
+        'message'  => 'Files restored successfully',
+        'filename' => $filename,
+    ]);
+}
+
+// ─────────────────────────────────────────────
+// UPLOADS FOLDER SIZE
+// ─────────────────────────────────────────────
+if ($method === 'GET' && $action === 'uploads_size') {
+    if (!is_dir(UPLOADS_DIR)) {
+        sendResponse(false, null, 'Uploads directory not found');
+    }
+    $totalSize  = 0;
+    $fileCount  = 0;
+    $iterator   = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator(UPLOADS_DIR, RecursiveDirectoryIterator::SKIP_DOTS)
+    );
+    foreach ($iterator as $file) {
+        if ($file->isFile()) {
+            $totalSize += $file->getSize();
+            $fileCount++;
+        }
+    }
+    sendResponse(true, [
+        'size'  => formatBytes($totalSize),
+        'bytes' => $totalSize,
+        'files' => $fileCount,
+    ]);
 }
 
 // ─────────────────────────────────────────────

@@ -58,6 +58,7 @@ $user = [
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
         .spinner { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .active-filter { background: rgba(255,255,255,0.12); color: white; }
     </style>
 </head>
 
@@ -83,6 +84,10 @@ $user = [
                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-white border border-white/10" href="backup.php">
                     <span class="material-symbols-outlined text-[20px] text-primary">backup</span>
                     <p class="text-sm font-medium">Backup &amp; Restore</p>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="audit-log.php">
+                    <span class="material-symbols-outlined text-[20px]">manage_search</span>
+                    <p class="text-sm font-medium">Audit Log</p>
                 </a>
                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="mfa-settings.php">
                     <span class="material-symbols-outlined text-[20px]">phonelink_lock</span>
@@ -167,42 +172,80 @@ $user = [
             <div id="globalMsg" class="hidden p-4 rounded-xl text-sm font-medium"></div>
 
             <!-- Primary Actions -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Backup Panel -->
-                <div class="bg-white/5 border border-white/10 rounded-3xl p-10 space-y-6 group hover:border-primary/30 transition-all duration-500 overflow-hidden relative">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Database Backup Panel -->
+                <div class="bg-white/5 border border-white/10 rounded-3xl p-8 space-y-5 group hover:border-primary/30 transition-all duration-500 overflow-hidden relative">
                     <div class="absolute -right-20 -top-20 size-64 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
                     <div class="relative z-10 space-y-4">
-                        <h3 class="text-2xl font-bold text-white font-display">Create Snapshot</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">Generate a complete SQL export of all Supabase tables, plus an optional Docker volume archive.</p>
-                        <ul class="space-y-2 pb-4 border-b border-white/5 text-xs text-slate-300">
-                            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-base">check_circle</span> All public schema tables (INSERT … ON CONFLICT)</li>
-                            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-base">check_circle</span> Safe upsert — won't break existing data</li>
-                            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-base">check_circle</span> Downloaded .sql file + stored server-side</li>
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-blue-500/10 rounded-xl">
+                                <span class="material-symbols-outlined text-blue-400">database</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-white font-display">Database Backup</h3>
+                        </div>
+                        <p class="text-slate-400 text-sm leading-relaxed">Export all Supabase tables as a SQL file. Safe upsert — won't overwrite unrelated rows.</p>
+                        <ul class="space-y-1.5 pb-4 border-b border-white/5 text-xs text-slate-300">
+                            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> All public schema tables</li>
+                            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> INSERT … ON CONFLICT upsert</li>
+                            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> Downloads as .sql file</li>
                         </ul>
-
                         <label class="flex items-center gap-3 cursor-pointer select-none">
                             <input type="checkbox" id="includeDocker" class="rounded bg-white/10 border-white/20 text-primary focus:ring-primary/50" />
-                            <span class="text-sm text-slate-300">Include Docker volume backup</span>
+                            <span class="text-xs text-slate-400">Include Docker volume backup</span>
                         </label>
+                        <button id="runBackupBtn" onclick="runBackup()" class="w-full py-3.5 bg-white hover:bg-slate-200 text-black rounded-2xl font-bold flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all text-sm">
+                            <span class="material-symbols-outlined text-xl" id="backupBtnIcon">backup</span>
+                            <span id="backupBtnText">Backup Database</span>
+                        </button>
+                    </div>
+                </div>
 
-                        <button id="runBackupBtn" onclick="runBackup()" class="w-full py-4 bg-white hover:bg-slate-200 text-black rounded-2xl font-bold flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all">
-                            <span class="material-symbols-outlined" id="backupBtnIcon">backup</span>
-                            <span id="backupBtnText">Run Manual Backup Now</span>
+                <!-- Files Backup Panel -->
+                <div class="bg-white/5 border border-white/10 rounded-3xl p-8 space-y-5 group hover:border-purple-500/30 transition-all duration-500 overflow-hidden relative">
+                    <div class="absolute -right-20 -top-20 size-64 bg-purple-500/5 rounded-full blur-3xl group-hover:bg-purple-500/10 transition-colors"></div>
+                    <div class="relative z-10 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-purple-500/10 rounded-xl">
+                                <span class="material-symbols-outlined text-purple-400">folder_zip</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-white font-display">Files Backup</h3>
+                        </div>
+                        <p class="text-slate-400 text-sm leading-relaxed">ZIP the entire <span class="font-mono text-slate-300">uploads/</span> folder — all encrypted files, PDFs, images, and watermarked assets.</p>
+                        <ul class="space-y-1.5 pb-4 border-b border-white/5 text-xs text-slate-300">
+                            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> Encrypted uploads + watermarked</li>
+                            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> All file types (PNG, PDF, MP4, XLSX)</li>
+                            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> Downloads as .zip archive</li>
+                        </ul>
+                        <div class="pb-4 border-b border-white/5">
+                            <p id="uploadsSize" class="text-xs text-slate-500">Calculating folder size...</p>
+                        </div>
+                        <button id="runFilesBackupBtn" onclick="runFilesBackup()" class="w-full py-3.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 hover:text-white border border-purple-500/30 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all text-sm">
+                            <span class="material-symbols-outlined text-xl" id="filesBtnIcon">folder_zip</span>
+                            <span id="filesBtnText">Backup Uploads Folder</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Restore Panel -->
-                <div class="bg-slate-card border border-white/10 rounded-3xl p-10 space-y-6 group hover:border-red-500/30 transition-all duration-500 overflow-hidden relative">
+                <div class="bg-slate-card border border-white/10 rounded-3xl p-8 space-y-5 group hover:border-red-500/30 transition-all duration-500 overflow-hidden relative">
                     <div class="absolute -right-20 -top-20 size-64 bg-red-500/5 rounded-full blur-3xl group-hover:bg-red-500/10 transition-colors"></div>
                     <div class="relative z-10 space-y-4">
-                        <h3 class="text-2xl font-bold text-red-400 font-display">Emergency Restore</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">Roll back to a previous snapshot. Existing rows are overwritten via upsert. <span class="text-red-400/80">Use with caution.</span></p>
-                        <div class="bg-red-500/5 border border-red-500/20 rounded-xl p-4 flex items-start gap-3">
-                            <span class="material-symbols-outlined text-red-400 mt-0.5 flex-shrink-0">warning</span>
-                            <p class="text-[10px] text-red-300/60 leading-relaxed uppercase tracking-widest font-bold">Rows matching the backup's primary keys will be overwritten. Rows not in the backup remain. A full wipe requires manual table truncation in Supabase first.</p>
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-red-500/10 rounded-xl">
+                                <span class="material-symbols-outlined text-red-400">restart_alt</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-red-400 font-display">Restore</h3>
                         </div>
-                        <button onclick="openRestoreModal()" class="w-full py-4 border border-red-500/30 hover:bg-red-500 text-red-400 hover:text-white rounded-2xl font-bold flex items-center justify-center gap-3 transition-all">
+                        <p class="text-slate-400 text-sm leading-relaxed">Roll back to a previous snapshot. Existing rows are overwritten via upsert. <span class="text-red-400/80">Use with caution.</span></p>
+                        <div class="bg-red-500/5 border border-red-500/20 rounded-xl p-3 flex items-start gap-3">
+                            <span class="material-symbols-outlined text-red-400 mt-0.5 flex-shrink-0 text-base">warning</span>
+                            <p class="text-[10px] text-red-300/60 leading-relaxed uppercase tracking-widest font-bold">Rows matching primary keys will be overwritten. A full wipe requires manual truncation in Supabase first.</p>
+                        </div>
+                        <div class="pb-4 border-b border-white/5 space-y-1">
+                            <p class="text-xs text-slate-500 flex items-center gap-1.5"><span class="material-symbols-outlined text-blue-400 text-sm">database</span> Database (.sql) — replays SQL via upsert</p>
+                            <p class="text-xs text-slate-500 flex items-center gap-1.5"><span class="material-symbols-outlined text-purple-400 text-sm">folder_zip</span> Files (.zip) — extracts back to uploads/</p>
+                        </div>
+                        <button onclick="openRestoreModal()" class="w-full py-3.5 border border-red-500/30 hover:bg-red-500 text-red-400 hover:text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all text-sm">
                             <span class="material-symbols-outlined">restart_alt</span> Open Restore Wizard
                         </button>
                     </div>
@@ -210,12 +253,18 @@ $user = [
             </div>
 
             <!-- Backup History -->
-            <div class="space-y-6">
+            <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-xl font-bold text-white font-display">Backup History</h3>
+                    <h3 class="text-xl font-bold text-white font-display">All Backups</h3>
                     <button onclick="loadBackups()" class="text-[10px] text-slate-500 hover:text-white font-bold uppercase tracking-widest flex items-center gap-1 transition-colors">
                         <span class="material-symbols-outlined text-sm">refresh</span> Refresh
                     </button>
+                </div>
+                <!-- Type filter -->
+                <div class="flex items-center gap-2">
+                    <button onclick="setFilter('all')"      id="filter-all"      class="filter-btn active-filter px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">All</button>
+                    <button onclick="setFilter('database')" id="filter-database" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-400 hover:text-white bg-white/5 border border-white/10">Database</button>
+                    <button onclick="setFilter('files')"    id="filter-files"    class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-400 hover:text-white bg-white/5 border border-white/10">Files</button>
                 </div>
                 <div class="bg-slate-card border border-white/10 rounded-2xl overflow-hidden">
                     <table class="w-full text-left">
@@ -273,13 +322,32 @@ $user = [
     <script>
         const API = '../StegaVault/api/super_admin_backup.php';
         let selectedRestoreFile = null;
+        let selectedRestoreType = 'database'; // 'database' | 'files'
         let allBackups = [];
+        let currentFilter = 'all';
 
         // ── Init ──────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             loadBackups();
             checkDockerStatus();
+            checkUploadsSize();
         });
+
+        // ── Uploads Folder Size ───────────────────────
+        async function checkUploadsSize() {
+            try {
+                const res  = await fetch(`${API}?action=uploads_size`);
+                const data = await res.json();
+                const el   = document.getElementById('uploadsSize');
+                if (data.success) {
+                    el.textContent = `${data.data.size} across ${data.data.files} files`;
+                } else {
+                    el.textContent = 'Could not read uploads folder';
+                }
+            } catch (e) {
+                document.getElementById('uploadsSize').textContent = 'Could not read uploads folder';
+            }
+        }
 
         // ── Docker Status ─────────────────────────────
         async function checkDockerStatus() {
@@ -319,7 +387,7 @@ $user = [
                 }
 
                 allBackups = data.data.backups || [];
-                renderBackupTable(allBackups);
+                setFilter(currentFilter); // re-apply current filter
 
                 // Update stats
                 document.getElementById('statBackupCount').textContent = allBackups.length + ' stored';
@@ -336,6 +404,21 @@ $user = [
             }
         }
 
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('active-filter');
+                b.classList.add('text-slate-400', 'bg-white/5', 'border', 'border-white/10');
+            });
+            const active = document.getElementById('filter-' + filter);
+            if (active) { active.classList.add('active-filter'); active.classList.remove('text-slate-400', 'bg-white/5', 'border', 'border-white/10'); }
+
+            const filtered = filter === 'all' ? allBackups
+                : filter === 'files' ? allBackups.filter(b => b.type === 'files')
+                : allBackups.filter(b => b.type !== 'files');
+            renderBackupTable(filtered);
+        }
+
         function renderBackupTable(backups) {
             const tbody = document.getElementById('backupTableBody');
             if (backups.length === 0) {
@@ -343,21 +426,30 @@ $user = [
                 return;
             }
 
-            tbody.innerHTML = backups.map(b => `
+            tbody.innerHTML = backups.map(b => {
+                const isFiles = b.type === 'files';
+                const typeBadge = isFiles
+                    ? 'bg-purple-500/10 border-purple-500/20 text-purple-400'
+                    : b.type === 'automatic'
+                        ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                        : 'bg-white/5 border-white/10 text-slate-400';
+                const typeIcon = isFiles ? 'folder_zip' : 'database';
+                const detail = isFiles
+                    ? `<p class="text-slate-300 text-xs">${(b.files || 0).toLocaleString()} files</p><p class="text-slate-500 text-[10px]">uploads/ folder</p>`
+                    : `<p class="text-slate-300 text-xs">${b.tables || '—'} tables</p><p class="text-slate-500 text-[10px]">${(b.rows || 0).toLocaleString()} rows</p>`;
+                return `
                 <tr class="hover:bg-white/[0.02] transition-colors">
                     <td class="px-6 py-4">
                         <p class="text-white font-mono text-xs">${escHtml(b.id)}</p>
                         <p class="text-slate-600 text-[10px] font-mono mt-0.5">${escHtml(b.filename)}</p>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="px-2 py-0.5 ${b.type === 'automatic' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-white/5 border-white/10 text-slate-400'} border text-[10px] font-bold uppercase rounded-full">
-                            ${b.type}
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 ${typeBadge} border text-[10px] font-bold uppercase rounded-full">
+                            <span class="material-symbols-outlined text-[11px]">${typeIcon}</span>
+                            ${isFiles ? 'files' : b.type}
                         </span>
                     </td>
-                    <td class="px-6 py-4">
-                        <p class="text-slate-300 text-xs">${b.tables || '—'} tables</p>
-                        <p class="text-slate-500 text-[10px]">${(b.rows || 0).toLocaleString()} rows</p>
-                    </td>
+                    <td class="px-6 py-4">${detail}</td>
                     <td class="px-6 py-4"><p class="text-slate-400 text-xs">${b.size_label || b.size || '—'}</p></td>
                     <td class="px-6 py-4">
                         <p class="text-slate-300 text-xs">${formatDate(b.created_at)}</p>
@@ -375,8 +467,8 @@ $user = [
                             </button>
                         </div>
                     </td>
-                </tr>
-            `).join('');
+                </tr>`;
+            }).join('');
         }
 
         function setTableEmpty(msg) {
@@ -430,6 +522,41 @@ $user = [
             }
         }
 
+        // ── Run Files Backup ──────────────────────────
+        async function runFilesBackup() {
+            const btn   = document.getElementById('runFilesBackupBtn');
+            const icon  = document.getElementById('filesBtnIcon');
+            const label = document.getElementById('filesBtnText');
+
+            btn.disabled      = true;
+            icon.className    = 'material-symbols-outlined spinner';
+            label.textContent = 'Creating ZIP...';
+            showGlobalMsg('', '');
+
+            try {
+                const res  = await fetch(`${API}?action=create_files`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    const d = data.data;
+                    showGlobalMsg('success', `Files backup created: ${d.files} files, ${d.size}. Downloading…`);
+                    window.location.href = `${API}?action=download&file=${encodeURIComponent(d.filename)}`;
+                    await loadBackups();
+                } else {
+                    showGlobalMsg('error', 'Files backup failed: ' + data.error);
+                }
+            } catch (e) {
+                showGlobalMsg('error', 'Connection error: ' + e.message);
+            } finally {
+                btn.disabled      = false;
+                icon.className    = 'material-symbols-outlined';
+                label.textContent = 'Backup Uploads Folder';
+            }
+        }
+
         // ── Delete Backup ─────────────────────────────
         async function deleteBackup(filename, id) {
             if (!confirm(`Delete backup ${id}?\n\nThis cannot be undone.`)) return;
@@ -456,6 +583,7 @@ $user = [
         // ── Restore Modal ─────────────────────────────
         function openRestoreModal() {
             selectedRestoreFile = null;
+            selectedRestoreType = 'database';
             document.getElementById('restoreConfirmBox').classList.add('hidden');
             document.getElementById('restoreConfirmInput').value = '';
             document.getElementById('restoreMsg').classList.add('hidden');
@@ -464,35 +592,55 @@ $user = [
             if (allBackups.length === 0) {
                 listEl.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">No backups available.</p>';
             } else {
-                listEl.innerHTML = allBackups.map(b => `
-                    <div onclick="selectRestoreFile('${escHtml(b.filename)}', '${escHtml(b.id)} — ${formatDate(b.created_at)}')"
-                         class="restore-item flex items-center justify-between p-3 rounded-xl border border-white/10 hover:border-red-500/40 hover:bg-red-500/5 cursor-pointer transition-all"
-                         data-file="${escHtml(b.filename)}">
-                        <div>
-                            <p class="text-white text-sm font-mono">${escHtml(b.id)}</p>
-                            <p class="text-slate-500 text-xs">${formatDate(b.created_at)} · ${b.tables} tables · ${b.size_label || '—'}</p>
-                        </div>
-                        <span class="material-symbols-outlined text-slate-600 text-xl">radio_button_unchecked</span>
-                    </div>
-                `).join('');
+                const dbBackups    = allBackups.filter(b => b.type !== 'files');
+                const filesBackups = allBackups.filter(b => b.type === 'files');
+
+                const renderGroup = (label, icon, color, items) => {
+                    if (items.length === 0) return '';
+                    return `<p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 px-1 mb-1 mt-3">${label}</p>` +
+                        items.map(b => {
+                            const isFiles = b.type === 'files';
+                            const detail  = isFiles
+                                ? `${(b.files||0).toLocaleString()} files · ${b.size_label||'—'}`
+                                : `${b.tables||'—'} tables · ${b.size_label||'—'}`;
+                            return `
+                            <div onclick="selectRestoreFile('${escHtml(b.filename)}', '${escHtml(b.id)}', '${isFiles ? 'files' : 'database'}')"
+                                 class="restore-item flex items-center justify-between p-3 rounded-xl border border-white/10 hover:border-red-500/40 hover:bg-red-500/5 cursor-pointer transition-all mb-1"
+                                 data-file="${escHtml(b.filename)}">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined ${color} text-base">${icon}</span>
+                                    <div>
+                                        <p class="text-white text-xs font-mono">${escHtml(b.id)}</p>
+                                        <p class="text-slate-500 text-[10px]">${formatDate(b.created_at)} · ${detail}</p>
+                                    </div>
+                                </div>
+                                <span class="material-symbols-outlined text-slate-600 text-lg">radio_button_unchecked</span>
+                            </div>`;
+                        }).join('');
+                };
+
+                listEl.innerHTML =
+                    renderGroup('Database Backups', 'database', 'text-blue-400', dbBackups) +
+                    renderGroup('Files Backups', 'folder_zip', 'text-purple-400', filesBackups);
             }
 
             document.getElementById('restoreModal').classList.remove('hidden');
         }
 
-        function selectRestoreFile(filename, label) {
+        function selectRestoreFile(filename, label, type) {
             selectedRestoreFile = filename;
+            selectedRestoreType = type;
 
-            // Highlight selection
             document.querySelectorAll('.restore-item').forEach(el => {
                 const isSelected = el.dataset.file === filename;
                 el.classList.toggle('border-red-500/50', isSelected);
                 el.classList.toggle('bg-red-500/10', isSelected);
-                el.querySelector('.material-symbols-outlined').textContent =
+                el.querySelector('.material-symbols-outlined:last-child').textContent =
                     isSelected ? 'radio_button_checked' : 'radio_button_unchecked';
             });
 
-            document.getElementById('restoreSelectedLabel').textContent = label;
+            const typeLabel = type === 'files' ? ' (Files)' : ' (Database)';
+            document.getElementById('restoreSelectedLabel').textContent = label + typeLabel;
             document.getElementById('restoreConfirmBox').classList.remove('hidden');
             document.getElementById('restoreConfirmInput').focus();
         }
@@ -506,19 +654,21 @@ $user = [
                 setRestoreMsg('error', 'Please select a backup first.');
                 return;
             }
-            const confirm = document.getElementById('restoreConfirmInput').value.trim();
-            if (confirm !== 'RESTORE') {
+            const confirmVal = document.getElementById('restoreConfirmInput').value.trim();
+            if (confirmVal !== 'RESTORE') {
                 setRestoreMsg('error', 'Type RESTORE (uppercase) to confirm.');
                 return;
             }
 
             const btn = document.getElementById('restoreExecBtn');
-            btn.disabled = true;
+            btn.disabled    = true;
             btn.textContent = 'Restoring...';
             setRestoreMsg('', '');
 
+            const apiAction = selectedRestoreType === 'files' ? 'restore_files' : 'restore';
+
             try {
-                const res  = await fetch(`${API}?action=restore`, {
+                const res  = await fetch(`${API}?action=${apiAction}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ filename: selectedRestoreFile })
@@ -526,7 +676,10 @@ $user = [
                 const data = await res.json();
 
                 if (data.success) {
-                    setRestoreMsg('success', `Restored successfully. ${data.data.statements} statements executed.`);
+                    const detail = selectedRestoreType === 'files'
+                        ? 'Files restored to uploads/ folder.'
+                        : `Database restored. ${data.data.statements} statements executed.`;
+                    setRestoreMsg('success', detail);
                     setTimeout(closeRestoreModal, 3000);
                 } else {
                     setRestoreMsg('error', 'Restore failed: ' + data.error);
@@ -534,7 +687,7 @@ $user = [
             } catch (e) {
                 setRestoreMsg('error', 'Connection error: ' + e.message);
             } finally {
-                btn.disabled = false;
+                btn.disabled    = false;
                 btn.textContent = 'Restore';
             }
         }

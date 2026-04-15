@@ -13,6 +13,7 @@ ini_set('error_log', __DIR__ . '/../logs/mfa_errors.log');
 
 header('Content-Type: application/json');
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/SuperAdminLogger.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $ga = new PHPGangsta_GoogleAuthenticator();
@@ -105,6 +106,7 @@ if ($method === 'POST' && $action === 'verify_setup') {
             $recoveryCodes = generateRecoveryCodes(10);
             storeRecoveryCodes($_SESSION['user_id'], $recoveryCodes);
             unset($_SESSION['temp_mfa_secret']);
+            SuperAdminLogger::log('mfa_enabled', 'mfa');
             sendResponse(true, [
                 'message' => 'MFA successfully enabled',
                 'recovery_codes' => $recoveryCodes
@@ -126,6 +128,7 @@ if ($method === 'POST' && $action === 'disable') {
     $stmt = $db->prepare("UPDATE super_admins SET mfa_secret = NULL, is_mfa_enabled = FALSE WHERE id = ?");
     $stmt->bind_param('i', $_SESSION['user_id']);
     if ($stmt->execute()) {
+        SuperAdminLogger::log('mfa_disabled', 'mfa');
         sendResponse(true, ['message' => 'MFA disabled']);
     } else {
         sendResponse(false, null, 'Database error', 500);
@@ -182,6 +185,7 @@ if ($method === 'POST' && $action === 'verify_login') {
 
         unset($_SESSION['pending_mfa_user_id']);
         unset($_SESSION['pending_mfa_portal']);
+        SuperAdminLogger::log('login_mfa_success', 'auth');
 
         sendResponse(true, [
             'user' => [

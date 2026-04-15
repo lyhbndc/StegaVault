@@ -18,6 +18,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 // Include database
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/SuperAdminLogger.php';
 
 // Get request method and action
 $method = $_SERVER['REQUEST_METHOD'];
@@ -73,6 +74,12 @@ if ($method === 'POST' && $action === 'login') {
 
         // Verify password
         if (!password_verify($password, $user['password_hash'])) {
+            // Log failed attempt (set session fields temporarily for logger)
+            $_SESSION['user_id'] = null;
+            $_SESSION['name']    = 'Unknown';
+            $_SESSION['email']   = $email;
+            SuperAdminLogger::log('login_failed', 'auth', ['email' => $email]);
+            $_SESSION = [];
             sendResponse(false, null, "Invalid email or password.", 401);
         }
 
@@ -84,18 +91,25 @@ if ($method === 'POST' && $action === 'login') {
 
         if ($mfaRow && $mfaRow['is_mfa_enabled']) {
             $_SESSION['pending_mfa_user_id'] = $user['id'];
-            $_SESSION['pending_mfa_portal'] = 'super_admin';
+            $_SESSION['pending_mfa_portal']  = 'super_admin';
+            // Log MFA challenge using pending session data
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['name']    = $user['name'];
+            $_SESSION['email']   = $user['email'];
+            SuperAdminLogger::log('login_mfa_challenged', 'auth');
+            unset($_SESSION['user_id'], $_SESSION['name'], $_SESSION['email']);
             sendResponse(true, [
                 'require_mfa' => true,
-                'message' => 'MFA verification required'
+                'message'     => 'MFA verification required'
             ], null, 200);
         }
 
         // Set session
         $_SESSION['user_id'] = $user['id'];
-        $_SESSION['email'] = $user['email'];
-        $_SESSION['name'] = $user['name'];
-        $_SESSION['role'] = 'super_admin';
+        $_SESSION['email']   = $user['email'];
+        $_SESSION['name']    = $user['name'];
+        $_SESSION['role']    = 'super_admin';
+        SuperAdminLogger::log('login_success', 'auth');
 
         // Success response
         sendResponse(true, [
@@ -117,6 +131,7 @@ if ($method === 'POST' && $action === 'login') {
 // LOGOUT
 // ============================================
 if ($method === 'POST' && $action === 'logout') {
+    SuperAdminLogger::log('logout', 'auth');
     session_destroy();
     sendResponse(true, ['message' => 'Logged out successfully']);
 }

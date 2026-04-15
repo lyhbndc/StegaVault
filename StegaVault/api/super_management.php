@@ -11,6 +11,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 header('Content-Type: application/json');
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/SuperAdminLogger.php';
 
 // Authentication Check: Only super_admin can access this API
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'super_admin') {
@@ -61,6 +62,7 @@ if ($action === 'create_super_admin' && $method === 'POST') {
     $stmt->bind_param('sss', $email, $name, $passwordHash);
 
     if ($stmt->execute()) {
+        SuperAdminLogger::log('super_admin_created', 'admin', ['target_name' => $name, 'target_email' => $email]);
         sendResponse(true, ['message' => 'Super Admin created successfully']);
     } else {
         sendResponse(false, null, 'Failed to create Super Admin. Email might already exist.', 500);
@@ -80,6 +82,7 @@ if ($action === 'delete_super_admin' && $method === 'DELETE') {
     $stmt->bind_param('i', $id);
 
     if ($stmt->execute()) {
+        SuperAdminLogger::log('super_admin_deleted', 'admin', ['target_id' => $id]);
         sendResponse(true, ['message' => 'Super Admin deleted successfully']);
     } else {
         sendResponse(false, null, 'Failed to delete Super Admin', 500);
@@ -145,6 +148,7 @@ if ($action === 'create_app_admin' && $method === 'POST') {
     $stmt->bind_param('sssssi', $email, $name, $passwordHash, $role, $status, $web_app_id);
 
     if ($stmt->execute()) {
+        SuperAdminLogger::log('app_admin_created', 'admin', ['target_name' => $name, 'target_email' => $email]);
         sendResponse(true, ['message' => 'App Admin created successfully']);
     } else {
         sendResponse(false, null, 'Failed to create App Admin. Email might already exist.', 500);
@@ -159,6 +163,7 @@ if ($action === 'delete_app_admin' && $method === 'DELETE') {
     $stmt->bind_param('i', $id);
 
     if ($stmt->execute()) {
+        SuperAdminLogger::log('app_admin_deleted', 'admin', ['target_id' => $id]);
         sendResponse(true, ['message' => 'App Admin deleted successfully']);
     } else {
         sendResponse(false, null, 'Failed to delete App Admin', 500);
