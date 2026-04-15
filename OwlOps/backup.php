@@ -89,6 +89,10 @@ $user = [
                     <span class="material-symbols-outlined text-[20px]">manage_search</span>
                     <p class="text-sm font-medium">Audit Log</p>
                 </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="reports.php">
+                    <span class="material-symbols-outlined text-[20px]">assessment</span>
+                    <p class="text-sm font-medium">System Report</p>
+                </a>
                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="mfa-settings.php">
                     <span class="material-symbols-outlined text-[20px]">phonelink_lock</span>
                     <p class="text-sm font-medium">MFA Settings</p>
