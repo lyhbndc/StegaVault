@@ -184,7 +184,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Generate unique filename
+    /* =====================================================
+       🔐 STEGAVAULT STORAGE LAYER
+    ===================================================== */
+
+    $targetDir = __DIR__ . "/storage/";
+
+    // create folder if not exists
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0777, true);
+    }
+
+    // safer filename (prevents overwrite)
+    $rawFilename = time() . "_" . basename($file["name"]);
+    $targetFile = $targetDir . $rawFilename;
+
+    // move file to LOCAL STORAGE
+    if (!move_uploaded_file($file["tmp_name"], $targetFile)) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Failed to store file']);
+        exit;
+    }
+
+    /* =====================================================
+       NEXT STEP — STEGAVAULT LOGIC
+       - encryption
+       - steganography
+       - DB insert
+    ===================================================== */
+
+    // Generate unique filename for encrypted output
     $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
     $filename = uniqid('enc_', true) . '.' . $extension;
 
@@ -196,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $filepath = $uploadDir . $filename;
 
-    $sourcePathForEncryption = $file['tmp_name'];
+    $sourcePathForEncryption = $targetFile;
     $tempProtectedPdfPath = null;
 
     // Optional: apply PDF open-password before storage encryption.
@@ -211,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $pdfProtectError = null;
-            $protectedPdfPath = PdfSecurity::protectPdfWithPassword($file['tmp_name'], $pdfPassword, $pdfProtectError);
+            $protectedPdfPath = PdfSecurity::protectPdfWithPassword($targetFile, $pdfPassword, $pdfProtectError);
             if ($protectedPdfPath === false) {
                 error_log("PDF Security Error: " . ($pdfProtectError ?: 'Unknown error'));
                 http_response_code(400);
@@ -229,6 +258,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($tempProtectedPdfPath && file_exists($tempProtectedPdfPath)) {
             @unlink($tempProtectedPdfPath);
         }
+        if (file_exists($targetFile)) {
+            @unlink($targetFile);
+        }
         http_response_code(500);
         echo json_encode(['success' => false, 'error' => 'Failed to encrypt and save file']);
         exit;
@@ -236,6 +268,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($tempProtectedPdfPath && file_exists($tempProtectedPdfPath)) {
         @unlink($tempProtectedPdfPath);
+    }
+
+    // Clean up raw storage file after encryption
+    if (file_exists($targetFile)) {
+        @unlink($targetFile);
     }
 
     // Save to database
