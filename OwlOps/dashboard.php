@@ -112,6 +112,8 @@ $stats['total_app_admins'] = $adminCount['count'] ?? 0;
                     <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Root Authority</p>
                 </div>
                 <div class="h-6 w-px bg-white/10 mx-1"></div>
+                <a href="mfa-settings.php" title="MFA Settings" class="material-symbols-outlined text-slate-400 hover:text-primary transition-colors text-[20px]">phonelink_lock</a>
+                <div class="h-6 w-px bg-white/10 mx-1"></div>
                 <button onclick="logout()" class="material-symbols-outlined text-slate-400 hover:text-red-400 transition-colors text-[20px]">logout</button>
             </div>
         </div>

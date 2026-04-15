@@ -204,6 +204,11 @@ if (isset($_SESSION['user_id'])) {
                 const data = await response.json();
 
                 if (data.success) {
+                    if (data.data.require_mfa) {
+                        window.location.href = 'mfa-verify.php';
+                        return;
+                    }
+
                     if (data.data.user.role !== 'super_admin') {
                         errorMsg.innerHTML = '<span class="flex items-center gap-2"><span class="material-symbols-outlined text-lg">gpp_bad</span> Security Alert: Unauthorized role detected. Validating...</span>';
                         errorMsg.style.display = 'block';

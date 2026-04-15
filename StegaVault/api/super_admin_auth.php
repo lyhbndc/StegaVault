@@ -76,6 +76,21 @@ if ($method === 'POST' && $action === 'login') {
             sendResponse(false, null, "Invalid email or password.", 401);
         }
 
+        // Check if MFA is enabled
+        $mfaStmt = $db->prepare("SELECT is_mfa_enabled FROM super_admins WHERE id = ?");
+        $mfaStmt->bind_param('i', $user['id']);
+        $mfaStmt->execute();
+        $mfaRow = $mfaStmt->get_result()->fetch_assoc();
+
+        if ($mfaRow && $mfaRow['is_mfa_enabled']) {
+            $_SESSION['pending_mfa_user_id'] = $user['id'];
+            $_SESSION['pending_mfa_portal'] = 'super_admin';
+            sendResponse(true, [
+                'require_mfa' => true,
+                'message' => 'MFA verification required'
+            ], null, 200);
+        }
+
         // Set session
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['email'] = $user['email'];
