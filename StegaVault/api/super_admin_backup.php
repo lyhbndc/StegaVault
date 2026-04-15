@@ -24,13 +24,26 @@ require_once __DIR__ . '/../includes/db.php';
 $action = $_GET['action'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Backup storage directory (outside web-accessible paths is ideal;
-// .htaccess below blocks direct HTTP access as a second layer)
-define('BACKUP_DIR', realpath(__DIR__ . '/..') . '/backups/');
+// Backup storage directory
+// __DIR__ = .../StegaVault/api  →  parent = .../StegaVault  →  backups = .../StegaVault/backups
+$_backupBase = dirname(__DIR__); // resolves without relying on realpath
+define('BACKUP_DIR', $_backupBase . '/backups/');
 define('BACKUP_META', BACKUP_DIR . 'backups_meta.json');
 
 if (!is_dir(BACKUP_DIR)) {
-    mkdir(BACKUP_DIR, 0750, true);
+    @mkdir(BACKUP_DIR, 0755, true);
+}
+
+// Verify the directory is actually writable before doing anything
+if (!is_writable(BACKUP_DIR)) {
+    if ($action !== 'list' && $action !== 'docker_status') {
+        // For write operations give a clear error
+        sendResponse(false, null,
+            'Backup directory is not writable. SSH into your server and run: ' .
+            'sudo mkdir -p ' . BACKUP_DIR . ' && sudo chown www-data:www-data ' . BACKUP_DIR . ' && sudo chmod 755 ' . BACKUP_DIR,
+            500
+        );
+    }
 }
 
 function sendResponse($success, $data = null, $error = null, $code = 200)
@@ -179,7 +192,15 @@ if ($method === 'POST' && $action === 'create') {
         $lines[] = 'COMMIT;';
 
         $sqlContent = implode("\n", $lines);
-        file_put_contents($dbFilepath, $sqlContent);
+        $written = file_put_contents($dbFilepath, $sqlContent);
+
+        if ($written === false) {
+            sendResponse(false, null,
+                'Failed to write backup file to disk. Check that ' . BACKUP_DIR .
+                ' exists and is writable by the web server user (www-data / apache).',
+                500
+            );
+        }
 
         // ── Docker volume backup (optional) ──────────────────
         $dockerResult = null;
