@@ -172,11 +172,11 @@ $user = [
             <div id="globalMsg" class="hidden p-4 rounded-xl text-sm font-medium"></div>
 
             <!-- Primary Actions -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
                 <!-- Database Backup Panel -->
-                <div class="bg-white/5 border border-white/10 rounded-3xl p-8 space-y-5 group hover:border-primary/30 transition-all duration-500 overflow-hidden relative">
+                <div class="bg-white/5 border border-white/10 rounded-3xl p-8 flex flex-col group hover:border-primary/30 transition-all duration-500 overflow-hidden relative">
                     <div class="absolute -right-20 -top-20 size-64 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
-                    <div class="relative z-10 space-y-4">
+                    <div class="relative z-10 flex flex-col flex-1 gap-4">
                         <div class="flex items-center gap-3">
                             <div class="p-2.5 bg-blue-500/10 rounded-xl">
                                 <span class="material-symbols-outlined text-blue-400">database</span>
@@ -184,16 +184,18 @@ $user = [
                             <h3 class="text-xl font-bold text-white font-display">Database Backup</h3>
                         </div>
                         <p class="text-slate-400 text-sm leading-relaxed">Export all Supabase tables as a SQL file. Safe upsert — won't overwrite unrelated rows.</p>
-                        <ul class="space-y-1.5 pb-4 border-b border-white/5 text-xs text-slate-300">
+                        <ul class="space-y-1.5 text-xs text-slate-300">
                             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> All public schema tables</li>
                             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> INSERT … ON CONFLICT upsert</li>
                             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> Downloads as .sql file</li>
                         </ul>
-                        <label class="flex items-center gap-3 cursor-pointer select-none">
-                            <input type="checkbox" id="includeDocker" class="rounded bg-white/10 border-white/20 text-primary focus:ring-primary/50" />
-                            <span class="text-xs text-slate-400">Include Docker volume backup</span>
-                        </label>
-                        <button id="runBackupBtn" onclick="runBackup()" class="w-full py-3.5 bg-white hover:bg-slate-200 text-black rounded-2xl font-bold flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all text-sm">
+                        <div class="pb-4 border-b border-white/5">
+                            <label class="flex items-center gap-3 cursor-pointer select-none">
+                                <input type="checkbox" id="includeDocker" class="rounded bg-white/10 border-white/20 text-primary focus:ring-primary/50" />
+                                <span class="text-xs text-slate-400">Include Docker volume backup</span>
+                            </label>
+                        </div>
+                        <button id="runBackupBtn" onclick="runBackup()" class="mt-auto w-full py-3.5 bg-white hover:bg-slate-200 text-black rounded-2xl font-bold flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all text-sm">
                             <span class="material-symbols-outlined text-xl" id="backupBtnIcon">backup</span>
                             <span id="backupBtnText">Backup Database</span>
                         </button>
@@ -201,9 +203,9 @@ $user = [
                 </div>
 
                 <!-- Files Backup Panel -->
-                <div class="bg-white/5 border border-white/10 rounded-3xl p-8 space-y-5 group hover:border-purple-500/30 transition-all duration-500 overflow-hidden relative">
+                <div class="bg-white/5 border border-white/10 rounded-3xl p-8 flex flex-col group hover:border-purple-500/30 transition-all duration-500 overflow-hidden relative">
                     <div class="absolute -right-20 -top-20 size-64 bg-purple-500/5 rounded-full blur-3xl group-hover:bg-purple-500/10 transition-colors"></div>
-                    <div class="relative z-10 space-y-4">
+                    <div class="relative z-10 flex flex-col flex-1 gap-4">
                         <div class="flex items-center gap-3">
                             <div class="p-2.5 bg-purple-500/10 rounded-xl">
                                 <span class="material-symbols-outlined text-purple-400">folder_zip</span>
@@ -211,7 +213,7 @@ $user = [
                             <h3 class="text-xl font-bold text-white font-display">Files Backup</h3>
                         </div>
                         <p class="text-slate-400 text-sm leading-relaxed">ZIP the entire <span class="font-mono text-slate-300">uploads/</span> folder — all encrypted files, PDFs, images, and watermarked assets.</p>
-                        <ul class="space-y-1.5 pb-4 border-b border-white/5 text-xs text-slate-300">
+                        <ul class="space-y-1.5 text-xs text-slate-300">
                             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> Encrypted uploads + watermarked</li>
                             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> All file types (PNG, PDF, MP4, XLSX)</li>
                             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> Downloads as .zip archive</li>
@@ -219,7 +221,7 @@ $user = [
                         <div class="pb-4 border-b border-white/5">
                             <p id="uploadsSize" class="text-xs text-slate-500">Calculating folder size...</p>
                         </div>
-                        <button id="runFilesBackupBtn" onclick="runFilesBackup()" class="w-full py-3.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 hover:text-white border border-purple-500/30 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all text-sm">
+                        <button id="runFilesBackupBtn" onclick="runFilesBackup()" class="mt-auto w-full py-3.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 hover:text-white border border-purple-500/30 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all text-sm">
                             <span class="material-symbols-outlined text-xl" id="filesBtnIcon">folder_zip</span>
                             <span id="filesBtnText">Backup Uploads Folder</span>
                         </button>
@@ -227,9 +229,9 @@ $user = [
                 </div>
 
                 <!-- Restore Panel -->
-                <div class="bg-slate-card border border-white/10 rounded-3xl p-8 space-y-5 group hover:border-red-500/30 transition-all duration-500 overflow-hidden relative">
+                <div class="bg-slate-card border border-white/10 rounded-3xl p-8 flex flex-col group hover:border-red-500/30 transition-all duration-500 overflow-hidden relative">
                     <div class="absolute -right-20 -top-20 size-64 bg-red-500/5 rounded-full blur-3xl group-hover:bg-red-500/10 transition-colors"></div>
-                    <div class="relative z-10 space-y-4">
+                    <div class="relative z-10 flex flex-col flex-1 gap-4">
                         <div class="flex items-center gap-3">
                             <div class="p-2.5 bg-red-500/10 rounded-xl">
                                 <span class="material-symbols-outlined text-red-400">restart_alt</span>
@@ -239,13 +241,13 @@ $user = [
                         <p class="text-slate-400 text-sm leading-relaxed">Roll back to a previous snapshot. Existing rows are overwritten via upsert. <span class="text-red-400/80">Use with caution.</span></p>
                         <div class="bg-red-500/5 border border-red-500/20 rounded-xl p-3 flex items-start gap-3">
                             <span class="material-symbols-outlined text-red-400 mt-0.5 flex-shrink-0 text-base">warning</span>
-                            <p class="text-[10px] text-red-300/60 leading-relaxed uppercase tracking-widest font-bold">Rows matching primary keys will be overwritten. A full wipe requires manual truncation in Supabase first.</p>
+                            <p class="text-[10px] text-red-300/60 leading-relaxed uppercase tracking-widest font-bold">Rows matching primary keys will be overwritten. Full wipe option available in the wizard.</p>
                         </div>
                         <div class="pb-4 border-b border-white/5 space-y-1">
-                            <p class="text-xs text-slate-500 flex items-center gap-1.5"><span class="material-symbols-outlined text-blue-400 text-sm">database</span> Database (.sql) — replays SQL via upsert</p>
+                            <p class="text-xs text-slate-500 flex items-center gap-1.5"><span class="material-symbols-outlined text-blue-400 text-sm">database</span> Database (.sql) — upsert or full wipe</p>
                             <p class="text-xs text-slate-500 flex items-center gap-1.5"><span class="material-symbols-outlined text-purple-400 text-sm">folder_zip</span> Files (.zip) — extracts back to uploads/</p>
                         </div>
-                        <button onclick="openRestoreModal()" class="w-full py-3.5 border border-red-500/30 hover:bg-red-500 text-red-400 hover:text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all text-sm">
+                        <button onclick="openRestoreModal()" class="mt-auto w-full py-3.5 border border-red-500/30 hover:bg-red-500 text-red-400 hover:text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all text-sm">
                             <span class="material-symbols-outlined">restart_alt</span> Open Restore Wizard
                         </button>
                     </div>

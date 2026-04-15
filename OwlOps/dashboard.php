@@ -23,10 +23,14 @@ $user = [
 
 // Fetch high-level stats
 $stats = [
-    'total_apps' => 0,
-    'total_super_admins' => 0,
-    'total_app_admins' => 0,
-    'last_backup' => '2 hours ago'
+    'total_apps'          => 0,
+    'total_super_admins'  => 0,
+    'total_app_admins'    => 0,
+    'total_users'         => 0,
+    'total_audit_events'  => 0,
+    'total_backups'       => 0,
+    'last_backup'         => null,
+    'last_backup_by'      => null,
 ];
 
 $appsCount = $db->query("SELECT COUNT(*) as count FROM web_apps")->fetch_assoc();
@@ -37,6 +41,61 @@ $stats['total_super_admins'] = $superCount['count'] ?? 0;
 
 $adminCount = $db->query("SELECT COUNT(*) as count FROM users WHERE role = 'admin'")->fetch_assoc();
 $stats['total_app_admins'] = $adminCount['count'] ?? 0;
+
+$userCount = $db->query("SELECT COUNT(*) as count FROM users")->fetch_assoc();
+$stats['total_users'] = $userCount['count'] ?? 0;
+
+try {
+    $auditCount = $db->query("SELECT COUNT(*) as count FROM super_admin_audit_log")->fetch_assoc();
+    $stats['total_audit_events'] = $auditCount['count'] ?? 0;
+} catch (Exception $e) { $stats['total_audit_events'] = 0; }
+
+// Backup count from meta file
+$stats['total_backups'] = 0;
+$backupMetaPath = __DIR__ . '/../StegaVault/backups/backups_meta.json';
+if (file_exists($backupMetaPath)) {
+    $backupMeta = json_decode(file_get_contents($backupMetaPath), true) ?? [];
+    $stats['total_backups'] = count($backupMeta);
+    if (!empty($backupMeta)) {
+        $stats['last_backup'] = $backupMeta[0]['created_at'] ?? '—';
+        $stats['last_backup_by'] = $backupMeta[0]['created_by'] ?? '—';
+    }
+}
+
+// Real recent audit activity (last 6)
+$recentEvents = [];
+try {
+    $auditQuery = $db->query(
+        "SELECT action, category, actor_name, created_at
+         FROM super_admin_audit_log
+         ORDER BY created_at DESC
+         LIMIT 6"
+    );
+    if ($auditQuery) {
+        while ($row = $auditQuery->fetch_assoc()) $recentEvents[] = $row;
+    }
+} catch (Exception $e) { $recentEvents = []; }
+
+// Action label + icon + colour map
+$actionMeta = [
+    'login_success'          => ['Login',              'login',            'emerald'],
+    'login_failed'           => ['Failed Login',       'warning',          'red'],
+    'login_mfa_challenged'   => ['MFA Challenge',      'shield_lock',      'blue'],
+    'login_mfa_success'      => ['MFA Login',          'verified_user',    'emerald'],
+    'logout'                 => ['Logout',              'logout',           'slate'],
+    'mfa_enabled'            => ['MFA Enabled',        'phonelink_lock',   'blue'],
+    'mfa_disabled'           => ['MFA Disabled',       'no_encryption',    'orange'],
+    'backup_db_created'      => ['DB Backup',          'database',         'blue'],
+    'backup_files_created'   => ['Files Backup',       'folder_zip',       'purple'],
+    'backup_db_restored'     => ['DB Restored',        'restore',          'orange'],
+    'backup_db_full_restored'=> ['Full Restore',       'restart_alt',      'red'],
+    'backup_files_restored'  => ['Files Restored',     'folder_open',      'purple'],
+    'backup_deleted'         => ['Backup Deleted',     'delete',           'red'],
+    'super_admin_created'    => ['Super Admin Added',  'person_add',       'emerald'],
+    'super_admin_deleted'    => ['Super Admin Removed','person_remove',    'red'],
+    'app_admin_created'      => ['App Admin Added',    'manage_accounts',  'emerald'],
+    'app_admin_deleted'      => ['App Admin Removed',  'manage_accounts',  'red'],
+];
 
 ?>
 <!DOCTYPE html>
@@ -166,80 +225,123 @@ $stats['total_app_admins'] = $adminCount['count'] ?? 0;
                         <p class="text-slate-500 text-sm mt-2 leading-relaxed">System-wide snapshots and environment restoration protocols.</p>
                     </div>
                     <div class="flex items-center gap-3 pt-4 border-t border-white/5">
-                        <span class="material-symbols-outlined text-emerald-500 text-sm">check_circle</span>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Last Sync: <?php echo $stats['last_backup']; ?></p>
+                        <?php if ($stats['total_backups'] > 0): ?>
+                            <span class="material-symbols-outlined text-emerald-500 text-sm">check_circle</span>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Last: <?php echo htmlspecialchars($stats['last_backup'] ?? '—'); ?></p>
+                        <?php else: ?>
+                            <span class="material-symbols-outlined text-slate-500 text-sm">radio_button_unchecked</span>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">No backups yet</p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </a>
 
-            <!-- Scopes / Environments -->
-            <div class="bg-slate-card border border-white/5 rounded-[2.5rem] p-10 group opacity-80 hover:opacity-100 transition-all duration-500 relative overflow-hidden">
-                <div class="absolute -right-16 -top-16 size-48 bg-slate-500/5 rounded-full blur-3xl"></div>
-                <div class="relative z-10 space-y-6 flex flex-col h-full">
-                    <div class="p-4 bg-white/5 rounded-[1.5rem] w-fit border border-white/10 text-slate-400">
-                        <span class="material-symbols-outlined text-3xl">apps</span>
+            <!-- System Report -->
+            <a href="audit-log.php" class="bg-slate-card border border-white/5 rounded-[2.5rem] p-10 group hover:border-emerald-500/40 hover:-translate-y-2 transition-all duration-500 relative overflow-hidden">
+                <div class="absolute -right-16 -top-16 size-48 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/10 transition-colors"></div>
+                <div class="relative z-10 space-y-6">
+                    <div class="p-4 bg-emerald-500/10 rounded-[1.5rem] w-fit border border-white/10 group-hover:bg-emerald-500 group-hover:text-white transition-all text-emerald-400">
+                        <span class="material-symbols-outlined text-3xl">assessment</span>
                     </div>
                     <div>
-                        <h3 class="text-2xl font-bold text-white font-display">Application Scopes</h3>
-                        <p class="text-slate-500 text-sm mt-2 leading-relaxed">Monitoring <?php echo $stats['total_apps']; ?> isolated environments within the ecosystem.</p>
+                        <h3 class="text-2xl font-bold text-white font-display">System Report</h3>
+                        <p class="text-slate-500 text-sm mt-2 leading-relaxed">Live overview of users, backups, and audit activity across the platform.</p>
                     </div>
-                    <div class="mt-auto pt-6">
-                        <div class="flex -space-x-3 overflow-hidden">
-                            <?php 
-                            $apps = $db->query("SELECT name FROM web_apps LIMIT 4");
-                            while($a = $apps->fetch_assoc()): ?>
-                                <div class="inline-block size-8 rounded-full ring-4 ring-black bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 border border-white/10">
-                                    <?php echo strtoupper(substr($a['name'], 0, 1)); ?>
-                                </div>
-                            <?php endwhile; ?>
-                            <?php if($stats['total_apps'] > 4): ?>
-                                <div class="inline-block size-8 rounded-full ring-4 ring-black bg-white/10 flex items-center justify-center text-[10px] font-bold text-white border border-white/10">
-                                    +<?php echo $stats['total_apps'] - 4; ?>
-                                </div>
-                            <?php endif; ?>
+                    <div class="grid grid-cols-2 gap-x-6 gap-y-4 pt-4 border-t border-white/5">
+                        <div>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Total Users</p>
+                            <p class="text-xl font-bold text-white"><?php echo number_format($stats['total_users']); ?></p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Audit Events</p>
+                            <p class="text-xl font-bold text-white"><?php echo number_format($stats['total_audit_events']); ?></p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Backups Stored</p>
+                            <p class="text-xl font-bold text-white"><?php echo $stats['total_backups']; ?></p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Web Apps</p>
+                            <p class="text-xl font-bold text-white"><?php echo $stats['total_apps']; ?></p>
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </section>
 
         <!-- System Alerts / Activity -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-8 border-t border-white/5">
             <div class="space-y-6">
-                <h3 class="text-sm font-bold text-slate-500 uppercase tracking-[0.2em]">Recent System Activity</h3>
-                <div class="space-y-4">
-                    <div class="flex items-start gap-4 p-4 rounded-2xl hover:bg-white/[0.02] transition-colors">
-                        <div class="size-2 bg-emerald-500 rounded-full mt-2"></div>
-                        <div>
-                            <p class="text-sm text-white font-medium">Automatic Snapshot Completed</p>
-                            <p class="text-xs text-slate-500 mt-1">Status: SV-20260413-0900 stored in secure vault.</p>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-[0.2em]">Recent System Activity</h3>
+                    <a href="audit-log.php" class="text-[10px] text-slate-500 hover:text-white font-bold uppercase tracking-widest flex items-center gap-1 transition-colors">
+                        <span class="material-symbols-outlined text-sm">open_in_new</span> View All
+                    </a>
+                </div>
+                <div class="space-y-1">
+                    <?php if (empty($recentEvents)): ?>
+                        <p class="text-sm text-slate-600 px-4 py-6">No recent activity recorded.</p>
+                    <?php else: ?>
+                        <?php foreach ($recentEvents as $event):
+                            $meta   = $actionMeta[$event['action']] ?? [ucwords(str_replace('_', ' ', $event['action'])), 'info', 'slate'];
+                            $label  = $meta[0];
+                            $icon   = $meta[1];
+                            $color  = $meta[2];
+                            $dotMap = ['emerald'=>'bg-emerald-500','blue'=>'bg-blue-500','red'=>'bg-red-500','orange'=>'bg-orange-400','purple'=>'bg-purple-400','slate'=>'bg-slate-500'];
+                            $dot    = $dotMap[$color] ?? 'bg-slate-500';
+                            // Human-readable time diff
+                            $ts   = strtotime($event['created_at']);
+                            $diff = time() - $ts;
+                            if ($diff < 60)         $ago = 'just now';
+                            elseif ($diff < 3600)   $ago = floor($diff/60) . 'm ago';
+                            elseif ($diff < 86400)  $ago = floor($diff/3600) . 'h ago';
+                            else                    $ago = floor($diff/86400) . 'd ago';
+                        ?>
+                        <div class="flex items-center gap-4 px-4 py-3 rounded-2xl hover:bg-white/[0.02] transition-colors">
+                            <div class="size-2 rounded-full flex-shrink-0 <?php echo $dot; ?>"></div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-white font-medium truncate"><?php echo htmlspecialchars($label); ?></p>
+                                <p class="text-xs text-slate-500 mt-0.5 truncate">by <?php echo htmlspecialchars($event['actor_name'] ?? '—'); ?></p>
+                            </div>
+                            <span class="flex-shrink-0 text-[10px] text-slate-600 font-bold uppercase"><?php echo $ago; ?></span>
                         </div>
-                        <span class="ml-auto text-[10px] text-slate-600 font-bold uppercase">2h ago</span>
-                    </div>
-                    <div class="flex items-start gap-4 p-4 rounded-2xl hover:bg-white/[0.02] transition-colors">
-                        <div class="size-2 bg-blue-500 rounded-full mt-2"></div>
-                        <div>
-                            <p class="text-sm text-white font-medium">New App Admin Provisioned</p>
-                            <p class="text-xs text-slate-500 mt-1">Context: StegaVault Corporate (ID: 12)</p>
-                        </div>
-                        <span class="ml-auto text-[10px] text-slate-600 font-bold uppercase">5h ago</span>
-                    </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
-            <div class="bg-primary/5 rounded-[2rem] p-8 border border-white/5">
-                <h3 class="text-sm font-bold text-white mb-2 font-display tracking-wider">Operational Integrity</h3>
-                <p class="text-xs text-slate-400 leading-relaxed mb-6">All systems are currently performing within expected latency parameters. Supabase database connectivity is stable at 24ms.</p>
-                <div class="flex items-center gap-6">
-                    <div class="flex flex-col">
-                        <span class="text-2xl font-bold text-white tracking-tighter">99.9%</span>
-                        <span class="text-[8px] text-slate-500 uppercase font-bold tracking-widest mt-1">Uptime</span>
+
+            <div class="bg-primary/5 rounded-[2rem] p-8 border border-white/5 space-y-6">
+                <div>
+                    <h3 class="text-sm font-bold text-white mb-1 font-display tracking-wider">Platform Summary</h3>
+                    <p class="text-xs text-slate-500">Current snapshot of all managed resources.</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Super Admins</p>
+                        <p class="text-2xl font-bold text-white"><?php echo $stats['total_super_admins']; ?></p>
                     </div>
-                    <div class="w-px h-10 bg-white/10"></div>
-                    <div class="flex flex-col">
-                        <span class="text-2xl font-bold text-white tracking-tighter">0.02%</span>
-                        <span class="text-[8px] text-slate-500 uppercase font-bold tracking-widest mt-1">Error Rate</span>
+                    <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">App Admins</p>
+                        <p class="text-2xl font-bold text-white"><?php echo $stats['total_app_admins']; ?></p>
+                    </div>
+                    <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Total Users</p>
+                        <p class="text-2xl font-bold text-white"><?php echo number_format($stats['total_users']); ?></p>
+                    </div>
+                    <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Backups Stored</p>
+                        <p class="text-2xl font-bold text-white"><?php echo $stats['total_backups']; ?></p>
                     </div>
                 </div>
+                <?php if (!empty($stats['last_backup']) && $stats['last_backup'] !== '2 hours ago'): ?>
+                <div class="flex items-center gap-3 pt-2">
+                    <span class="material-symbols-outlined text-emerald-500 text-sm">check_circle</span>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                        Last backup: <?php echo htmlspecialchars($stats['last_backup']); ?>
+                        by <?php echo htmlspecialchars($stats['last_backup_by'] ?? '—'); ?>
+                    </p>
+                </div>
+                <?php endif; ?>
             </div>
         </section>
 
