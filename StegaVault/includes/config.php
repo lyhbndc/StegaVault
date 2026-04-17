@@ -8,14 +8,14 @@
 // Database Configuration (Supabase PostgreSQL via Transaction Pooler)
 // Port 6543 = Transaction Pooler (works better with restrictive EC2 firewalls)
 // Port 5432 = Session Pooler (requires outbound port 5432 open in AWS Security Group)
-define('DB_HOST', 'aws-1-ap-southeast-2.pooler.supabase.com');
-define('DB_PORT', '6543');
-define('DB_USER', 'postgres.dknxptrhnjpcymvvmdpj');
-define('DB_PASS', 'OwlOpsCo432');
+define('DB_HOST', 'aws-1-ap-south-1.pooler.supabase.com');
+define('DB_PORT', '5432');
+define('DB_USER', 'postgres.iakongqdopzyvxhqfzvp');
+define('DB_PASS', 'owlopsco432');
 define('DB_NAME', 'postgres');
 
 // Site Configuration
-define('SITE_URL', 'http://localhost/stegavault');
+define('SITE_URL', 'https://stegavault.xyz/');
 define('SITE_NAME', 'StegaVault');
 define('UPLOAD_DIR', __DIR__ . '/../uploads/');
 define('MAX_FILE_SIZE', 10485760); // 10MB in bytes
