@@ -201,7 +201,7 @@ $user = [
                         </div>
                         <button id="runBackupBtn" onclick="runBackup()" class="mt-auto w-full py-3.5 bg-white hover:bg-slate-200 text-black rounded-2xl font-bold flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all text-sm">
                             <span class="material-symbols-outlined text-xl" id="backupBtnIcon">backup</span>
-                            <span id="backupBtnText">Backup Database</span>
+                            <span id="backupBtnText">Run Backup Now</span>
                         </button>
                     </div>
                 </div>
@@ -511,7 +511,7 @@ $user = [
             showGlobalMsg('', '');
 
             try {
-                const res  = await fetch(`${API}?action=create`, {
+                const res  = await fetch(`${API}?action=run_backup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ include_docker: docker })
@@ -540,7 +540,7 @@ $user = [
             } finally {
                 btn.disabled = false;
                 icon.className = 'material-symbols-outlined';
-                label.textContent = 'Run Manual Backup Now';
+                label.textContent = 'Run Backup Now';
             }
         }
 

@@ -78,7 +78,7 @@ function saveMeta(array $meta)
 // ─────────────────────────────────────────────
 // CREATE BACKUP
 // ─────────────────────────────────────────────
-if ($method === 'POST' && $action === 'create') {
+if ($method === 'POST' && ($action === 'create' || $action === 'run_backup')) {
     $input = json_decode(file_get_contents('php://input'), true) ?? [];
     $includeDocker = !empty($input['include_docker']);
 
