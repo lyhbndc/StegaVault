@@ -27,7 +27,7 @@ $stmt = $db->prepare("
     SELECT action, description, created_at 
         FROM activity_log_employee 
     WHERE user_id = ?
-      AND action IN ('login_success', 'file_downloaded')
+      AND action IN ('login_success', 'file_downloaded', 'file_viewed')
     ORDER BY created_at DESC 
     LIMIT 100
 ");
@@ -49,6 +49,8 @@ function getActionIcon($action)
             return ['login', 'text-emerald-500', 'bg-emerald-500/10'];
         case 'file_downloaded':
             return ['download', 'text-blue-500', 'bg-blue-500/10'];
+        case 'file_viewed':
+            return ['visibility', 'text-sky-500', 'bg-sky-500/10'];
         default:
             return ['info', 'text-slate-500', 'bg-slate-500/10'];
     }
@@ -61,6 +63,8 @@ function formatActionText($action, $desc)
             return "<b>Logged in</b><br/><span class='text-xs text-slate-500 dark:text-slate-400'>$desc</span>";
         case 'file_downloaded':
             return "<b>Downloaded file</b><br/><span class='text-xs text-slate-500 dark:text-slate-400'>$desc</span>";
+        case 'file_viewed':
+            return "<b>Viewed file</b><br/><span class='text-xs text-slate-500 dark:text-slate-400'>$desc</span>";
         default:
             return "<b>Activity</b><br/><span class='text-xs text-slate-500 dark:text-slate-400'>$desc</span>";
     }
@@ -164,7 +168,7 @@ function formatActionText($action, $desc)
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
                 <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800">
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white">Recent Activity</h3>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">A timeline of your login and file download activity.</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">A timeline of your login, file view, and download activity.</p>
                 </div>
                 <div class="p-6">
                     <div class="relative border-l-2 border-slate-100 dark:border-slate-800/60 ml-3 md:ml-4 space-y-8 pb-4">

@@ -11,6 +11,7 @@
 session_start();
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/Encryption.php';
+require_once __DIR__ . '/../includes/ActivityLogger.php';
 
 // Authentication Check
 if (!isset($_SESSION['user_id'])) {
@@ -67,6 +68,18 @@ if ($realFilePath === false || strpos($realFilePath, $uploadsDir) !== 0 || !file
     http_response_code(404);
     die('File missing or invalid path');
 }
+
+// Log file view
+$viewerName = $_SESSION['name'] ?? 'Unknown';
+logActivityEvent(
+    $db,
+    (int)$userId,
+    'file_viewed',
+    'Viewed file: ' . ($file['original_name'] ?? 'Unknown') . ' by ' . $viewerName,
+    $_SERVER['REMOTE_ADDR'] ?? null,
+    $_SESSION['role'] ?? null,
+    false
+);
 
 // Decrypt Content
 $content = Encryption::decryptFileContent($filePath);
