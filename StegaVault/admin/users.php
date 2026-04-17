@@ -425,6 +425,14 @@ foreach ($users as $u) {
                                             title="Edit">
                                             <span class="material-symbols-outlined text-[18px]">edit</span>
                                         </button>
+                                        <?php if (in_array($u['status'], ['pending_activation', 'expired'])): ?>
+                                            <button
+                                                onclick="resendActivation(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars($u['name'], ENT_QUOTES); ?>')"
+                                                class="p-1.5 hover:bg-yellow-500/10 rounded-lg text-slate-400 hover:text-yellow-500 transition-colors"
+                                                title="Resend Activation Email">
+                                                <span class="material-symbols-outlined text-[18px]">forward_to_inbox</span>
+                                            </button>
+                                        <?php endif; ?>
                                         <?php if ($u['id'] != $user['id']): ?>
                                             <button
                                                 onclick="deleteUser(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars($u['name'], ENT_QUOTES); ?>')"
@@ -540,6 +548,17 @@ foreach ($users as $u) {
                                             oninput="checkPwPolicy()" />
                                         <button type="button" onclick="togglePassword()"
                                             class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">visibility_off</button>
+                                    </div>
+                                    <div class="flex items-center justify-between gap-2">
+                                        <button type="button" onclick="generatePassword()"
+                                            class="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
+                                            <span class="material-symbols-outlined text-[15px]">casino</span>
+                                            Generate random password
+                                        </button>
+                                        <button type="button" id="copyPwBtn" onclick="copyGeneratedPassword()" class="hidden flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                                            <span class="material-symbols-outlined text-[15px]">content_copy</span>
+                                            Copy
+                                        </button>
                                     </div>
                                     <!-- Password Policy Panel -->
                                     <div id="pwPolicyPanel"
@@ -776,6 +795,28 @@ foreach ($users as $u) {
             }
         }
 
+        async function resendActivation(id, name) {
+            if (!confirm(`Resend activation email to ${name}?`)) return;
+
+            try {
+                const response = await fetch('../api/users.php?action=resend_activation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage(`Activation email resent to ${name}.`, 'success');
+                } else {
+                    showMessage(data.error || 'Failed to resend activation email', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
         async function deleteUser(id, name) {
             if (!confirm(`Are you sure you want to delete ${name}?`)) return;
 
@@ -948,6 +989,54 @@ foreach ($users as $u) {
             setTimeout(() => {
                 box.style.display = 'none';
             }, 5000);
+        }
+
+        function generatePassword() {
+            const upper   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const lower   = 'abcdefghijklmnopqrstuvwxyz';
+            const numbers = '0123456789';
+            const special = '!@#$%^&*()-_=+[]{}|;:,.<>?';
+            const all     = upper + lower + numbers + special;
+
+            // Guarantee at least one of each required type
+            let pwd = [
+                upper  [Math.floor(Math.random() * upper.length)],
+                lower  [Math.floor(Math.random() * lower.length)],
+                numbers[Math.floor(Math.random() * numbers.length)],
+                special[Math.floor(Math.random() * special.length)],
+            ];
+
+            // Fill up to 16 characters
+            for (let i = pwd.length; i < 16; i++) {
+                pwd.push(all[Math.floor(Math.random() * all.length)]);
+            }
+
+            // Shuffle
+            pwd = pwd.sort(() => Math.random() - 0.5).join('');
+
+            const input = document.getElementById('userPassword');
+            input.value = pwd;
+            input.type  = 'text'; // show the generated password
+
+            // Sync visibility icon
+            const visIcon = input.nextElementSibling;
+            if (visIcon) visIcon.textContent = 'visibility';
+
+            // Show copy button
+            document.getElementById('copyPwBtn').classList.remove('hidden');
+
+            checkPwPolicy();
+        }
+
+        function copyGeneratedPassword() {
+            const val = document.getElementById('userPassword').value;
+            if (!val) return;
+            navigator.clipboard.writeText(val).then(() => {
+                const btn = document.getElementById('copyPwBtn');
+                const icon = btn.querySelector('span');
+                icon.textContent = 'check';
+                setTimeout(() => { icon.textContent = 'content_copy'; }, 1500);
+            });
         }
 
         function togglePassword() {

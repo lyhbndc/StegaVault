@@ -333,11 +333,16 @@ elseif ($error): ?>
                         <p class="text-slate-500 dark:text-slate-400 text-sm mb-4">
                             <?php echo htmlspecialchars($error); ?>
                         </p>
-                        <span
-                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-500 border border-red-500/20">
-                            <span class="size-1.5 bg-red-500 rounded-full"></span>
-                            Integrity: Compromised / Unknown
-                        </span>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-500 border border-red-500/20">
+                                <span class="size-1.5 bg-red-500 rounded-full"></span>
+                                Integrity: Compromised / Unknown
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                                <span class="material-symbols-outlined text-[13px]">location_off</span>
+                                Where from: External / Unknown
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -366,6 +371,84 @@ else: ?>
                             <?php echo ($extractedData['content_tampered'] ?? false) ? 'Warning: Digital signature is valid, but content tampering was detected.' : 'Digital signature verified — watermark is intact and authentic.'; ?>
                         </p>
                     </div>
+                </div>
+
+                <!-- ── Origin Card ── -->
+                <?php
+                $originName = $extractedData['u_name'] ?? $extractedData['user_name'] ?? null;
+                $originRole = $extractedData['u_role'] ?? null;
+                $originId   = $extractedData['u_id']   ?? $extractedData['user_id'] ?? null;
+                $originIp   = $extractedData['ip']     ?? null;
+                $originTs   = $extractedData['ts']     ?? $extractedData['timestamp'] ?? null;
+                $fromSystem = ($originName !== null);
+                ?>
+                <div class="bg-white dark:bg-slate-900 border <?php echo $fromSystem ? 'border-primary/30' : 'border-slate-200 dark:border-slate-700'; ?> rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="material-symbols-outlined text-[18px] <?php echo $fromSystem ? 'text-primary' : 'text-slate-400'; ?>">
+                            <?php echo $fromSystem ? 'travel_explore' : 'location_off'; ?>
+                        </span>
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">File Origin</h2>
+                        <?php if ($fromSystem): ?>
+                        <span class="ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                            <span class="material-symbols-outlined text-[13px]">verified</span>
+                            From this system
+                        </span>
+                        <?php else: ?>
+                        <span class="ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                            <span class="material-symbols-outlined text-[13px]">location_off</span>
+                            Where from: Unknown
+                        </span>
+                        <?php endif; ?>
+                    </div>
+
+                    <?php if ($fromSystem): ?>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Downloaded by</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <div class="size-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
+                                    <?php echo strtoupper(substr($originName, 0, 2)); ?>
+                                </div>
+                                <div>
+                                    <p class="text-slate-900 dark:text-white font-bold text-sm"><?php echo htmlspecialchars($originName); ?></p>
+                                    <?php if ($originRole): ?>
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary/10 text-primary uppercase"><?php echo htmlspecialchars($originRole); ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Where from</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="material-symbols-outlined text-slate-400 text-[18px]">router</span>
+                                <p class="text-slate-900 dark:text-white font-mono font-semibold text-sm">
+                                    <?php
+                                    $ip = $originIp ?? 'Unknown';
+                                    echo htmlspecialchars(($ip === '::1' || $ip === '127.0.0.1') ? 'localhost' : $ip);
+                                    ?>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Downloaded At</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="material-symbols-outlined text-slate-400 text-[18px]">schedule</span>
+                                <p class="text-slate-900 dark:text-white font-semibold text-sm">
+                                    <?php echo $originTs ? date('M j, Y g:i A', (int)$originTs) : 'N/A'; ?>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">User ID</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="material-symbols-outlined text-slate-400 text-[18px]">badge</span>
+                                <p class="text-slate-900 dark:text-white font-mono font-semibold text-sm">#<?php echo htmlspecialchars((string)($originId ?? 'N/A')); ?></p>
+                            </div>
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">No watermark or origin data could be extracted from this file. It may not have been downloaded from this system, or the watermark was stripped.</p>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Printable Report Wrapper -->

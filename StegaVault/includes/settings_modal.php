@@ -131,7 +131,7 @@
                 </div>
 
                 <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-                    <p class="text-xs text-slate-600 dark:text-slate-400 mb-4">Manage your two-factor authentication settings on a dedicated page.</p>
+                    <p class="text-xs text-slate-600 dark:text-slate-400 mb-4">Manage your multi-factor authentication settings on a dedicated page.</p>
                     <a href="mfa-settings.php" class="w-full inline-flex items-center justify-center gap-2 py-2 px-4 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-lg transition-all">
                         <span class="material-symbols-outlined text-sm">settings</span>
                         <span>Manage MFA</span>

@@ -310,18 +310,6 @@ if ($projectsResult) {
                     </div>
 
                     <div class="space-y-3">
-                        <a href="upload.php" class="block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
-                            <div class="flex items-center gap-4">
-                                <div class="p-3 bg-primary/10 rounded-lg">
-                                    <span class="material-symbols-outlined text-primary text-2xl">upload_file</span>
-                                </div>
-                                <div>
-                                    <h4 class="text-slate-900 dark:text-white font-bold text-base">Upload Files</h4>
-                                    <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Add files to secure vault</p>
-                                </div>
-                            </div>
-                        </a>
-
                         <a href="analysis.php" class="block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
                             <div class="flex items-center gap-4">
                                 <div class="p-3 bg-red-500/10 rounded-lg">

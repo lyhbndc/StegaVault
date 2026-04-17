@@ -435,5 +435,66 @@ if ($method === 'GET' && $action === 'stats') {
     }
 }
 
+// ============================================
+// RESEND ACTIVATION EMAIL
+// ============================================
+if ($method === 'POST' && $action === 'resend_activation') {
+    try {
+        $input = json_decode(file_get_contents('php://input'), true);
+        $targetUserId = isset($input['id']) ? (int)$input['id'] : 0;
+
+        if ($targetUserId <= 0) {
+            sendResponse(false, null, 'Invalid user ID', 400);
+        }
+
+        $stmt = $db->prepare("SELECT id, email, username, name, role, status, expiration_date FROM users WHERE id = ?");
+        $stmt->bind_param('i', $targetUserId);
+        $stmt->execute();
+        $target = $stmt->get_result()->fetch_assoc();
+
+        if (!$target) {
+            sendResponse(false, null, 'User not found', 404);
+        }
+
+        if (!in_array($target['status'], ['pending_activation', 'expired'])) {
+            sendResponse(false, null, 'User account is already active or disabled', 400);
+        }
+
+        // Generate a fresh activation token
+        $newToken = bin2hex(random_bytes(32));
+        $upd = $db->prepare("UPDATE users SET activation_token = ?, status = 'pending_activation' WHERE id = ?");
+        $upd->bind_param('si', $newToken, $targetUserId);
+
+        if (!$upd->execute()) {
+            sendResponse(false, null, 'Failed to regenerate activation token', 500);
+        }
+
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https://" : "http://";
+        $baseDir = dirname(dirname($_SERVER['SCRIPT_NAME']));
+        if ($baseDir === '/' || $baseDir === '\\') $baseDir = '';
+        $activationLink = $protocol . $_SERVER['HTTP_HOST'] . $baseDir . "/activate.php?token=" . $newToken;
+
+        $emailer = new EmailService();
+        $emailer->sendActivationEmail(
+            $target['email'],
+            $target['name'],
+            $target['username'],
+            null, // password not available on resend
+            $target['role'],
+            $activationLink,
+            $target['expiration_date']
+        );
+
+        $adminId = $_SESSION['user_id'];
+        $description = "Resent activation email to: {$target['username']} ({$target['email']})";
+        logActivityEvent($db, (int)$adminId, 'user_activation_resent', $description, $_SERVER['REMOTE_ADDR'] ?? null, $_SESSION['role'] ?? 'admin', false);
+
+        sendResponse(true, ['message' => 'Activation email resent successfully']);
+    }
+    catch (Exception $e) {
+        sendResponse(false, null, 'Server error: ' . $e->getMessage(), 500);
+    }
+}
+
 // Invalid endpoint
 sendResponse(false, null, 'Invalid endpoint or method', 404);

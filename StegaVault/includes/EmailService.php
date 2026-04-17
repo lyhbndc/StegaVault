@@ -52,7 +52,7 @@ class EmailService
      * @param string|null $expirationDate Account expiration date (optional)
      * @return bool True if email sent successfully
      */
-    public function sendActivationEmail($email, $name, $username, $password, $role, $activationLink, $expirationDate = null)
+    public function sendActivationEmail($email, $name, $username, $password = null, $role, $activationLink, $expirationDate = null)
     {
         try {
             $this->mail->clearAddresses();
@@ -64,7 +64,8 @@ class EmailService
             $this->mail->Subject = 'Activate Your StegaVault Account';
 
             $this->mail->Body = $this->getActivationEmailTemplate($name, $email, $username, $password, $role, $activationLink, $expirationDate);
-            $this->mail->AltBody = "Hello $name,\n\nYour StegaVault account has been created!\n\nYour Login Credentials:\nEmail: $email\nUsername: $username\nPassword: $password\nRole: $role\n\nActivate your account: $activationLink\n\nIMPORTANT: Please change your password after logging in via Account Settings.\n\nThank you,\nStegaVault Security Team";
+            $pwLine = $password ? "Password: $password\n" : "Use your original password (or reset it if forgotten).\n";
+            $this->mail->AltBody = "Hello $name,\n\nYour StegaVault account has been created!\n\nYour Login Credentials:\nEmail: $email\nUsername: $username\n{$pwLine}Role: $role\n\nActivate your account: $activationLink\n\nIMPORTANT: Please change your password after logging in via Account Settings.\n\nThank you,\nStegaVault Security Team";
 
             $this->mail->send();
             return true;
@@ -186,7 +187,10 @@ class EmailService
                                         <p style="color: #667eea; margin: 0 0 12px 0; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">🔑 Your Login Credentials</p>
                                         <p style="color: #e2e8f0; margin: 6px 0; font-size: 14px;"><strong style="color: #94a3b8;">Email:</strong>&nbsp;&nbsp;' . htmlspecialchars($email) . '</p>
                                         <p style="color: #e2e8f0; margin: 6px 0; font-size: 14px;"><strong style="color: #94a3b8;">Username:</strong>&nbsp;&nbsp;' . htmlspecialchars($username) . '</p>
-                                        <p style="color: #e2e8f0; margin: 6px 0; font-size: 14px;"><strong style="color: #94a3b8;">Password:</strong>&nbsp;&nbsp;<span style="font-family: monospace; background-color: #334155; padding: 2px 8px; border-radius: 4px; font-size: 14px;">' . htmlspecialchars($password) . '</span></p>
+                                        ' . ($password
+                                            ? '<p style="color: #e2e8f0; margin: 6px 0; font-size: 14px;"><strong style="color: #94a3b8;">Password:</strong>&nbsp;&nbsp;<span style="font-family: monospace; background-color: #334155; padding: 2px 8px; border-radius: 4px; font-size: 14px;">' . htmlspecialchars($password) . '</span></p>'
+                                            : '<p style="color: #fde68a; margin: 6px 0; font-size: 13px;"><strong style="color: #94a3b8;">Password:</strong>&nbsp;&nbsp;Use your original password, or use <em>Forgot Password</em> to reset it.</p>'
+                                        ) . '
                                         <p style="color: #e2e8f0; margin: 6px 0; font-size: 14px;"><strong style="color: #94a3b8;">Role:</strong>&nbsp;&nbsp;' . ucfirst($role) . '</p>
                                         ' . $expiryText . '
                                     </div>
