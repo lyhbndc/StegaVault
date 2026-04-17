@@ -126,9 +126,12 @@ while ($row = $usersResult->fetch_assoc()) {
 }
 
 // ── Summary stats ──────────────────────────────────────────────
-$totalAll   = $db->query("SELECT COUNT(*) FROM {$activitySourceRaw} al")->fetch_row()[0];
-$todayCount = $db->query("SELECT COUNT(*) FROM {$activitySourceRaw} al WHERE CAST(al.created_at AS DATE) = CURRENT_DATE")->fetch_row()[0];
-$weekCount  = $db->query("SELECT COUNT(*) FROM {$activitySourceRaw} al WHERE al.created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'")->fetch_row()[0];
+$r = $db->query("SELECT COUNT(*) FROM {$activitySourceRaw} al");
+$totalAll   = $r ? (int)$r->fetch_row()[0] : 0;
+$r = $db->query("SELECT COUNT(*) FROM {$activitySourceRaw} al WHERE CAST(al.created_at AS DATE) = CURDATE()");
+$todayCount = $r ? (int)$r->fetch_row()[0] : 0;
+$r = $db->query("SELECT COUNT(*) FROM {$activitySourceRaw} al WHERE al.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+$weekCount  = $r ? (int)$r->fetch_row()[0] : 0;
 
 // ── Action color map ───────────────────────────────────────────
 function actionBadge(string $action): string
