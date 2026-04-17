@@ -933,12 +933,13 @@ if ($action === 'rename-file') {
             exit;
         }
 
-        // Get old name for logging
-        $old = $db->prepare("SELECT original_name FROM files WHERE id = ?");
+        // Get old name and owner for logging
+        $old = $db->prepare("SELECT original_name, user_id AS owner_id FROM files WHERE id = ?");
         $old->bind_param('i', $fileId);
         $old->execute();
-        $oldRow = $old->get_result()->fetch_assoc();
+        $oldRow  = $old->get_result()->fetch_assoc();
         $oldName = $oldRow ? $oldRow['original_name'] : 'Unknown';
+        $fileOwnerId = (int)($oldRow['owner_id'] ?? 0);
 
         // Prevent duplicate filenames within this project only (case-insensitive)
         $dup = $db->prepare("SELECT id FROM files WHERE LOWER(TRIM(original_name)) = LOWER(TRIM(?)) AND project_id = ? AND id != ? LIMIT 1");
@@ -954,9 +955,18 @@ if ($action === 'rename-file') {
         if ($stmt->execute()) {
             // Log rename activity
             try {
-                $userName = $_SESSION['name'] ?? 'Unknown User';
-                $logDesc = "Renamed file from " . $oldName . " to " . $newName . " by " . $userName;
-                logActivityEvent($db, (int)$userId, 'file_renamed', $logDesc, $_SERVER['REMOTE_ADDR'] ?? null, $_SESSION['role'] ?? null, false);
+                $userName   = $_SESSION['name'] ?? 'Unknown User';
+                $userRole   = $_SESSION['role'] ?? 'unknown';
+                $renameIp   = $_SERVER['REMOTE_ADDR'] ?? null;
+                $logDesc    = "Renamed file from '{$oldName}' to '{$newName}' by {$userName}";
+                logActivityEvent($db, (int)$userId, 'file_renamed', $logDesc, $renameIp, $userRole, false);
+
+                // Notify file owner if actor is different
+                if ($fileOwnerId > 0 && $fileOwnerId !== (int)$userId) {
+                    $ownerRole  = getUserRoleForActivityLog($db, $fileOwnerId);
+                    $ownerTable = getRoleActivityTable($ownerRole);
+                    insertActivityRow($db, $ownerTable, $fileOwnerId, 'file_renamed', "Your file '{$oldName}' was renamed to '{$newName}' by {$userName} ({$userRole})", $renameIp);
+                }
             }
             catch (Exception $e) {
             }

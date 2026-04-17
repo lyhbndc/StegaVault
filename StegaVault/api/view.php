@@ -36,12 +36,12 @@ if ($fileId <= 0) {
 // 3. Project Member can view files in their project
 
 if ($userRole === 'admin') {
-    $stmt = $db->prepare("SELECT file_path, mime_type, original_name FROM files WHERE id = ?");
+    $stmt = $db->prepare("SELECT file_path, mime_type, original_name, user_id AS owner_id FROM files WHERE id = ?");
     $stmt->bind_param('i', $fileId);
 } else {
     // Check if user is owner OR member of the project
     $stmt = $db->prepare("
-        SELECT f.file_path, f.mime_type, f.original_name
+        SELECT f.file_path, f.mime_type, f.original_name, f.user_id AS owner_id
         FROM files f
         LEFT JOIN project_members pm ON f.project_id = pm.project_id
         WHERE f.id = ? AND (f.user_id = ? OR pm.user_id = ?)
@@ -71,15 +71,19 @@ if ($realFilePath === false || strpos($realFilePath, $uploadsDir) !== 0 || !file
 
 // Log file view
 $viewerName = $_SESSION['name'] ?? 'Unknown';
-logActivityEvent(
-    $db,
-    (int)$userId,
-    'file_viewed',
-    'Viewed file: ' . ($file['original_name'] ?? 'Unknown') . ' by ' . $viewerName,
-    $_SERVER['REMOTE_ADDR'] ?? null,
-    $_SESSION['role'] ?? null,
-    false
-);
+$viewerRole = $_SESSION['role'] ?? 'unknown';
+$fileName   = $file['original_name'] ?? 'Unknown';
+$clientIp   = $_SERVER['REMOTE_ADDR'] ?? null;
+
+logActivityEvent($db, (int)$userId, 'file_viewed', "Viewed file: {$fileName} by {$viewerName}", $clientIp, $viewerRole, false);
+
+// Also notify the file owner if the viewer is someone else
+$ownerId = (int)($file['owner_id'] ?? 0);
+if ($ownerId > 0 && $ownerId !== (int)$userId) {
+    $ownerRole  = getUserRoleForActivityLog($db, $ownerId);
+    $ownerTable = getRoleActivityTable($ownerRole);
+    insertActivityRow($db, $ownerTable, $ownerId, 'file_viewed', "Your file '{$fileName}' was viewed by {$viewerName} ({$viewerRole})", $clientIp);
+}
 
 // Decrypt Content
 $content = Encryption::decryptFileContent($filePath);

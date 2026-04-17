@@ -27,7 +27,7 @@ $stmt = $db->prepare("
     SELECT action, description, created_at 
         FROM activity_log_employee 
     WHERE user_id = ?
-      AND action IN ('login_success', 'file_downloaded', 'file_viewed')
+      AND action IN ('login_success', 'file_downloaded', 'file_viewed', 'file_renamed')
     ORDER BY created_at DESC 
     LIMIT 100
 ");
@@ -51,6 +51,8 @@ function getActionIcon($action)
             return ['download', 'text-blue-500', 'bg-blue-500/10'];
         case 'file_viewed':
             return ['visibility', 'text-sky-500', 'bg-sky-500/10'];
+        case 'file_renamed':
+            return ['edit', 'text-amber-500', 'bg-amber-500/10'];
         default:
             return ['info', 'text-slate-500', 'bg-slate-500/10'];
     }
@@ -65,6 +67,8 @@ function formatActionText($action, $desc)
             return "<b>Downloaded file</b><br/><span class='text-xs text-slate-500 dark:text-slate-400'>$desc</span>";
         case 'file_viewed':
             return "<b>Viewed file</b><br/><span class='text-xs text-slate-500 dark:text-slate-400'>$desc</span>";
+        case 'file_renamed':
+            return "<b>File renamed</b><br/><span class='text-xs text-slate-500 dark:text-slate-400'>$desc</span>";
         default:
             return "<b>Activity</b><br/><span class='text-xs text-slate-500 dark:text-slate-400'>$desc</span>";
     }
