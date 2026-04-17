@@ -336,6 +336,18 @@ if ($projectsResult) {
                             </a>
                         <?php endif; ?>
 
+                        <a href="../guide.php" class="block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center gap-4">
+                                <div class="p-3 bg-primary/10 rounded-lg">
+                                    <span class="material-symbols-outlined text-primary text-2xl">menu_book</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-slate-900 dark:text-white font-bold text-base">System Guide</h4>
+                                    <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">How every page works, plain English</p>
+                                </div>
+                            </div>
+                        </a>
+
                         <!-- System Status -->
                         <div class="bg-gradient-to-br from-primary/10 to-purple-500/10 border border-primary/20 rounded-xl p-5 mt-6">
                             <div class="flex items-start gap-3">
