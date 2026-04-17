@@ -342,6 +342,13 @@ elseif ($error): ?>
                                 <span class="material-symbols-outlined text-[13px]">location_off</span>
                                 Where from: External / Unknown
                             </span>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-700/20 text-slate-400 border border-slate-500/20">
+                                <span class="material-symbols-outlined text-[13px]">router</span>
+                                Submitted from: <?php
+                                    $submitterIp = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+                                    echo htmlspecialchars(($submitterIp === '::1' || $submitterIp === '127.0.0.1') ? 'localhost' : $submitterIp);
+                                ?>
+                            </span>
                         </div>
                     </div>
                 </div>
