@@ -160,7 +160,7 @@ function formatActionText($action, $desc)
             <?php include '../includes/search_bar.php'; ?>
         </header>
 
-        <div class="p-8 max-w-4xl">
+        <div class="p-8 w-full">
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
                 <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800">
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white">Recent Activity</h3>

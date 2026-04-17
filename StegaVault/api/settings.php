@@ -55,7 +55,23 @@ if ($action === 'change_password') {
         exit;
     }
     if (strlen($newPass) < 12) {
-        echo json_encode(['success' => false, 'error' => 'New password must be at least 12 characters']);
+        echo json_encode(['success' => false, 'error' => 'Password must be at least 12 characters']);
+        exit;
+    }
+    if (!preg_match('/[A-Z]/', $newPass)) {
+        echo json_encode(['success' => false, 'error' => 'Password must contain at least one uppercase letter']);
+        exit;
+    }
+    if (!preg_match('/[a-z]/', $newPass)) {
+        echo json_encode(['success' => false, 'error' => 'Password must contain at least one lowercase letter']);
+        exit;
+    }
+    if (!preg_match('/[0-9]/', $newPass)) {
+        echo json_encode(['success' => false, 'error' => 'Password must contain at least one number']);
+        exit;
+    }
+    if (!preg_match('/[\W_]/', $newPass)) {
+        echo json_encode(['success' => false, 'error' => 'Password must contain at least one special character']);
         exit;
     }
 

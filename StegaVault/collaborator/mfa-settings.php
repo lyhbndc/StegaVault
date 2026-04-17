@@ -34,7 +34,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
     <link rel="icon" type="image/png" href="../icon.png">
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Two-Factor Authentication - StegaVault</title>
+    <title>Multi-Factor Authentication - StegaVault</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -78,7 +78,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
                     <span class="material-symbols-outlined text-2xl">arrow_back</span>
                 </a>
                 <div>
-                    <h1 class="text-2xl font-bold">Two-Factor Authentication</h1>
+                    <h1 class="text-2xl font-bold">Multi-Factor Authentication</h1>
                     <p class="text-slate-400 text-sm">Secure your account with MFA</p>
                 </div>
             </div>
@@ -131,7 +131,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
         <div class="rounded-2xl border border-slate-700 bg-slate-800/30 p-6 lg:p-8">
             <?php if (!$mfaEnabled): ?>
                 <!-- SETUP SECTION -->
-                <h3 class="text-lg font-bold mb-4">Enable Two-Factor Authentication</h3>
+                <h3 class="text-lg font-bold mb-4">Enable Multi-Factor Authentication</h3>
                 
                 <div class="space-y-6">
                     <div>
@@ -223,7 +223,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
                         <div class="flex items-start gap-4">
                             <span class="material-symbols-outlined text-3xl text-emerald-500 flex-shrink-0">check_circle</span>
                             <div>
-                                <p class="font-semibold text-emerald-400 mb-1">Two-Factor Authentication Active</p>
+                                <p class="font-semibold text-emerald-400 mb-1">Multi-Factor Authentication Active</p>
                                 <p class="text-sm text-slate-300">
                                     Your account is now protected. You'll need your authenticator app code to sign in.
                                 </p>
@@ -233,7 +233,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
 
                     <button onclick="disableMfa()" class="w-full py-4 px-6 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold rounded-xl border border-red-500/30 transition-all flex items-center justify-center gap-3 text-lg">
                         <span class="material-symbols-outlined">lock_open</span>
-                        <span>Disable Two-Factor Authentication</span>
+                        <span>Disable Multi-Factor Authentication</span>
                     </button>
 
                     <div class="border border-slate-700 rounded-xl p-6">
@@ -363,7 +363,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
         }
 
         async function disableMfa() {
-            if (!confirm('Are you sure you want to disable Two-Factor Authentication? This will remove the extra layer of security from your account.')) {
+            if (!confirm('Are you sure you want to disable Multi-Factor Authentication? This will remove the extra layer of security from your account.')) {
                 return;
             }
 

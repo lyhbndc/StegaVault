@@ -175,7 +175,7 @@ if ($method === 'POST' && $action === 'create') {
             $activationLink = $protocol . $_SERVER['HTTP_HOST'] . $baseDir . "/activate.php?token=" . $activation_token;
 
             $emailer = new EmailService();
-            $emailer->sendActivationEmail($email, $name, $username, $role, $activationLink, $expiration_date);
+            $emailer->sendActivationEmail($email, $name, $username, $password, $role, $activationLink, $expiration_date);
 
             // Log activity
             $adminId = $_SESSION['user_id'];

@@ -1608,9 +1608,13 @@ $userId = $user['id'];
             }
 
             document.getElementById('folderUploadError').textContent = '';
-            document.getElementById('folderUploadStatus').textContent = '';
+            const _statusEl = document.getElementById('folderUploadStatus');
+            _statusEl.textContent = '';
+            _statusEl.classList.remove('text-emerald-500', 'font-semibold');
+            _statusEl.classList.add('text-slate-500');
             document.getElementById('folderUploadProgress').classList.add('hidden');
             document.getElementById('folderUploadProgressBar').style.width = '0%';
+            document.getElementById('folderUploadTriggerBtn').classList.remove('hidden');
             if (_currentFolderName) {
                 document.getElementById('folderUploadFolderName').textContent = `Into: ${_currentFolderName}`;
             }
@@ -1743,11 +1747,11 @@ $userId = $user['id'];
                 bar.style.width = `${((i + 1) / files.length) * 100}%`;
             }
 
-            status.textContent = `Done! ${successCount}/${files.length} file(s) uploaded.`;
-            setTimeout(() => {
-                closeFolderUploadModal();
-                loadPane(_currentFolderId);
-            }, 800);
+            status.textContent = `✓ Done! ${successCount}/${files.length} file${files.length !== 1 ? 's' : ''} uploaded.`;
+            status.classList.remove('text-slate-500', 'text-slate-400');
+            status.classList.add('text-emerald-500', 'font-semibold');
+            loadPane(_currentFolderId);
+            document.getElementById('folderUploadTriggerBtn').classList.add('hidden');
         }
 
         document.addEventListener('DOMContentLoaded', wireFolderDrop);

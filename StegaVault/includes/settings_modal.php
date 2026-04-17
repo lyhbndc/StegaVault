@@ -94,10 +94,18 @@
                     </div>
                     <div class="relative">
                         <input id="settingsNewPass" type="password" placeholder="New password (min 12 chars)"
+                            oninput="checkPasswordPolicy(this.value)"
                             class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 pr-10 text-slate-900 dark:text-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" />
                         <button type="button" onclick="toggleSettingsPassword('settingsNewPass', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                             <span class="material-symbols-outlined text-[20px]">visibility_off</span>
                         </button>
+                    </div>
+                    <div id="passwordPolicyChecklist" class="hidden mt-1.5 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px]">
+                        <span id="pc_len"  class="flex items-center gap-1 text-slate-400"><span class="material-symbols-outlined text-[13px]">cancel</span>12+ characters</span>
+                        <span id="pc_upper" class="flex items-center gap-1 text-slate-400"><span class="material-symbols-outlined text-[13px]">cancel</span>Uppercase (A-Z)</span>
+                        <span id="pc_lower" class="flex items-center gap-1 text-slate-400"><span class="material-symbols-outlined text-[13px]">cancel</span>Lowercase (a-z)</span>
+                        <span id="pc_num"  class="flex items-center gap-1 text-slate-400"><span class="material-symbols-outlined text-[13px]">cancel</span>Number (0-9)</span>
+                        <span id="pc_spec" class="flex items-center gap-1 text-slate-400"><span class="material-symbols-outlined text-[13px]">cancel</span>Special character</span>
                     </div>
                     <div class="relative">
                         <input id="settingsConfPass" type="password" placeholder="Confirm new password"
@@ -119,7 +127,7 @@
             <div>
                 <div class="flex items-center gap-2 mb-3">
                     <span class="material-symbols-outlined text-primary text-[16px]">phonelink_lock</span>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Two-Factor Auth</h3>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Multi-Factor Auth</h3>
                 </div>
 
                 <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
@@ -417,10 +425,38 @@
         }
     }
 
+    function checkPasswordPolicy(val) {
+        const checklist = document.getElementById('passwordPolicyChecklist');
+        checklist.classList.toggle('hidden', val.length === 0);
+        const rules = {
+            pc_len:   val.length >= 12,
+            pc_upper: /[A-Z]/.test(val),
+            pc_lower: /[a-z]/.test(val),
+            pc_num:   /[0-9]/.test(val),
+            pc_spec:  /[\W_]/.test(val),
+        };
+        for (const [id, pass] of Object.entries(rules)) {
+            const el = document.getElementById(id);
+            const icon = el.querySelector('span');
+            if (pass) {
+                el.classList.replace('text-slate-400', 'text-emerald-500');
+                icon.textContent = 'check_circle';
+            } else {
+                el.classList.replace('text-emerald-500', 'text-slate-400');
+                icon.textContent = 'cancel';
+            }
+        }
+    }
+
     async function changePassword() {
         const cur = document.getElementById('settingsCurPass').value;
         const nw = document.getElementById('settingsNewPass').value;
         const conf = document.getElementById('settingsConfPass').value;
+
+        if (nw.length < 12 || !/[A-Z]/.test(nw) || !/[a-z]/.test(nw) || !/[0-9]/.test(nw) || !/[\W_]/.test(nw)) {
+            showSettingsToast('Password does not meet the policy requirements', false);
+            return;
+        }
         try {
             const res = await fetch('../api/settings.php', {
                 method: 'POST',

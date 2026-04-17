@@ -52,7 +52,7 @@ class EmailService
      * @param string|null $expirationDate Account expiration date (optional)
      * @return bool True if email sent successfully
      */
-    public function sendActivationEmail($email, $name, $username, $role, $activationLink, $expirationDate = null)
+    public function sendActivationEmail($email, $name, $username, $password, $role, $activationLink, $expirationDate = null)
     {
         try {
             $this->mail->clearAddresses();
@@ -63,8 +63,8 @@ class EmailService
             $this->mail->isHTML(true);
             $this->mail->Subject = 'Activate Your StegaVault Account';
 
-            $this->mail->Body = $this->getActivationEmailTemplate($name, $username, $role, $activationLink, $expirationDate);
-            $this->mail->AltBody = "Hello $name,\n\nYour StegaVault account has been created!\n\nUsername: $username\nRole: $role\n\nActivate your account: $activationLink\n\nThank you,\nStegaVault Security Team";
+            $this->mail->Body = $this->getActivationEmailTemplate($name, $email, $username, $password, $role, $activationLink, $expirationDate);
+            $this->mail->AltBody = "Hello $name,\n\nYour StegaVault account has been created!\n\nYour Login Credentials:\nEmail: $email\nUsername: $username\nPassword: $password\nRole: $role\n\nActivate your account: $activationLink\n\nIMPORTANT: Please change your password after logging in via Account Settings.\n\nThank you,\nStegaVault Security Team";
 
             $this->mail->send();
             return true;
@@ -140,19 +140,18 @@ class EmailService
     /**
      * Get HTML template for activation email
      */
-    private function getActivationEmailTemplate($name, $username, $role, $activationLink, $expirationDate)
+    private function getActivationEmailTemplate($name, $email, $username, $password, $role, $activationLink, $expirationDate)
     {
         $expiryText = $expirationDate ? "<p style='color: #f59e0b; margin: 5px 0 0 0; font-size: 14px;'><strong>Account Expiration:</strong> " . date('F j, Y', strtotime($expirationDate)) . "</p>" : '';
 
         // Determine login page based on role
-        $loginPage = ($role === 'admin') ? 'admin/login.php' : 'login.php';
+        $loginPage = ($role === 'admin') ? 'admin/login.php' : ($role === 'collaborator' ? 'collaborator/login.php' : 'employee/login.php');
         $loginUrl = 'http://localhost/StegaVault/' . $loginPage; // TODO: Update domain
 
         return '
         <!DOCTYPE html>
         <html>
         <head>
-    <link rel="icon" type="image/png" href="../icon.png">
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Activate Your Account</title>
@@ -174,22 +173,30 @@ class EmailService
                                     <p style="color: rgba(255, 255, 255, 0.9); margin: 8px 0 0 0; font-size: 14px;">StegaVault Access Granted</p>
                                 </td>
                             </tr>
-                            
+
                             <!-- Content -->
                             <tr>
                                 <td style="padding: 40px 30px;">
                                     <h2 style="color: #f1f5f9; margin: 0 0 20px 0; font-size: 24px; font-weight: bold;">Welcome to StegaVault!</h2>
                                     <p style="color: #cbd5e1; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">Hello <strong style="color: #f1f5f9;">' . htmlspecialchars($name) . '</strong>,</p>
-                                    <p style="color: #cbd5e1; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">Your StegaVault account has been created by an administrator. Click the button below to activate your account and set up your access.</p>
-                                    
-                                    <!-- Account Details Box -->
-                                    <div style="background-color: #334155; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                                        <p style="color: #94a3b8; margin: 0 0 10px 0; font-size: 14px; font-weight: bold;">Account Details:</p>
-                                        <p style="color: #e2e8f0; margin: 5px 0; font-size: 14px;"><strong>Username:</strong> ' . htmlspecialchars($username) . '</p>
-                                        <p style="color: #e2e8f0; margin: 5px 0; font-size: 14px;"><strong>Role:</strong> ' . ucfirst($role) . '</p>
+                                    <p style="color: #cbd5e1; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">Your StegaVault account has been created by an administrator. Below are your login credentials. Click the button below to activate your account.</p>
+
+                                    <!-- Credentials Box -->
+                                    <div style="background-color: #1a2744; border: 1px solid #667eea; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                                        <p style="color: #667eea; margin: 0 0 12px 0; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">🔑 Your Login Credentials</p>
+                                        <p style="color: #e2e8f0; margin: 6px 0; font-size: 14px;"><strong style="color: #94a3b8;">Email:</strong>&nbsp;&nbsp;' . htmlspecialchars($email) . '</p>
+                                        <p style="color: #e2e8f0; margin: 6px 0; font-size: 14px;"><strong style="color: #94a3b8;">Username:</strong>&nbsp;&nbsp;' . htmlspecialchars($username) . '</p>
+                                        <p style="color: #e2e8f0; margin: 6px 0; font-size: 14px;"><strong style="color: #94a3b8;">Password:</strong>&nbsp;&nbsp;<span style="font-family: monospace; background-color: #334155; padding: 2px 8px; border-radius: 4px; font-size: 14px;">' . htmlspecialchars($password) . '</span></p>
+                                        <p style="color: #e2e8f0; margin: 6px 0; font-size: 14px;"><strong style="color: #94a3b8;">Role:</strong>&nbsp;&nbsp;' . ucfirst($role) . '</p>
                                         ' . $expiryText . '
                                     </div>
-                                    
+
+                                    <!-- Change Password Reminder -->
+                                    <div style="background-color: #422006; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 20px 0;">
+                                        <p style="color: #fbbf24; margin: 0 0 4px 0; font-size: 14px; font-weight: bold;">⚠️ Important — Change Your Password</p>
+                                        <p style="color: #fde68a; margin: 0; font-size: 13px; line-height: 1.6;">For your security, please change your password after your first login. Go to <strong>Account Settings</strong> in the portal to update it.</p>
+                                    </div>
+
                                     <!-- Button -->
                                     <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
                                         <tr>
@@ -198,18 +205,18 @@ class EmailService
                                             </td>
                                         </tr>
                                     </table>
-                                    
+
                                     <!-- Alternative Link -->
                                     <div style="background-color: #334155; border-radius: 8px; padding: 20px; margin: 20px 0;">
                                         <p style="color: #94a3b8; margin: 0 0 10px 0; font-size: 14px;">If the button doesn\'t work, copy and paste this link into your browser:</p>
                                         <p style="color: #667eea; margin: 0; font-size: 13px; word-break: break-all; font-family: monospace;">' . $activationLink . '</p>
                                     </div>
-                                    
+
                                     <!-- Security Notice -->
                                     <div style="border-left: 3px solid #667eea; padding-left: 15px; margin: 25px 0;">
                                         <p style="color: #94a3b8; margin: 0; font-size: 14px; line-height: 1.6;"><strong style="color: #f1f5f9;">Security Notice:</strong> This activation link is for one-time use only.</p>
                                     </div>
-                                    
+
                                     <!-- Login Link -->
                                     <div style="background-color: #334155; border-radius: 8px; padding: 20px; margin: 20px 0;">
                                         <p style="color: #94a3b8; margin: 0 0 10px 0; font-size: 14px;">After activating your account, login here:</p>
@@ -217,11 +224,11 @@ class EmailService
                                             <a href="' . $loginUrl . '" style="color: #667eea; text-decoration: none; font-weight: bold; font-size: 14px;">→ ' . ($role === 'admin' ? 'Admin Login' : ($role === 'collaborator' ? 'Collaborator Login' : 'Employee Login')) . '</a>
                                         </p>
                                     </div>
-                                    
+
                                     <p style="color: #94a3b8; margin: 20px 0 0 0; font-size: 14px; line-height: 1.6;">If you didn\'t expect this email, please contact your administrator.</p>
                                 </td>
                             </tr>
-                            
+
                             <!-- Footer -->
                             <tr>
                                 <td style="background-color: #0f172a; padding: 30px; text-align: center; border-top: 1px solid #334155;">

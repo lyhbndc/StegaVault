@@ -189,6 +189,63 @@ if ($method === 'POST' && $action === 'verify_login') {
     }
 }
 
+// 4b. Verify MFA via recovery code during login
+if ($method === 'POST' && $action === 'verify_recovery_login') {
+    if (!isset($_SESSION['pending_mfa_user_id'])) {
+        sendResponse(false, null, 'No pending MFA challenge', 400);
+    }
+
+    $recoveryCode = strtoupper(trim($input['recovery_code'] ?? ''));
+    if (empty($recoveryCode)) {
+        sendResponse(false, null, 'Recovery code is required', 400);
+    }
+
+    $pendingUserId = $_SESSION['pending_mfa_user_id'];
+
+    $stmt = $db->prepare("SELECT id, email, name, role FROM users WHERE id = ?");
+    $stmt->bind_param('i', $pendingUserId);
+    $stmt->execute();
+    $user = $stmt->get_result()->fetch_assoc();
+
+    if (!$user) {
+        sendResponse(false, null, 'Invalid user', 400);
+    }
+
+    // Find the unused recovery code
+    $stmt = $db->prepare("SELECT id FROM mfa_recovery_codes WHERE user_id = ? AND UPPER(code) = ? AND used = FALSE");
+    $stmt->bind_param('is', $pendingUserId, $recoveryCode);
+    $stmt->execute();
+    $codeRow = $stmt->get_result()->fetch_assoc();
+
+    if (!$codeRow) {
+        sendResponse(false, null, 'Invalid or already used recovery code', 400);
+    }
+
+    // Mark as used
+    $stmt = $db->prepare("UPDATE mfa_recovery_codes SET used = TRUE, used_at = NOW() WHERE id = ?");
+    $stmt->bind_param('i', $codeRow['id']);
+    $stmt->execute();
+
+    // Complete the login
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['email']   = $user['email'];
+    $_SESSION['name']    = $user['name'];
+    $_SESSION['role']    = $user['role'];
+
+    unset($_SESSION['pending_mfa_user_id']);
+
+    sendResponse(true, [
+        'user' => [
+            'id'    => $user['id'],
+            'email' => $user['email'],
+            'name'  => $user['name'],
+            'role'  => $user['role']
+        ],
+        'message'    => 'Login successful via recovery code',
+        'session_id' => session_id()
+    ]);
+}
+
 // 5. Get recovery codes (for backup/display)
 if ($method === 'GET' && $action === 'recovery_codes') {
     if (!isset($_SESSION['user_id'])) {

@@ -44,6 +44,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     } elseif (strlen($newPassword) < 12) {
         $message = 'Password must be at least 12 characters';
         $messageType = 'error';
+    } elseif (!preg_match('/[A-Z]/', $newPassword)) {
+        $message = 'Password must contain at least one uppercase letter';
+        $messageType = 'error';
+    } elseif (!preg_match('/[a-z]/', $newPassword)) {
+        $message = 'Password must contain at least one lowercase letter';
+        $messageType = 'error';
+    } elseif (!preg_match('/[0-9]/', $newPassword)) {
+        $message = 'Password must contain at least one number';
+        $messageType = 'error';
+    } elseif (!preg_match('/[\W_]/', $newPassword)) {
+        $message = 'Password must contain at least one special character';
+        $messageType = 'error';
     } elseif (!password_verify($currentPassword, $userDetails['password_hash'])) {
         $message = 'Current password is incorrect';
         $messageType = 'error';
@@ -309,10 +321,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                     <div class="form-group">
                         <label for="new_password">New Password</label>
                         <div class="password-input-wrapper">
-                            <input type="password" id="new_password" name="new_password" minlength="12" required>
+                            <input type="password" id="new_password" name="new_password" minlength="12" required oninput="checkPolicy(this.value)">
                             <button type="button" class="password-toggle-btn material-symbols-outlined" onclick="togglePasswordVisibility('new_password', this)">visibility_off</button>
                         </div>
-                        <small style="color: #666;">Minimum 12 characters</small>
+                        <div id="policyChecklist" style="display:none; margin-top:8px; display:grid; grid-template-columns:1fr 1fr; gap:4px 12px; font-size:12px;">
+                            <span id="pc_len"   style="display:flex;align-items:center;gap:4px;color:#888;"><span class="material-symbols-outlined" style="font-size:14px;">cancel</span>12+ characters</span>
+                            <span id="pc_upper" style="display:flex;align-items:center;gap:4px;color:#888;"><span class="material-symbols-outlined" style="font-size:14px;">cancel</span>Uppercase (A-Z)</span>
+                            <span id="pc_lower" style="display:flex;align-items:center;gap:4px;color:#888;"><span class="material-symbols-outlined" style="font-size:14px;">cancel</span>Lowercase (a-z)</span>
+                            <span id="pc_num"   style="display:flex;align-items:center;gap:4px;color:#888;"><span class="material-symbols-outlined" style="font-size:14px;">cancel</span>Number (0-9)</span>
+                            <span id="pc_spec"  style="display:flex;align-items:center;gap:4px;color:#888;"><span class="material-symbols-outlined" style="font-size:14px;">cancel</span>Special character</span>
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -330,6 +348,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     </div>
     <script src="../js/security-shield.js"></script>
     <script>
+        function checkPolicy(val) {
+            const list = document.getElementById('policyChecklist');
+            list.style.display = val.length > 0 ? 'grid' : 'none';
+            const rules = {
+                pc_len:   val.length >= 12,
+                pc_upper: /[A-Z]/.test(val),
+                pc_lower: /[a-z]/.test(val),
+                pc_num:   /[0-9]/.test(val),
+                pc_spec:  /[\W_]/.test(val),
+            };
+            for (const [id, pass] of Object.entries(rules)) {
+                const el = document.getElementById(id);
+                const icon = el.querySelector('span');
+                el.style.color = pass ? '#4caf50' : '#888';
+                icon.textContent = pass ? 'check_circle' : 'cancel';
+            }
+        }
+
         function togglePasswordVisibility(fieldId, btnElement) {
             const input = document.getElementById(fieldId);
             if (input.type === 'password') {
