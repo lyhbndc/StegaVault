@@ -1,7 +1,7 @@
 <?php
 
 /**
- * StegaVault - Upload API (Video Support + Project Link)
+ * StegaVault - Upload API (Fixed Storage + Safe Upload + Encryption Pipeline)
  */
 
 session_start();
@@ -76,58 +76,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $file = $_FILES['file'];
+
     $projectId = isset($_POST['project_id']) && is_numeric($_POST['project_id']) ? (int) $_POST['project_id'] : null;
     $folderId = isset($_POST['folder_id']) && is_numeric($_POST['folder_id']) ? (int) $_POST['folder_id'] : null;
 
     /* =====================================================
-       VALIDATION (PROJECT / FOLDER)
+       VALIDATION
     ===================================================== */
-    if ($folderId && $projectId) {
-        $fcheck = $db->prepare("SELECT id FROM project_folders WHERE id = ? AND project_id = ?");
-        $fcheck->bind_param('ii', $folderId, $projectId);
-        $fcheck->execute();
-        if ($fcheck->get_result()->num_rows === 0) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Folder does not belong to this project']);
-            exit;
-        }
-    } elseif ($folderId && !$projectId) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'folder_id requires project_id']);
-        exit;
-    }
-
-    if ($projectId) {
-        $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
-
-        if (!$isAdmin) {
-            $stmt = $db->prepare("SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?");
-            $stmt->bind_param('ii', $projectId, $userId);
-            $stmt->execute();
-
-            if ($stmt->get_result()->num_rows === 0) {
-                http_response_code(403);
-                echo json_encode(['success' => false, 'error' => 'Not a member of this project']);
-                exit;
-            }
-        }
-    }
 
     if ($file['error'] !== UPLOAD_ERR_OK) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Upload failed']);
+        echo json_encode(['success' => false, 'error' => 'Upload failed (PHP error)']);
         exit;
     }
 
-    /* =====================================================
-       FILE TYPE + SIZE VALIDATION
-    ===================================================== */
     $maxSize = 50 * 1024 * 1024;
     if ($file['size'] > $maxSize) {
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => 'File too large']);
         exit;
     }
+
+    /* =====================================================
+       MIME CHECK
+    ===================================================== */
 
     $allowedMimes = [
         'image/png','image/jpeg','image/jpg','image/webp',
@@ -152,6 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* =====================================================
        DUPLICATE CHECK
     ===================================================== */
+
     $originalName = trim($file['name']);
 
     if ($projectId !== null) {
@@ -171,15 +144,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     /* =====================================================
-       🔐 STEGAVAULT STORAGE STRUCTURE
+       STORAGE PATH (FIXED)
     ===================================================== */
 
-    $baseStorage = __DIR__ . "/storage/";
+    $baseStorage = __DIR__ . '/../uploads';
 
-    $rawDir = $baseStorage . "raw/";
-    $encryptedDir = $baseStorage . "encrypted/";
-    $stegoDir = $baseStorage . "stego/";
-    $backupDir = $baseStorage . "backups/";
+    $rawDir = $baseStorage . "/raw/";
+    $encryptedDir = $baseStorage . "/encrypted/";
+    $stegoDir = $baseStorage . "/stego/";
+    $backupDir = $baseStorage . "/backups/";
 
     foreach ([$rawDir, $encryptedDir, $stegoDir, $backupDir] as $dir) {
         if (!is_dir($dir)) {
@@ -188,20 +161,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     /* =====================================================
-       STEP 1: SAVE RAW FILE
+       STEP 1: SAVE RAW FILE (FIXED)
     ===================================================== */
 
-    $rawFilename = time() . "_" . basename($file["name"]);
+    if (!is_uploaded_file($file["tmp_name"])) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Invalid upload source']);
+        exit;
+    }
+
+    $safeName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $file["name"]);
+    $rawFilename = uniqid('raw_', true) . '_' . $safeName;
     $rawPath = $rawDir . $rawFilename;
 
     if (!move_uploaded_file($file["tmp_name"], $rawPath)) {
+        error_log("Upload failed: {$file['tmp_name']} -> $rawPath");
+
         http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Failed to store raw file']);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Failed to store raw file',
+            'debug' => [
+                'tmp' => $file["tmp_name"],
+                'target' => $rawPath
+            ]
+        ]);
         exit;
     }
 
     /* =====================================================
-       STEP 2: OPTIONAL PDF PASSWORD PROTECTION
+       STEP 2: PDF PROTECTION (OPTIONAL)
     ===================================================== */
 
     $sourcePath = $rawPath;
@@ -209,9 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($mimeType === 'application/pdf' && !empty($_POST['pdf_password'])) {
 
-        $pdfPassword = $_POST['pdf_password'];
-
-        $protected = PdfSecurity::protectPdfWithPassword($rawPath, $pdfPassword);
+        $protected = PdfSecurity::protectPdfWithPassword($rawPath, $_POST['pdf_password']);
 
         if ($protected === false) {
             http_response_code(400);
@@ -249,9 +236,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ===================================================== */
 
     $fileSize = filesize($encPath);
-    $relativePath = 'storage/encrypted/' . $encFilename;
+    $relativePath = 'uploads/encrypted/' . $encFilename;
 
-    $requireWatermark = true;
+    $requireWatermark = 1;
 
     $stmt = $db->prepare("
         INSERT INTO files 
@@ -260,7 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ");
 
     $stmt->bind_param(
-        'isssisb',
+        'isssisi',
         $userId,
         $encFilename,
         $originalName,
@@ -280,7 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fileId = $stmt->insert_id;
 
     /* =====================================================
-       STEP 5: ASSIGN PROJECT/FOLDER
+       STEP 5: PROJECT LINK
     ===================================================== */
 
     if ($projectId !== null || $folderId !== null) {
@@ -290,7 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     /* =====================================================
-       SUCCESS RESPONSE
+       SUCCESS
     ===================================================== */
 
     echo json_encode([
@@ -302,7 +289,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'original_name' => $originalName,
                 'path' => $relativePath
             ],
-            'message' => 'File uploaded, encrypted, and stored successfully'
+            'message' => 'Upload successful'
         ]
     ]);
     exit;
