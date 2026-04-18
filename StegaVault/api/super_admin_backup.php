@@ -244,23 +244,28 @@ BASH;
         $meta = array_merge($newEntries, $meta);
         $meta = array_slice($meta, 0, 50);
         saveMeta($meta);
-if (class_exists('SuperAdminLogger')) {
-    SuperAdminLogger::log('backup_db_created', 'backup', [
-        'backup_id' => $backupId,
-        'filename'  => $folderName . '/database.dump',
-        'size'      => formatBytes(filesize($dbFile)),
-    ]);
-}
 
-sendResponse(true, [
-    'backup_id' => $backupId,
-    'filename'  => $folderName . '/database.dump',
-    'size'      => formatBytes(filesize($dbFile)),
-    'tables'    => $tableCount,
-    'rows'      => $rowCount,
-    'message'   => 'Backup created successfully',
-    'output'    => trim($output),
-]);
+        if (class_exists('SuperAdminLogger')) {
+            SuperAdminLogger::log('backup_db_created', 'backup', [
+                'backup_id' => $backupId,
+                'filename'  => $folderName . '/database.dump',
+                'size'      => formatBytes(filesize($dbFile)),
+            ]);
+        }
+
+        sendResponse(true, [
+            'backup_id' => $backupId,
+            'filename'  => $folderName . '/database.dump',
+            'size'      => formatBytes(filesize($dbFile)),
+            'tables'    => $tableCount,
+            'rows'      => $rowCount,
+            'message'   => 'Backup created successfully',
+            'output'    => trim($output),
+        ]);
+    } catch (Exception $e) {
+        sendResponse(false, null, 'Backup failed: ' . $e->getMessage(), 500);
+    }
+}
 
 
 // ─────────────────────────────────────────────
