@@ -158,22 +158,26 @@ if ($method === 'POST' && $action === 'verify_login') {
     }
 
     // Try TOTP code first
-    $checkResult = $ga->verifyCode($user['mfa_secret'], $code, 2);
+    $checkResult = $ga->verifyCode($user['mfa_secret'], $code, 4);
 
     // If TOTP fails, try recovery code
     if (!$checkResult) {
         $recoveryCode = strtoupper(trim($code));
         $stmt = $db->prepare("SELECT id FROM super_admin_mfa_recovery_codes WHERE super_admin_id = ? AND code = ? AND used = FALSE");
-        $stmt->bind_param('is', $pendingUserId, $recoveryCode);
-        $stmt->execute();
-        $recoveryResult = $stmt->get_result();
+        if ($stmt) {
+            $stmt->bind_param('is', $pendingUserId, $recoveryCode);
+            $stmt->execute();
+            $recoveryResult = $stmt->get_result();
 
-        if ($recoveryResult->num_rows > 0) {
-            $recoveryRow = $recoveryResult->fetch_assoc();
-            $updateStmt = $db->prepare("UPDATE super_admin_mfa_recovery_codes SET used = TRUE, used_at = NOW() WHERE id = ?");
-            $updateStmt->bind_param('i', $recoveryRow['id']);
-            $updateStmt->execute();
-            $checkResult = true;
+            if ($recoveryResult->num_rows > 0) {
+                $recoveryRow = $recoveryResult->fetch_assoc();
+                $updateStmt = $db->prepare("UPDATE super_admin_mfa_recovery_codes SET used = TRUE, used_at = NOW() WHERE id = ?");
+                if ($updateStmt) {
+                    $updateStmt->bind_param('i', $recoveryRow['id']);
+                    $updateStmt->execute();
+                }
+                $checkResult = true;
+            }
         }
     }
 
