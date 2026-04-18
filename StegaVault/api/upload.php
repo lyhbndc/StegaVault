@@ -156,8 +156,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     foreach ([$rawDir, $encryptedDir, $stegoDir, $backupDir] as $dir) {
         if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
+            if (!mkdir($dir, 0755, true)) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Failed to create upload directory. Check server permissions.',
+                    'debug' => ['dir' => $dir]
+                ]);
+                exit;
+            }
         }
+    }
+
+    if (!is_writable($rawDir)) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Upload directory is not writable. Fix permissions on the server.',
+            'debug' => ['dir' => $rawDir]
+        ]);
+        exit;
     }
 
     /* =====================================================
