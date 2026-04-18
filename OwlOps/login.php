@@ -179,7 +179,7 @@ if (isset($_SESSION['user_id'])) {
             submitText.textContent = 'Authenticating...';
 
             try {
-                const response = await fetch('../api/super_admin_auth.php?action=login', {
+                const response = await fetch('../StegaVault/api/super_admin_auth.php?action=login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

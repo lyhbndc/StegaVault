@@ -59,7 +59,7 @@ if ($method === 'POST' && $action === 'login') {
         // Find user in super_admins table
         $stmt = $db->prepare("SELECT id, email, password_hash, name FROM super_admins WHERE email = ?");
         if (!$stmt) {
-            sendResponse(false, null, 'Database error: ' . $db->getConnection()->error, 500);
+            sendResponse(false, null, 'Database error: ' . $db->error, 500);
         }
 
         $stmt->bind_param('s', $email);
