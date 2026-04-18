@@ -133,16 +133,12 @@ if ($method === 'POST' && ($action === 'create' || $action === 'run_backup')) {
         $after = glob(BACKUP_DIR . '*', GLOB_ONLYDIR) ?: [];
         $newDirs = array_values(array_diff($after, $before));
 
-        if (!empty($newDirs)) {
-            rsort($newDirs);
-            $latestDir = $newDirs[0];
-        } else {
-            rsort($after);
-            if (empty($after)) {
-                sendResponse(false, null, 'Backup script ran, but no backup folder was found. Output: ' . $output, 500);
-            }
-            $latestDir = $after[0];
-        }
+if (!empty($newDirs)) {
+    rsort($newDirs);
+    $latestDir = $newDirs[0];
+} else {
+    sendResponse(false, null, 'Backup script did not create a new backup folder. Output: ' . trim($output), 500);
+}
 
         $dbFile     = $latestDir . '/database.dump';
         $filesFile  = $latestDir . '/files.tar.gz';
