@@ -752,7 +752,9 @@ foreach ($users as $u) {
             document.getElementById('userEmail').value = u.email;
             document.getElementById('userRole').value = u.role;
             setStatusMode('edit', u.status || 'active');
-            document.getElementById('userExpiration').value = u.expiration_date ? u.expiration_date.split(' ')[0] : '';
+            const expDateStr = u.expiration_date ? u.expiration_date.split(' ')[0] : '';
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('userExpiration').value = (expDateStr && expDateStr > todayStr) ? expDateStr : '';
 
             document.getElementById('drawerTitle').textContent = 'Edit User';
             document.getElementById('submitText').textContent = 'Update User';

@@ -891,7 +891,6 @@ $userId = $user['id'];
                     '<p class="text-slate-500 dark:text-slate-400 font-semibold text-sm mb-1">' +
                     (_currentFolderId ? 'This folder is empty' : 'No files yet') +
                     '</p>' +
-                    '<p class="text-slate-400 dark:text-slate-500 text-xs mb-4">Ask an admin to upload files</p>' +
                     '</div>';
                 return;
             }
