@@ -1731,6 +1731,7 @@ $userId = $user['id'];
                 try {
                     const res = await fetch('../api/upload.php', {
                         method: 'POST',
+                        credentials: 'include',
                         body: fd
                     });
                     const data = await res.json();

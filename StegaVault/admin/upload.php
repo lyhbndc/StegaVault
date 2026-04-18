@@ -388,6 +388,7 @@ $user = [
 
                     const response = await fetch('../api/upload.php', {
                         method: 'POST',
+                        credentials: 'include',
                         body: formData
                     });
 
