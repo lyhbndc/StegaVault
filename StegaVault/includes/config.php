@@ -45,9 +45,9 @@ function isApiRequest(): bool
 function getLoginRedirectByRole(string $role): string
 {
     return match ($role) {
-        'admin' => '/StegaVault/admin/login.php',
-        'collaborator' => '/StegaVault/collaborator/login.php',
-        default => '/StegaVault/employee/login.php',
+        'admin' => '/admin/login.php',
+        'collaborator' => '/collaborator/login.php',
+        default => '/employee/login.php',
     };
 }
 
