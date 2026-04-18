@@ -457,7 +457,7 @@ BEGIN
     END IF;
   END LOOP;
 END \$\$;");
-        } catch (Exception \$e) { /* sequence fix is optional */ }
+        } catch (Exception $e) { /* sequence fix is optional */ }
 
         if (class_exists('SuperAdminLogger')) {
             SuperAdminLogger::log('backup_db_restored', 'backup', [
@@ -577,7 +577,7 @@ BEGIN
     END IF;
   END LOOP;
 END \$\$;");
-        } catch (Exception \$e) { /* sequence fix is optional */ }
+        } catch (Exception $e) { /* sequence fix is optional */ }
 
         if (class_exists('SuperAdminLogger')) {
             SuperAdminLogger::log('backup_db_full_restored', 'backup', [
