@@ -342,7 +342,7 @@ $user = [
     </div>
 
     <script>
-        const API = '../StegaVault/api/super_admin_backup.php';
+const API = '/StegaVault/api/super_admin_backup.php';
         let selectedRestoreFile = null;
         let selectedRestoreType = 'database'; // 'database' | 'files'
         let allBackups = [];
@@ -520,7 +520,7 @@ $user = [
 
                 if (data.success) {
                     const d = data.data;
-                    let msg = `Backup created: ${d.tables} tables, ${(d.rows || 0).toLocaleString()} rows, ${d.size}.`;
+let msg = `Backup created successfully: ${d.filename} (${d.size}).`;
                     if (d.docker) {
                         msg += d.docker.success
                             ? ` Docker: ${d.docker.volumes?.length || 0} volume(s) backed up.`

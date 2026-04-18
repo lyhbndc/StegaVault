@@ -153,23 +153,71 @@ if ($method === 'POST' && ($action === 'create' || $action === 'run_backup')) {
         }
 
         $backupId = 'SV-' . date('Ymd-Hi') . '-' . strtolower(substr(bin2hex(random_bytes(2)), 0, 4));
+
+        $tableCount = 0;
+        $rowCount = 0;
+
+        try {
+            $countCmd = <<<'BASH'
+docker run --rm \
+  -e PGPASSWORD="owlopsco432" \
+  postgres:17 \
+  psql \
+    -h aws-1-ap-south-1.pooler.supabase.com \
+    -p 5432 \
+    -U postgres.iakongqdopzyvxhqfzvp \
+    -d postgres \
+    -At \
+    -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';"
+BASH;
+
+            $rowsCmd = <<<'BASH'
+docker run --rm \
+  -e PGPASSWORD="owlopsco432" \
+  postgres:17 \
+  psql \
+    -h aws-1-ap-south-1.pooler.supabase.com \
+    -p 5432 \
+    -U postgres.iakongqdopzyvxhqfzvp \
+    -d postgres \
+    -At \
+    -c "SELECT COALESCE(SUM(n_live_tup),0)::bigint FROM pg_stat_user_tables WHERE schemaname = 'public';"
+BASH;
+
+            $tableCountOut = trim(shell_exec($countCmd . ' 2>&1') ?? '0');
+            $rowCountOut   = trim(shell_exec($rowsCmd . ' 2>&1') ?? '0');
+
+            if (is_numeric($tableCountOut)) {
+                $tableCount = (int) $tableCountOut;
+            }
+
+            if (is_numeric($rowCountOut)) {
+                $rowCount = (int) $rowCountOut;
+            }
+        } catch (Exception $e) {
+            $tableCount = 0;
+            $rowCount = 0;
+        }
+
         $folderName = basename($latestDir);
         $meta = loadMeta();
 
-        array_unshift($meta, [
+        $newEntries = [];
+
+        $newEntries[] = [
             'id'         => $backupId,
             'filename'   => $folderName . '/database.dump',
             'type'       => 'manual',
             'size'       => filesize($dbFile),
             'size_label' => formatBytes(filesize($dbFile)),
-            'tables'     => 'Remote DB',
-            'rows'       => 0,
+            'tables'     => $tableCount,
+            'rows'       => $rowCount,
             'created_at' => date('Y-m-d H:i:s'),
             'created_by' => $_SESSION['name'] ?? 'System',
-        ]);
+        ];
 
         if (file_exists($filesFile)) {
-            array_unshift($meta, [
+            $newEntries[] = [
                 'id'         => $backupId . '-FILES',
                 'filename'   => $folderName . '/files.tar.gz',
                 'type'       => 'files',
@@ -178,11 +226,11 @@ if ($method === 'POST' && ($action === 'create' || $action === 'run_backup')) {
                 'files'      => 0,
                 'created_at' => date('Y-m-d H:i:s'),
                 'created_by' => $_SESSION['name'] ?? 'System',
-            ]);
+            ];
         }
 
         if (file_exists($configFile)) {
-            array_unshift($meta, [
+            $newEntries[] = [
                 'id'         => $backupId . '-CONFIG',
                 'filename'   => $folderName . '/config.tar.gz',
                 'type'       => 'config',
@@ -190,33 +238,30 @@ if ($method === 'POST' && ($action === 'create' || $action === 'run_backup')) {
                 'size_label' => formatBytes(filesize($configFile)),
                 'created_at' => date('Y-m-d H:i:s'),
                 'created_by' => $_SESSION['name'] ?? 'System',
-            ]);
+            ];
         }
 
+        $meta = array_merge($newEntries, $meta);
         $meta = array_slice($meta, 0, 50);
         saveMeta($meta);
-
-        if (class_exists('SuperAdminLogger')) {
-            SuperAdminLogger::log('backup_db_created', 'backup', [
-                'backup_id' => $backupId,
-                'filename'  => $folderName . '/database.dump',
-                'size'      => formatBytes(filesize($dbFile)),
-            ]);
-        }
-
-        sendResponse(true, [
-            'backup_id' => $backupId,
-            'filename'  => $folderName . '/database.dump',
-            'size'      => formatBytes(filesize($dbFile)),
-            'tables'    => 'Remote DB',
-            'rows'      => 0,
-            'message'   => 'Backup created successfully',
-            'output'    => trim($output),
-        ]);
-    } catch (Exception $e) {
-        sendResponse(false, null, 'Backup failed: ' . $e->getMessage(), 500);
-    }
+if (class_exists('SuperAdminLogger')) {
+    SuperAdminLogger::log('backup_db_created', 'backup', [
+        'backup_id' => $backupId,
+        'filename'  => $folderName . '/database.dump',
+        'size'      => formatBytes(filesize($dbFile)),
+    ]);
 }
+
+sendResponse(true, [
+    'backup_id' => $backupId,
+    'filename'  => $folderName . '/database.dump',
+    'size'      => formatBytes(filesize($dbFile)),
+    'tables'    => $tableCount,
+    'rows'      => $rowCount,
+    'message'   => 'Backup created successfully',
+    'output'    => trim($output),
+]);
+
 
 // ─────────────────────────────────────────────
 // CREATE FILES BACKUP (uploads folder → .zip)
@@ -404,65 +449,79 @@ if ($method === 'POST' && $action === 'restore') {
         sendResponse(false, null, 'Backup file not found', 404);
     }
 
-    if (!str_ends_with(strtolower($filepath), '.sql')) {
-        sendResponse(false, null, 'This restore endpoint only supports .sql backups right now.', 400);
+    if (!str_ends_with(strtolower($filepath), '.dump')) {
+        sendResponse(false, null, 'This restore endpoint only supports .dump backups right now.', 400);
+    }
+
+    if (!file_exists('/opt/restore.sh')) {
+        sendResponse(false, null, 'Restore script not found at /opt/restore.sh', 500);
+    }
+
+    if (!is_executable('/opt/restore.sh')) {
+        sendResponse(false, null, 'Restore script is not executable', 500);
     }
 
     try {
-        $pdo = $db->getConnection();
-        $sql = file_get_contents($filepath);
+        $cmd = 'bash /opt/restore.sh ' . escapeshellarg($filepath) . ' 2>&1';
+        $output = shell_exec($cmd);
 
-        $lines      = explode("\n", $sql);
-        $statements = [];
-        $current    = '';
-
-        foreach ($lines as $line) {
-            $trimmed = trim($line);
-            if ($trimmed === '' || strpos($trimmed, '--') === 0) {
-                continue;
-            }
-
-            $current .= ' ' . $trimmed;
-
-            if (substr(rtrim($current), -1) === ';') {
-                $stmt = trim($current);
-                if (!in_array(strtoupper($stmt), ['BEGIN;', 'COMMIT;', 'ROLLBACK;'])) {
-                    $statements[] = $stmt;
-                }
-                $current = '';
-            }
+        if ($output === null) {
+            sendResponse(false, null, 'Restore command failed to execute', 500);
         }
 
-        $pdo->beginTransaction();
+        // Optional: fix sequences after restore
+        $sequenceFixCmd = <<<'BASH'
+docker run --rm \
+  -e PGPASSWORD="owlopsco432" \
+  postgres:17 \
+  psql \
+    -h aws-1-ap-south-1.pooler.supabase.com \
+    -p 5432 \
+    -U postgres.iakongqdopzyvxhqfzvp \
+    -d postgres \
+    -c "
+DO \$\$
+DECLARE r RECORD;
+BEGIN
+  FOR r IN
+    SELECT
+      table_name,
+      column_name,
+      pg_get_serial_sequence(format('%I.%I', table_schema, table_name), column_name) AS seq
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND column_default LIKE 'nextval%'
+  LOOP
+    IF r.seq IS NOT NULL THEN
+      EXECUTE format(
+        'SELECT setval(%L, COALESCE((SELECT MAX(%I) FROM %I.%I), 0) + 1, false);',
+        r.seq, r.column_name, 'public', r.table_name
+      );
+    END IF;
+  END LOOP;
+END \$\$;
+"
+BASH;
 
-        $executed = 0;
-        foreach ($statements as $stmt) {
-            $pdo->exec($stmt);
-            $executed++;
-        }
-
-        $pdo->commit();
+        shell_exec($sequenceFixCmd . ' 2>&1');
 
         if (class_exists('SuperAdminLogger')) {
             SuperAdminLogger::log('backup_db_restored', 'backup', [
-                'filename'   => $filename,
-                'statements' => $executed,
+                'filename' => $filename,
+                'output'   => trim($output),
             ]);
         }
 
         sendResponse(true, [
             'message'    => 'Database restored successfully',
-            'statements' => $executed,
             'filename'   => $filename,
+            'statements' => 1,
+            'output'     => trim($output),
         ]);
     } catch (Exception $e) {
-        if (isset($pdo) && $pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
         sendResponse(false, null, 'Restore failed: ' . $e->getMessage(), 500);
     }
 }
-
 // ─────────────────────────────────────────────
 // RESTORE FILES BACKUP (.zip → uploads/)
 // ─────────────────────────────────────────────
@@ -528,83 +587,79 @@ if ($method === 'POST' && $action === 'full_restore') {
         sendResponse(false, null, 'Backup file not found', 404);
     }
 
-    if (!str_ends_with(strtolower($filepath), '.sql')) {
-        sendResponse(false, null, 'Only .sql backups can be fully restored right now.', 400);
+    if (!str_ends_with(strtolower($filepath), '.dump')) {
+        sendResponse(false, null, 'This full restore endpoint only supports .dump backups right now.', 400);
+    }
+
+    if (!file_exists('/opt/restore.sh')) {
+        sendResponse(false, null, 'Restore script not found at /opt/restore.sh', 500);
+    }
+
+    if (!is_executable('/opt/restore.sh')) {
+        sendResponse(false, null, 'Restore script is not executable', 500);
     }
 
     try {
-        $pdo = $db->getConnection();
+        $cmd = 'bash /opt/restore.sh ' . escapeshellarg($filepath) . ' 2>&1';
+        $output = shell_exec($cmd);
 
-        $tablesStmt = $pdo->query(
-            "SELECT tablename
-             FROM pg_catalog.pg_tables
-             WHERE schemaname = 'public'
-             ORDER BY tablename"
-        );
-        $tables = $tablesStmt->fetchAll(PDO::FETCH_COLUMN);
-
-        if (empty($tables)) {
-            sendResponse(false, null, 'No tables found in public schema', 500);
+        if ($output === null) {
+            sendResponse(false, null, 'Full restore command failed to execute', 500);
         }
 
-        $sql = file_get_contents($filepath);
-        $lines = explode("\n", $sql);
-        $statements = [];
-        $current = '';
+        $sequenceFixCmd = <<<'BASH'
+docker run --rm \
+  -e PGPASSWORD="owlopsco432" \
+  postgres:17 \
+  psql \
+    -h aws-1-ap-south-1.pooler.supabase.com \
+    -p 5432 \
+    -U postgres.iakongqdopzyvxhqfzvp \
+    -d postgres \
+    -c "
+DO \$\$
+DECLARE r RECORD;
+BEGIN
+  FOR r IN
+    SELECT
+      table_name,
+      column_name,
+      pg_get_serial_sequence(format('%I.%I', table_schema, table_name), column_name) AS seq
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND column_default LIKE 'nextval%'
+  LOOP
+    IF r.seq IS NOT NULL THEN
+      EXECUTE format(
+        'SELECT setval(%L, COALESCE((SELECT MAX(%I) FROM %I.%I), 0) + 1, false);',
+        r.seq, r.column_name, 'public', r.table_name
+      );
+    END IF;
+  END LOOP;
+END \$\$;
+"
+BASH;
 
-        foreach ($lines as $line) {
-            $trimmed = trim($line);
-            if ($trimmed === '' || strpos($trimmed, '--') === 0) {
-                continue;
-            }
-
-            $current .= ' ' . $trimmed;
-
-            if (substr(rtrim($current), -1) === ';') {
-                $stmt = trim($current);
-                if (!in_array(strtoupper($stmt), ['BEGIN;', 'COMMIT;', 'ROLLBACK;'])) {
-                    $statements[] = $stmt;
-                }
-                $current = '';
-            }
-        }
-
-        $pdo->beginTransaction();
-
-        $quotedTables = array_map(fn($t) => '"' . $t . '"', $tables);
-        $truncateSql = 'TRUNCATE TABLE ' . implode(', ', $quotedTables) . ' RESTART IDENTITY CASCADE';
-        $pdo->exec($truncateSql);
-
-        $executed = 0;
-        foreach ($statements as $stmt) {
-            $pdo->exec($stmt);
-            $executed++;
-        }
-
-        $pdo->commit();
+        shell_exec($sequenceFixCmd . ' 2>&1');
 
         if (class_exists('SuperAdminLogger')) {
             SuperAdminLogger::log('backup_db_full_restored', 'backup', [
-                'filename'   => $filename,
-                'tables'     => count($tables),
-                'statements' => $executed,
+                'filename' => $filename,
+                'output'   => trim($output),
             ]);
         }
 
         sendResponse(true, [
-            'message'    => 'Full restore complete. All tables were wiped and reloaded.',
+            'message'    => 'Full restore completed successfully',
             'filename'   => $filename,
-            'tables'     => count($tables),
-            'statements' => $executed,
+            'tables'     => 'public',
+            'statements' => 1,
+            'output'     => trim($output),
         ]);
     } catch (Exception $e) {
-        if (isset($pdo) && $pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
         sendResponse(false, null, 'Full restore failed: ' . $e->getMessage(), 500);
     }
 }
-
 // ─────────────────────────────────────────────
 // UPLOADS FOLDER SIZE
 // ─────────────────────────────────────────────

@@ -13,10 +13,10 @@ if (isset($_SESSION['user_id'])) {
         header('Location: dashboard.php');
         exit;
     } else if ($_SESSION['role'] === 'admin') {
-        header('Location: ../admin/dashboard.php');
+        header('Location: /StegaVault/admin/dashboard.php');
         exit;
     } else {
-        header('Location: ../employee/login.php');
+        header('Location: /StegaVault/employee/login.php');
         exit;
     }
 }
@@ -209,9 +209,9 @@ if (isset($_SESSION['user_id'])) {
 
                         setTimeout(() => {
                             if (data.data.user.role === 'admin') {
-                                window.location.href = '../admin/login.php';
+                                window.location.href = '/StegaVault/admin/login.php';
                             } else {
-                                window.location.href = '../employee/login.php';
+                                window.location.href = '/StegaVault/employee/login.php';
                             }
                         }, 2000);
                     } else {
