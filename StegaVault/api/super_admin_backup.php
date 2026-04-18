@@ -154,42 +154,12 @@ if (!empty($newDirs)) {
         $rowCount = 0;
 
         try {
-            $countCmd = <<<'BASH'
-docker run --rm \
-  -e PGPASSWORD="owlopsco432" \
-  postgres:17 \
-  psql \
-    -h aws-1-ap-south-1.pooler.supabase.com \
-    -p 5432 \
-    -U postgres.iakongqdopzyvxhqfzvp \
-    -d postgres \
-    -At \
-    -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';"
-BASH;
+            $pdo = $db->getConnection();
+            $tStmt = $pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'");
+            $tableCount = (int) $tStmt->fetchColumn();
 
-            $rowsCmd = <<<'BASH'
-docker run --rm \
-  -e PGPASSWORD="owlopsco432" \
-  postgres:17 \
-  psql \
-    -h aws-1-ap-south-1.pooler.supabase.com \
-    -p 5432 \
-    -U postgres.iakongqdopzyvxhqfzvp \
-    -d postgres \
-    -At \
-    -c "SELECT COALESCE(SUM(n_live_tup),0)::bigint FROM pg_stat_user_tables WHERE schemaname = 'public';"
-BASH;
-
-            $tableCountOut = trim(shell_exec($countCmd . ' 2>&1') ?? '0');
-            $rowCountOut   = trim(shell_exec($rowsCmd . ' 2>&1') ?? '0');
-
-            if (is_numeric($tableCountOut)) {
-                $tableCount = (int) $tableCountOut;
-            }
-
-            if (is_numeric($rowCountOut)) {
-                $rowCount = (int) $rowCountOut;
-            }
+            $rStmt = $pdo->query("SELECT COALESCE(SUM(n_live_tup),0)::bigint FROM pg_stat_user_tables WHERE schemaname = 'public'");
+            $rowCount = (int) $rStmt->fetchColumn();
         } catch (Exception $e) {
             $tableCount = 0;
             $rowCount = 0;
@@ -471,40 +441,23 @@ if ($method === 'POST' && $action === 'restore') {
         }
 
         // Optional: fix sequences after restore
-        $sequenceFixCmd = <<<'BASH'
-docker run --rm \
-  -e PGPASSWORD="owlopsco432" \
-  postgres:17 \
-  psql \
-    -h aws-1-ap-south-1.pooler.supabase.com \
-    -p 5432 \
-    -U postgres.iakongqdopzyvxhqfzvp \
-    -d postgres \
-    -c "
-DO \$\$
+        try {
+            $db->getConnection()->exec("DO \$\$
 DECLARE r RECORD;
 BEGIN
   FOR r IN
-    SELECT
-      table_name,
-      column_name,
+    SELECT table_name, column_name,
       pg_get_serial_sequence(format('%I.%I', table_schema, table_name), column_name) AS seq
     FROM information_schema.columns
-    WHERE table_schema = 'public'
-      AND column_default LIKE 'nextval%'
+    WHERE table_schema = 'public' AND column_default LIKE 'nextval%'
   LOOP
     IF r.seq IS NOT NULL THEN
-      EXECUTE format(
-        'SELECT setval(%L, COALESCE((SELECT MAX(%I) FROM %I.%I), 0) + 1, false);',
-        r.seq, r.column_name, 'public', r.table_name
-      );
+      EXECUTE format('SELECT setval(%L, COALESCE((SELECT MAX(%I) FROM %I.%I), 0) + 1, false);',
+        r.seq, r.column_name, 'public', r.table_name);
     END IF;
   END LOOP;
-END \$\$;
-"
-BASH;
-
-        shell_exec($sequenceFixCmd . ' 2>&1');
+END \$\$;");
+        } catch (Exception \$e) { /* sequence fix is optional */ }
 
         if (class_exists('SuperAdminLogger')) {
             SuperAdminLogger::log('backup_db_restored', 'backup', [
@@ -608,40 +561,23 @@ if ($method === 'POST' && $action === 'full_restore') {
             sendResponse(false, null, 'Full restore command failed to execute', 500);
         }
 
-        $sequenceFixCmd = <<<'BASH'
-docker run --rm \
-  -e PGPASSWORD="owlopsco432" \
-  postgres:17 \
-  psql \
-    -h aws-1-ap-south-1.pooler.supabase.com \
-    -p 5432 \
-    -U postgres.iakongqdopzyvxhqfzvp \
-    -d postgres \
-    -c "
-DO \$\$
+        try {
+            $db->getConnection()->exec("DO \$\$
 DECLARE r RECORD;
 BEGIN
   FOR r IN
-    SELECT
-      table_name,
-      column_name,
+    SELECT table_name, column_name,
       pg_get_serial_sequence(format('%I.%I', table_schema, table_name), column_name) AS seq
     FROM information_schema.columns
-    WHERE table_schema = 'public'
-      AND column_default LIKE 'nextval%'
+    WHERE table_schema = 'public' AND column_default LIKE 'nextval%'
   LOOP
     IF r.seq IS NOT NULL THEN
-      EXECUTE format(
-        'SELECT setval(%L, COALESCE((SELECT MAX(%I) FROM %I.%I), 0) + 1, false);',
-        r.seq, r.column_name, 'public', r.table_name
-      );
+      EXECUTE format('SELECT setval(%L, COALESCE((SELECT MAX(%I) FROM %I.%I), 0) + 1, false);',
+        r.seq, r.column_name, 'public', r.table_name);
     END IF;
   END LOOP;
-END \$\$;
-"
-BASH;
-
-        shell_exec($sequenceFixCmd . ' 2>&1');
+END \$\$;");
+        } catch (Exception \$e) { /* sequence fix is optional */ }
 
         if (class_exists('SuperAdminLogger')) {
             SuperAdminLogger::log('backup_db_full_restored', 'backup', [
