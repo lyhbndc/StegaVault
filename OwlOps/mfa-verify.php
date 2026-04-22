@@ -79,29 +79,39 @@ if (!isset($_SESSION['pending_mfa_user_id']) || !isset($_SESSION['pending_mfa_po
 
     <!-- Main Content -->
     <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-12">
-        <div class="w-full max-w-[420px]">
+        <div class="container mx-auto max-w-[420px]">
             <div class="text-center mb-8">
                 <div class="inline-flex items-center justify-center size-16 bg-primary/10 rounded-full mb-4 ring-4 ring-primary/10">
                     <span class="material-symbols-outlined text-3xl text-primary">phonelink_lock</span>
                 </div>
                 <h1 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-2">Two-Factor Auth</h1>
                 <p class="text-slate-600 dark:text-slate-400 text-sm">Enter the 6-digit code from your Authenticator app, or a recovery code.</p>
-                        <input type="text" id="mfaCode" name="code" required autofocus autocomplete="one-time-code"
-                            maxlength="20"
-                            class="w-full text-center tracking-[0.4em] text-2xl py-4 rounded-xl bg-slate-50 dark:bg-[#111111] border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
-                            placeholder="000000" />
-                        <p class="text-center text-xs text-slate-500">6-digit TOTP code or XXXX-XXXX recovery code</p>
+            </div>
+
+            <div class="relative group">
+                <div class="absolute -inset-1 bg-gradient-to-r from-primary/20 to-slate-400/10 rounded-2xl blur opacity-30"></div>
+                <div class="relative bg-white dark:bg-[#111111] border border-slate-200 dark:border-white/10 rounded-2xl p-8 shadow-xl">
+                    <div id="errorMsg" style="display:none;" class="mb-4 flex items-center gap-3 px-4 py-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 rounded-xl text-sm"></div>
+
+                    <form id="mfaForm" class="space-y-4">
+                        <div class="space-y-2">
+                            <input type="text" id="mfaCode" name="code" required autofocus autocomplete="one-time-code"
+                                maxlength="20"
+                                class="w-full text-center tracking-[0.4em] text-2xl py-4 rounded-xl bg-slate-50 dark:bg-[#111111] border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
+                                placeholder="000000" />
+                            <p class="text-center text-xs text-slate-500">6-digit TOTP code or XXXX-XXXX recovery code</p>
+                        </div>
+
+                        <button id="submitBtn" type="submit"
+                            class="w-full py-4 bg-primary hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-all shadow-glow flex items-center justify-center gap-2 group">
+                            <span id="submitText">Verify Identity</span>
+                            <span class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">verified_user</span>
+                        </button>
+                    </form>
+
+                    <div class="mt-6 text-center">
+                        <a href="login.php" class="text-xs text-slate-500 hover:text-white transition-colors">Cancel &amp; Return to Login</a>
                     </div>
-
-                    <button id="submitBtn" type="submit"
-                        class="w-full py-4 bg-primary hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-all shadow-glow flex items-center justify-center gap-2 group">
-                        <span id="submitText">Verify Identity</span>
-                        <span class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">verified_user</span>
-                    </button>
-                </form>
-
-                <div class="mt-6 text-center">
-                    <a href="login.php" class="text-xs text-slate-500 hover:text-white transition-colors">Cancel &amp; Return to Login</a>
                 </div>
             </div>
         </div>

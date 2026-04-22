@@ -116,34 +116,39 @@ if (isset($_SESSION['user_id'])) {
             </div>
             <?php endif; ?>
 
-                <h1 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-2 mt-6">Super Admin Access</h1>
-                <p class="text-slate-600 dark:text-slate-400 text-sm mb-6">System level administration only</p>
+            <div class="relative group">
+                <div class="absolute -inset-1 bg-gradient-to-r from-primary/20 to-slate-400/10 rounded-2xl blur opacity-30"></div>
+                <div class="relative bg-white dark:bg-[#111111] border border-slate-200 dark:border-white/10 rounded-2xl p-8 shadow-xl">
+                    <h1 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-2">Super Admin Access</h1>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm mb-6">System level administration only</p>
 
-                <div id="errorMsg" style="display:none;" class="mb-4 flex items-center gap-3 px-4 py-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 rounded-xl text-sm"></div>
+                    <div id="errorMsg" style="display:none;" class="mb-4 flex items-center gap-3 px-4 py-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 rounded-xl text-sm"></div>
 
-                <form id="authForm" class="space-y-4">
-                    <div class="space-y-2">
-                        <label class="block text-slate-900 dark:text-slate-200 text-sm font-medium">Email Address</label>
-                        <div class="relative">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl">alternate_email</span>
-                            <input id="email" required class="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 dark:bg-[#111111] border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="admin@owlops.com" type="email" />
+                    <form id="authForm" class="space-y-4">
+                        <div class="space-y-2">
+                            <label class="block text-slate-900 dark:text-slate-200 text-sm font-medium">Email Address</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl">alternate_email</span>
+                                <input id="email" required class="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 dark:bg-[#0a0a0a] border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="admin@owlops.com" type="email" />
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="space-y-2">
-                        <label class="block text-slate-900 dark:text-slate-200 text-sm font-medium">Password</label>
-                        <div class="relative">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl">key</span>
-                            <input id="password" required class="w-full pl-12 pr-12 py-4 rounded-xl bg-slate-50 dark:bg-[#111111] border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="••••••••••••" type="password" />
-                            <button type="button" onclick="togglePassword(event)" class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">visibility_off</button>
+                        <div class="space-y-2">
+                            <label class="block text-slate-900 dark:text-slate-200 text-sm font-medium">Password</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl">key</span>
+                                <input id="password" required class="w-full pl-12 pr-12 py-4 rounded-xl bg-slate-50 dark:bg-[#0a0a0a] border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="••••••••••••" type="password" />
+                                <button type="button" onclick="togglePassword(event)" class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">visibility_off</button>
+                            </div>
                         </div>
-                    </div>
 
-                    <button id="submitBtn" class="w-full py-4 bg-primary hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-all shadow-glow flex items-center justify-center gap-2 group mt-2" type="submit">
-                        <span id="submitText">Access Global Dashboard</span>
-                        <span class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">rocket_launch</span>
-                    </button>
-                </form>
+                        <button id="submitBtn" class="w-full py-4 bg-primary hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-all shadow-glow flex items-center justify-center gap-2 group mt-2" type="submit">
+                            <span id="submitText">Access Global Dashboard</span>
+                            <span class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">rocket_launch</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
             </div>
     </main>
 
