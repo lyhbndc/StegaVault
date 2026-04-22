@@ -207,6 +207,19 @@ if (!empty($newDirs)) {
             ];
         }
 
+        $volumeFile = $latestDir . '/docker-volumes.tar.gz';
+        if (file_exists($volumeFile)) {
+            $newEntries[] = [
+                'id'         => $backupId . '-VOLUME',
+                'filename'   => $folderName . '/docker-volumes.tar.gz',
+                'type'       => 'docker',
+                'size'       => filesize($volumeFile),
+                'size_label' => formatBytes(filesize($volumeFile)),
+                'created_at' => date('Y-m-d H:i:s'),
+                'created_by' => $_SESSION['name'] ?? 'System',
+            ];
+        }
+
         $meta = array_merge($newEntries, $meta);
         $meta = array_slice($meta, 0, 50);
         saveMeta($meta);
