@@ -12,6 +12,7 @@ if (session_status() === PHP_SESSION_NONE) {
 header('Content-Type: application/json');
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/SuperAdminLogger.php';
+require_once __DIR__ . '/../includes/EmailService.php';
 
 // Authentication Check: Only super_admin can access this API
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'super_admin') {
@@ -140,16 +141,26 @@ if ($action === 'create_app_admin' && $method === 'POST') {
         sendResponse(false, null, 'Email, Name, and Password are required', 400);
     }
 
-    $passwordHash = password_hash($password, PASSWORD_BCRYPT);
-    $status = 'active'; // Default to active for manually created admins by super admin
-    $role = 'admin';
+    $passwordHash     = password_hash($password, PASSWORD_BCRYPT);
+    $activation_token = bin2hex(random_bytes(32));
+    $status           = 'pending_activation';
+    $role             = 'admin';
+    $username         = strstr($email, '@', true);
 
-    $stmt = $db->prepare("INSERT INTO users (email, name, password_hash, role, status, web_app_id) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param('sssssi', $email, $name, $passwordHash, $role, $status, $web_app_id);
+    $stmt = $db->prepare("INSERT INTO users (email, username, name, password_hash, role, status, activation_token, web_app_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param('sssssssi', $email, $username, $name, $passwordHash, $role, $status, $activation_token, $web_app_id);
 
     if ($stmt->execute()) {
+        $protocol  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+        $baseDir   = dirname(dirname($_SERVER['SCRIPT_NAME']));
+        if ($baseDir === '/' || $baseDir === '\\') $baseDir = '';
+        $activationLink = $protocol . $_SERVER['HTTP_HOST'] . $baseDir . '/activate.php?token=' . $activation_token;
+
+        $emailer = new EmailService();
+        $emailer->sendActivationEmail($email, $name, $username, $password, $role, $activationLink, null);
+
         SuperAdminLogger::log('app_admin_created', 'admin', ['target_name' => $name, 'target_email' => $email]);
-        sendResponse(true, ['message' => 'App Admin created successfully']);
+        sendResponse(true, ['message' => 'App Admin created successfully. Activation email sent.']);
     } else {
         sendResponse(false, null, 'Failed to create App Admin. Email might already exist.', 500);
     }
