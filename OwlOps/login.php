@@ -107,25 +107,12 @@ if (isset($_SESSION['user_id'])) {
             </div>
             <?php endif; ?>
 
-            <div class="text-center mb-10">
                 <h1 class="text-slate-900 text-3xl font-bold tracking-tight mb-2">Super Admin Access</h1>
                 <p class="text-slate-600 text-sm">System level administration only</p>
-            </div>
-
-            <div class="bg-white backdrop-blur-xl border border-slate-200 p-8 rounded-2xl shadow-lg">
-                <div id="errorMsg" style="display: none;" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
 
                 <form id="authForm" class="space-y-6">
                     <div class="space-y-2">
                         <label class="block text-slate-900 text-sm font-medium">Super Admin Email</label>
-                        <div class="relative">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl">alternate_email</span>
-                            <input id="email" required class="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="superadmin@owlops.com" type="email" />
-                        </div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label class="block text-slate-900 text-sm font-medium">Master Password</label>
                         <div class="relative">
                             <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl">key</span>
                             <input id="password" required class="w-full pl-12 pr-12 py-4 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="••••••••••••" type="password" />

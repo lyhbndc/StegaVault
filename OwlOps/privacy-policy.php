@@ -81,18 +81,6 @@ session_start();
                 <!-- INTRO -->
                 <section>
                     <h2 class="text-slate-900 font-semibold mb-4 text-lg">1. Introduction</h2>
-                    <p>
-                        OwlOps is a comprehensive super administration and infrastructure management system developed for
-                        Peanut Gallery Media Network.
-                        We are committed to protecting the confidentiality, integrity, and availability of all user data
-                        in compliance with applicable
-                        data protection laws including the Data Privacy Act of 2012 (Republic Act 10173).
-                    </p>
-                </section>
-
-                <!-- DATA COLLECTION -->
-                <section>
-                    <h2 class="text-slate-900 font-semibold mb-4 text-lg">2. Information We Collect</h2>
                     <ul class="list-disc ml-6 space-y-2">
                         <li>Super Administrator account information (name, email, encrypted password)</li>
                         <li>Application management data and system configurations</li>
@@ -204,7 +192,15 @@ session_start();
 
                 <!-- CONTACT -->
                 <section>
-                    <h2 class="text-white font-semibold mb-4 text-lg">12. Contact Information</h2>
+                    <h2 class="text-slate-900 font-semibold mb-4 text-lg">12. Contact Information</h2>
+                    <p>
+                        For questions regarding this Privacy Policy, contact:
+                    </p>
+                    <p class="mt-4 text-primary font-semibold">
+                        Peanut Gallery Media Network<br>
+                        Email: [Insert Email Here]
+                    </p>
+                </section>
                     <p>
                         For questions regarding this Privacy Policy, contact:
                     </p>

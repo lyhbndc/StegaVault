@@ -78,14 +78,6 @@ if (!isset($_SESSION['pending_mfa_user_id']) || !isset($_SESSION['pending_mfa_po
                 </div>
                 <h1 class="text-slate-900 text-3xl font-bold tracking-tight mb-2">Two-Factor Auth</h1>
                 <p class="text-slate-600 text-sm">Enter the 6-digit code from your Authenticator app, or a recovery code.</p>
-            </div>
-
-            <div class="bg-white backdrop-blur-xl border border-slate-200 p-8 rounded-2xl shadow-lg">
-                <div id="errorMsg" style="display: none;" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-center"></div>
-
-                <form id="mfaForm" class="space-y-6">
-                    <div class="space-y-2">
-                        <label class="block text-slate-900 text-sm font-medium text-center">Verification Code</label>
                         <input type="text" id="mfaCode" name="code" required autofocus autocomplete="one-time-code"
                             maxlength="20"
                             class="w-full text-center tracking-[0.4em] text-2xl py-4 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"

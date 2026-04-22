@@ -16,7 +16,7 @@ require_once __DIR__ . '/auth_guard.php';
 $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
 ?>
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
@@ -53,41 +53,44 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
 <body class="text-slate-200 min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside class="w-64 border-r border-white/5 bg-background-dark flex flex-col fixed inset-y-0 left-0 z-50">
+    <aside class="w-64 border-r border-slate-200 bg-background-light flex flex-col fixed inset-y-0 left-0 z-50">
         <div class="p-6 flex flex-col h-full gap-8">
-            <div>
-                <h1 class="text-white text-base font-bold leading-tight font-display">OwlOps</h1>
-                <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
+            <div class="flex items-center gap-2">
+                <img src="OwlOps.png" alt="OwlOps Logo" class="h-8 w-auto">
+                <div>
+                    <h1 class="text-slate-900 text-base font-bold leading-tight font-display">OwlOps</h1>
+                    <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
+                </div>
             </div>
             <nav class="flex flex-col gap-2 flex-1">
-                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Systems</p>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="dashboard.php">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2">Systems</p>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="dashboard.php">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
                     <p class="text-sm font-medium">Control Center</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="manage_admins.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="manage_admins.php">
                     <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
                     <p class="text-sm font-medium">Manage Admins</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="backup.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="backup.php">
                     <span class="material-symbols-outlined text-[20px]">backup</span>
                     <p class="text-sm font-medium">Backup &amp; Restore</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-white border border-white/10" href="audit-log.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20" href="audit-log.php">
                     <span class="material-symbols-outlined text-[20px] text-primary">manage_search</span>
                     <p class="text-sm font-medium">Audit Log</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="reports.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="reports.php">
                     <span class="material-symbols-outlined text-[20px]">assessment</span>
                     <p class="text-sm font-medium">System Report</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="mfa-settings.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="mfa-settings.php">
                     <span class="material-symbols-outlined text-[20px]">phonelink_lock</span>
                     <p class="text-sm font-medium">MFA Settings</p>
                 </a>
             </nav>
-            <div class="pt-6 border-t border-white/5">
-                <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors">
+            <div class="pt-6 border-t border-slate-200">
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
                     <span class="material-symbols-outlined text-[20px]">logout</span>
                     <p class="text-sm font-medium">Sign Out</p>
                 </button>
@@ -97,7 +100,7 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
 
     <main class="flex-1 ml-64 p-12 relative overflow-x-hidden">
         <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-            <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
+            <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
         </div>
 
         <div class="relative z-10 max-w-7xl mx-auto space-y-8">
@@ -105,10 +108,10 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
             <!-- Header -->
             <header class="flex items-end justify-between">
                 <div>
-                    <h2 class="text-4xl font-bold text-white font-display">Audit Log</h2>
-                    <p class="text-slate-400 mt-2">Full record of all super admin actions — logins, backups, admin changes, and MFA events.</p>
+                    <h2 class="text-4xl font-bold text-slate-900 font-display">Audit Log</h2>
+                    <p class="text-slate-600 mt-2">Full record of all super admin actions — logins, backups, admin changes, and MFA events.</p>
                 </div>
-                <button onclick="loadLogs()" class="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-slate-400 hover:text-white text-sm font-medium transition-colors">
+                <button onclick="loadLogs()" class="flex items-center gap-2 px-4 py-2 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 hover:text-slate-900 text-sm font-medium transition-colors">
                     <span class="material-symbols-outlined text-base">refresh</span> Refresh
                 </button>
             </header>
@@ -119,33 +122,33 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
             <!-- Filters -->
             <div class="flex flex-wrap items-center gap-3">
                 <!-- Category tabs -->
-                <div class="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
+                <div class="flex items-center gap-1 bg-slate-100 border border-slate-200 rounded-xl p-1">
                     <button onclick="setCategory('')"    id="cat-all"    class="cat-btn active-cat px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">All</button>
-                    <button onclick="setCategory('auth')"   id="cat-auth"   class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-400 hover:text-white">Auth</button>
-                    <button onclick="setCategory('backup')" id="cat-backup" class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-400 hover:text-white">Backup</button>
-                    <button onclick="setCategory('admin')"  id="cat-admin"  class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-400 hover:text-white">Admin</button>
-                    <button onclick="setCategory('mfa')"    id="cat-mfa"    class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-400 hover:text-white">MFA</button>
+                    <button onclick="setCategory('auth')"   id="cat-auth"   class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-600 hover:text-slate-900">Auth</button>
+                    <button onclick="setCategory('backup')" id="cat-backup" class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-600 hover:text-slate-900">Backup</button>
+                    <button onclick="setCategory('admin')"  id="cat-admin"  class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-600 hover:text-slate-900">Admin</button>
+                    <button onclick="setCategory('mfa')"    id="cat-mfa"    class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-600 hover:text-slate-900">MFA</button>
                 </div>
 
                 <!-- Search -->
                 <div class="relative flex-1 min-w-[220px]">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">search</span>
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 text-lg">search</span>
                     <input id="searchInput" type="text" placeholder="Search by name, email, action…"
-                        class="w-full pl-9 pr-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 text-sm focus:ring-2 focus:ring-primary/30 focus:border-white/30 outline-none transition-all" />
+                        class="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-500 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary/50 outline-none transition-all" />
                 </div>
             </div>
 
             <!-- Log Table -->
-            <div class="bg-slate-card border border-white/10 rounded-2xl overflow-hidden">
+            <div class="bg-card-light border border-slate-200 rounded-2xl overflow-hidden">
                 <table class="w-full text-left">
                     <thead>
-                        <tr class="bg-white/5 border-b border-white/10">
-                            <th class="px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Timestamp</th>
-                            <th class="px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Who</th>
-                            <th class="px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Action</th>
-                            <th class="px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Category</th>
-                            <th class="px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Details</th>
-                            <th class="px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">IP</th>
+                        <tr class="bg-slate-50 border-b border-slate-200">
+                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Timestamp</th>
+                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Who</th>
+                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Action</th>
+                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Category</th>
+                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Details</th>
+                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">IP</th>
                         </tr>
                     </thead>
                     <tbody id="logTableBody" class="divide-y divide-white/5">

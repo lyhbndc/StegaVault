@@ -182,8 +182,8 @@ $actionMeta = [
         
         <!-- Welcome Section -->
         <div class="max-w-3xl">
-            <h1 class="text-5xl font-bold text-white mb-6 font-display tracking-tight leading-tight">Welcome back, <span class="text-primary/70 italic"><?php echo explode(' ', $user['name'])[0]; ?>.</span></h1>
-            <p class="text-lg text-slate-400 leading-relaxed font-body">The infrastructure is currently synchronized. You have full oversight of all administrators and system preservation tasks.</p>
+            <h1 class="text-5xl font-bold text-slate-900 mb-6 font-display tracking-tight leading-tight">Welcome back, <span class="text-primary/70 italic"><?php echo explode(' ', $user['name'])[0]; ?>.</span></h1>
+            <p class="text-lg text-slate-600 leading-relaxed font-body">The infrastructure is currently synchronized. You have full oversight of all administrators and system preservation tasks.</p>
         </div>
 
         <!-- Quick Access Control Cards -->

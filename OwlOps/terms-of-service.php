@@ -81,15 +81,7 @@ session_start();
                 <!-- 1 -->
                 <section>
                     <h2 class="text-slate-900 font-semibold mb-4 text-lg">1. Agreement to Terms</h2>
-                    <p>
-                        By accessing or using OwlOps, you agree to be bound by these Terms of Service.
-                        If you do not agree, you must discontinue use of the system immediately.
-                    </p>
-                </section>
 
-                <!-- 2 -->
-                <section>
-                    <h2 class="text-white font-semibold mb-4 text-lg">2. Description of Service</h2>
                     <p>
                         OwlOps is a comprehensive super administration and infrastructure management platform that provides
                         system-wide control, application management, user administration, security monitoring, and automated
@@ -206,7 +198,15 @@ session_start();
 
                 <!-- 14 -->
                 <section>
-                    <h2 class="text-white font-semibold mb-4 text-lg">14. Contact Information</h2>
+                    <h2 class="text-slate-900 font-semibold mb-4 text-lg">14. Contact Information</h2>
+                    <p>
+                        For questions regarding these Terms of Service:
+                    </p>
+                    <p class="mt-4 text-primary font-semibold">
+                        Peanut Gallery Media Network<br>
+                        Email: [Insert Email Here]
+                    </p>
+                </section>
                     <p>
                         For questions regarding these Terms of Service:
                     </p>

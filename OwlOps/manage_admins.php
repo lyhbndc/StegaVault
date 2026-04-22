@@ -33,7 +33,7 @@ if ($appsResult) {
 
 ?>
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 
 <head>
     <meta charset="utf-8" />
@@ -90,54 +90,57 @@ if ($appsResult) {
 <body class="text-slate-200 min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside class="w-64 border-r border-white/5 bg-background-dark flex flex-col fixed inset-y-0 left-0 z-50">
+    <aside class="w-64 border-r border-slate-200 bg-background-light flex flex-col fixed inset-y-0 left-0 z-50">
         <div class="p-6 flex flex-col h-full gap-8">
-            <div>
-                <h1 class="text-white text-base font-bold leading-tight font-display">OwlOps</h1>
-                <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
+            <div class="flex items-center gap-2">
+                <img src="OwlOps.png" alt="OwlOps Logo" class="h-8 w-auto">
+                <div>
+                    <h1 class="text-slate-900 text-base font-bold leading-tight font-display">OwlOps</h1>
+                    <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
+                </div>
             </div>
 
             <nav class="flex flex-col gap-2 flex-1">
-                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Systems</p>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2">Systems</p>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors"
                     href="dashboard.php">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
                     <p class="text-sm font-medium">Control Center</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-white border border-white/10"
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20"
                     href="manage_admins.php">
                     <span class="material-symbols-outlined text-[20px] text-primary">admin_panel_settings</span>
                     <p class="text-sm font-medium">Manage Admins</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors"
                     href="backup.php">
                     <span class="material-symbols-outlined text-[20px]">backup</span>
                     <p class="text-sm font-medium">Backup & Restore</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="audit-log.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="audit-log.php">
                     <span class="material-symbols-outlined text-[20px]">manage_search</span>
                     <p class="text-sm font-medium">Audit Log</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="reports.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="reports.php">
                     <span class="material-symbols-outlined text-[20px]">assessment</span>
                     <p class="text-sm font-medium">System Report</p>
                 </a>
             </nav>
 
-            <div class="pt-6 border-t border-white/5">
+            <div class="pt-6 border-t border-slate-200">
                 <div class="flex items-center gap-3 px-3 py-2">
                     <div
-                        class="size-8 rounded-full bg-primary flex items-center justify-center text-black font-bold text-xs">
+                        class="size-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs">
                         <?php echo strtoupper(substr($user['name'], 0, 1)); ?>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-white text-xs font-bold truncate"><?php echo htmlspecialchars($user['name']); ?>
+                        <p class="text-slate-900 text-xs font-bold truncate"><?php echo htmlspecialchars($user['name']); ?>
                         </p>
-                        <p class="text-slate-500 text-[10px] truncate">Super Admin</p>
+                        <p class="text-slate-600 text-[10px] truncate">Super Admin</p>
                     </div>
                 </div>
                 <button onclick="logout()"
-                    class="w-full mt-4 flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors">
+                    class="w-full mt-4 flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
                     <span class="material-symbols-outlined text-[20px]">logout</span>
                     <p class="text-sm font-medium">Sign Out</p>
                 </button>
@@ -148,7 +151,7 @@ if ($appsResult) {
     <main class="flex-1 ml-64 p-12 transition-all duration-500 relative overflow-x-hidden">
         <!-- Background Decor -->
         <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-            <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
+            <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
             <div class="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]"></div>
         </div>
 
@@ -156,46 +159,46 @@ if ($appsResult) {
             <!-- Header -->
             <header class="flex items-end justify-between">
                 <div>
-                    <h2 class="text-4xl font-bold text-white font-display">Administrator Management</h2>
-                    <p class="text-slate-400 mt-2">Oversee global system owners and application-level administrators.
+                    <h2 class="text-4xl font-bold text-slate-900 font-display">Administrator Management</h2>
+                    <p class="text-slate-600 mt-2">Oversee global system owners and application-level administrators.
                     </p>
                 </div>
                 <div class="flex gap-4">
                     <button onclick="openCreateModal('super')"
-                        class="px-5 py-2.5 bg-white hover:bg-slate-200 text-black rounded-xl font-bold text-sm transition-all shadow-lg flex items-center gap-2">
+                        class="px-5 py-2.5 bg-primary hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-all shadow-lg flex items-center gap-2">
                         <span class="material-symbols-outlined text-lg">shield_person</span> New Super Admin
                     </button>
                     <button onclick="openCreateModal('app')"
-                        class="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl font-bold text-sm transition-all flex items-center gap-2">
+                        class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-900 border border-slate-300 rounded-xl font-bold text-sm transition-all flex items-center gap-2">
                         <span class="material-symbols-outlined text-lg">person_add</span> New App Admin
                     </button>
                 </div>
             </header>
 
             <!-- Tabs -->
-            <div class="flex border-b border-white/5 gap-8">
+            <div class="flex border-b border-slate-200 gap-8">
                 <button onclick="switchTab('super')" id="tab-super"
-                    class="pb-4 px-2 text-sm font-bold border-b-2 border-primary text-white transition-all">Super
+                    class="pb-4 px-2 text-sm font-bold border-b-2 border-primary text-slate-900 transition-all">Super
                     Admins</button>
                 <button onclick="switchTab('app')" id="tab-app"
-                    class="pb-4 px-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-white transition-all">App
+                    class="pb-4 px-2 text-sm font-bold border-b-2 border-transparent text-slate-600 hover:text-slate-900 transition-all">App
                     Administrators</button>
             </div>
 
             <!-- Content Area -->
             <div id="content-super" class="space-y-6">
-                <div class="bg-slate-card border border-white/10 rounded-2xl overflow-hidden">
+                <div class="bg-card-light border border-slate-200 rounded-2xl overflow-hidden">
                     <table class="w-full text-left">
                         <thead>
-                            <tr class="bg-white/5 border-b border-white/10">
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <tr class="bg-slate-50 border-b border-slate-200">
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
                                     Name</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
                                     Email</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
                                     Added Date</th>
                                 <th
-                                    class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">
+                                    class="px-6 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest text-right">
                                     Actions</th>
                             </tr>
                         </thead>

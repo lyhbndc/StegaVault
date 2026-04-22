@@ -19,7 +19,7 @@ $user = [
 ];
 ?>
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 
 <head>
     <meta charset="utf-8" />
@@ -31,13 +31,12 @@ $user = [
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script>
         tailwind.config = {
-            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#ffffff",
-                        "background-dark": "#000000",
-                        "slate-card": "#111111",
+                        "primary": "#2563eb",
+                        "background-light": "#ffffff",
+                        "card-light": "#f8fafc",
                         "accent-blue": "#3b82f6",
                     },
                     fontFamily: {
@@ -49,58 +48,61 @@ $user = [
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #000000; }
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
         h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Space Grotesk', sans-serif; }
         .bg-grid-pattern {
-            background-image: radial-gradient(#ffffff 0.1px, transparent 0.1px);
+            background-image: radial-gradient(#cbd5e1 0.1px, transparent 0.1px);
             background-size: 30px 30px;
         }
         .glow-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
         .spinner { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .active-filter { background: rgba(255,255,255,0.12); color: white; }
+        .active-filter { background: rgba(37, 99, 235, 0.1); color: #2563eb; }
     </style>
 </head>
 
-<body class="text-slate-200 min-h-screen flex">
+<body class="text-slate-900 min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside class="w-64 border-r border-white/5 bg-background-dark flex flex-col fixed inset-y-0 left-0 z-50">
+    <aside class="w-64 border-r border-slate-200 bg-background-light flex flex-col fixed inset-y-0 left-0 z-50">
         <div class="p-6 flex flex-col h-full gap-8">
-            <div>
-                <h1 class="text-white text-base font-bold leading-tight font-display">OwlOps</h1>
-                <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
+            <div class="flex items-center gap-2">
+                <img src="OwlOps.png" alt="OwlOps Logo" class="h-8 w-auto">
+                <div>
+                    <h1 class="text-slate-900 text-base font-bold leading-tight font-display">OwlOps</h1>
+                    <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
+                </div>
             </div>
             <nav class="flex flex-col gap-2 flex-1">
-                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Systems</p>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="dashboard.php">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2">Systems</p>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="dashboard.php">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
                     <p class="text-sm font-medium">Control Center</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="manage_admins.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="manage_admins.php">
                     <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
                     <p class="text-sm font-medium">Manage Admins</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-white border border-white/10" href="backup.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20" href="backup.php">
                     <span class="material-symbols-outlined text-[20px] text-primary">backup</span>
                     <p class="text-sm font-medium">Backup &amp; Restore</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="audit-log.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="audit-log.php">
                     <span class="material-symbols-outlined text-[20px]">manage_search</span>
                     <p class="text-sm font-medium">Audit Log</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="reports.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="reports.php">
                     <span class="material-symbols-outlined text-[20px]">assessment</span>
                     <p class="text-sm font-medium">System Report</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="mfa-settings.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="mfa-settings.php">
                     <span class="material-symbols-outlined text-[20px]">phonelink_lock</span>
                     <p class="text-sm font-medium">MFA Settings</p>
                 </a>
             </nav>
-            <div class="pt-6 border-t border-white/5">
-                <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors">
+            <div class="pt-6 border-t border-slate-200">
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
                     <span class="material-symbols-outlined text-[20px]">logout</span>
                     <p class="text-sm font-medium">Sign Out</p>
                 </button>
@@ -110,8 +112,8 @@ $user = [
 
     <main class="flex-1 ml-64 p-12 relative overflow-x-hidden">
         <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-            <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
-            <div class="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-blue/5 rounded-full blur-[120px]"></div>
+            <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
+            <div class="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]"></div>
         </div>
 
         <div class="relative z-10 max-w-6xl mx-auto space-y-10">
@@ -119,35 +121,35 @@ $user = [
             <!-- Header -->
             <header class="flex items-end justify-between">
                 <div>
-                    <h2 class="text-4xl font-bold text-white font-display">System Maintenance</h2>
-                    <p class="text-slate-400 mt-2">Manage infrastructure snapshots, database backups, and environment restoration.</p>
+                    <h2 class="text-4xl font-bold text-slate-900 font-display">System Maintenance</h2>
+                    <p class="text-slate-600 mt-2">Manage infrastructure snapshots, database backups, and environment restoration.</p>
                 </div>
-                <div id="dockerStatusBadge" class="flex items-center gap-3 px-4 py-2 bg-slate-800/50 border border-white/10 rounded-full">
-                    <span class="size-2 rounded-full bg-slate-500"></span>
-                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Checking Docker...</span>
+                <div id="dockerStatusBadge" class="flex items-center gap-3 px-4 py-2 bg-slate-100 border border-slate-200 rounded-full">
+                    <span class="size-2 rounded-full bg-slate-400"></span>
+                    <span class="text-[10px] text-slate-600 font-bold uppercase tracking-widest">Checking Docker...</span>
                 </div>
             </header>
 
             <!-- Status Grid -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-slate-card border border-white/10 p-6 rounded-2xl space-y-4">
+                <div class="bg-card-light border border-slate-200 p-6 rounded-2xl space-y-4">
                     <div class="flex items-center justify-between">
-                        <div class="p-2 bg-blue-500/10 rounded-xl">
-                            <span class="material-symbols-outlined text-blue-400">database</span>
+                        <div class="p-2 bg-blue-100 rounded-xl">
+                            <span class="material-symbols-outlined text-blue-600">database</span>
                         </div>
-                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Supabase DB</span>
+                        <span class="text-[10px] text-slate-600 font-bold uppercase tracking-widest">Supabase DB</span>
                     </div>
                     <div>
-                        <p class="text-slate-400 text-xs font-medium">Backup Count</p>
-                        <h3 id="statBackupCount" class="text-xl font-bold text-white">—</h3>
+                        <p class="text-slate-600 text-xs font-medium">Backup Count</p>
+                        <h3 id="statBackupCount" class="text-xl font-bold text-slate-900">—</h3>
                     </div>
                     <p class="text-[10px] text-slate-500">Retention: 30 most recent snapshots</p>
                 </div>
 
-                <div class="bg-slate-card border border-white/10 p-6 rounded-2xl space-y-4">
+                <div class="bg-card-light border border-slate-200 p-6 rounded-2xl space-y-4">
                     <div class="flex items-center justify-between">
-                        <div class="p-2 bg-purple-500/10 rounded-xl">
-                            <span class="material-symbols-outlined text-purple-400">folder_zip</span>
+                        <div class="p-2 bg-purple-100 rounded-xl">
+                            <span class="material-symbols-outlined text-purple-600">folder_zip</span>
                         </div>
                         <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">File Backups</span>
                     </div>
