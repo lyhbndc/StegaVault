@@ -71,9 +71,7 @@ if (isset($_SESSION['user_id'])) {
 
     <header class="relative z-10 w-full px-6 py-6 lg:px-12 flex items-center justify-between border-b border-slate-200 bg-background-light/50 backdrop-blur-md">
         <div class="flex items-center gap-3">
-            <div class="bg-primary p-2 rounded-lg shadow-glow">
-                <span class="material-symbols-outlined text-white text-2xl">local_police</span>
-            </div>
+            <img src="OwlOps.png" alt="OwlOps Logo" class="h-10 w-auto">
             <h2 class="text-slate-900 text-xl font-bold tracking-tight">OwlOps <span class="text-slate-600 font-medium">Super Admin</span></h2>
         </div>
         <div class="flex items-center gap-4">
@@ -147,8 +145,8 @@ if (isset($_SESSION['user_id'])) {
     <footer class="relative z-10 w-full px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-slate-200 text-[12px] text-slate-600">
         <p>© <?php echo date('Y'); ?> OwlOps. Global Administration System.</p>
         <div class="flex items-center gap-6">
-            <a href="privacy-policy.php" target="_blank" class="hover:text-primary transition-colors">Privacy Policy</a>
-            <a href="terms-of-service.php" target="_blank" class="hover:text-primary transition-colors">Terms of Service</a>
+            <a href="privacy-policy.php" class="hover:text-primary transition-colors">Privacy Policy</a>
+            <a href="terms-of-service.php" class="hover:text-primary transition-colors">Terms of Service</a>
         </div>
     </footer>
 

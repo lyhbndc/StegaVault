@@ -71,9 +71,12 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
     <!-- Sidebar -->
     <aside class="w-64 border-r border-slate-200 bg-background-light flex flex-col fixed inset-y-0 left-0 z-50">
         <div class="p-6 flex flex-col h-full gap-8">
-            <div>
-                <h1 class="text-slate-900 text-base font-bold leading-tight font-display">OwlOps</h1>
-                <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
+            <div class="flex items-center gap-2">
+                <img src="OwlOps.png" alt="OwlOps Logo" class="h-8 w-auto">
+                <div>
+                    <h1 class="text-slate-900 text-base font-bold leading-tight font-display">OwlOps</h1>
+                    <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
+                </div>
             </div>
             <nav class="flex flex-col gap-2 flex-1">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Systems</p>

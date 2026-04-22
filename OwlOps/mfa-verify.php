@@ -64,9 +64,7 @@ if (!isset($_SESSION['pending_mfa_user_id']) || !isset($_SESSION['pending_mfa_po
     <!-- Header -->
     <header class="relative z-10 w-full px-6 py-6 lg:px-12 flex items-center justify-between border-b border-slate-200 bg-background-light/50 backdrop-blur-md">
         <div class="flex items-center gap-3">
-            <div class="bg-primary p-2 rounded-lg shadow-glow">
-                <span class="material-symbols-outlined text-white text-2xl">local_police</span>
-            </div>
+            <img src="OwlOps.png" alt="OwlOps Logo" class="h-10 w-auto">
             <h2 class="text-slate-900 text-xl font-bold tracking-tight">OwlOps <span class="text-slate-600 font-medium">Super Admin</span></h2>
         </div>
     </header>

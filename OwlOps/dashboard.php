@@ -151,9 +151,7 @@ $actionMeta = [
     <!-- Header -->
     <header class="relative z-10 w-full px-8 py-6 flex items-center justify-between border-b border-slate-200 bg-background-light/80 backdrop-blur-md sticky top-0">
         <div class="flex items-center gap-4">
-            <div class="bg-primary p-2.5 rounded-2xl shadow-lg shadow-primary/20">
-                <span class="material-symbols-outlined text-white text-2xl">security</span>
-            </div>
+            <img src="OwlOps.png" alt="OwlOps Logo" class="h-12 w-auto">
             <div>
                 <h2 class="text-slate-900 text-2xl font-bold tracking-tight font-display">OwlOps</h2>
                 <div class="flex items-center gap-2">
