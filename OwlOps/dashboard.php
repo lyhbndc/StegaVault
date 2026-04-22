@@ -1,3 +1,5 @@
+
+
 <?php
 
 /**
@@ -52,7 +54,7 @@ try {
 
 // Backup count from meta file
 $stats['total_backups'] = 0;
-$backupMetaPath = __DIR__ . '/../StegaVault/backups/backups_meta.json';
+$backupMetaPath = '/opt/backups/backups_meta.json';
 if (file_exists($backupMetaPath)) {
     $backupMeta = json_decode(file_get_contents($backupMetaPath), true) ?? [];
     $stats['total_backups'] = count($backupMeta);
@@ -138,7 +140,7 @@ $actionMeta = [
     </style>
 </head>
 
-<body class="text-slate-200 min-h-screen flex flex-col relative overflow-hidden">
+<body class="text-slate-200 min-h-screen flex flex-col relative">
 
     <!-- Background Decor -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">

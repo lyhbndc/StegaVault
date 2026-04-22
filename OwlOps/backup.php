@@ -1,3 +1,4 @@
+
 <?php
 /**
  * StegaVault - System Backup & Restore
@@ -291,6 +292,11 @@ $user = [
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination -->
+                <div id="backupPagination" class="hidden flex items-center justify-between px-2 pt-2">
+                    <p id="paginationInfo" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest"></p>
+                    <div class="flex items-center gap-1" id="paginationButtons"></div>
+                </div>
             </div>
         </div>
     </main>
@@ -346,7 +352,10 @@ const API = '/StegaVault/api/super_admin_backup.php';
         let selectedRestoreFile = null;
         let selectedRestoreType = 'database'; // 'database' | 'files'
         let allBackups = [];
+        let filteredBackups = [];
         let currentFilter = 'all';
+        let currentPage = 1;
+        const PER_PAGE = 5;
 
         // ── Init ──────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
@@ -428,6 +437,7 @@ const API = '/StegaVault/api/super_admin_backup.php';
 
         function setFilter(filter) {
             currentFilter = filter;
+            currentPage = 1;
             document.querySelectorAll('.filter-btn').forEach(b => {
                 b.classList.remove('active-filter');
                 b.classList.add('text-slate-400', 'bg-white/5', 'border', 'border-white/10');
@@ -435,20 +445,26 @@ const API = '/StegaVault/api/super_admin_backup.php';
             const active = document.getElementById('filter-' + filter);
             if (active) { active.classList.add('active-filter'); active.classList.remove('text-slate-400', 'bg-white/5', 'border', 'border-white/10'); }
 
-            const filtered = filter === 'all' ? allBackups
+            filteredBackups = filter === 'all' ? allBackups
                 : filter === 'files' ? allBackups.filter(b => b.type === 'files')
                 : allBackups.filter(b => b.type !== 'files');
-            renderBackupTable(filtered);
+            renderBackupTable();
         }
 
-        function renderBackupTable(backups) {
+        function renderBackupTable() {
             const tbody = document.getElementById('backupTableBody');
-            if (backups.length === 0) {
+            if (filteredBackups.length === 0) {
                 setTableEmpty('No backups found. Run your first backup above.');
+                document.getElementById('backupPagination').classList.add('hidden');
                 return;
             }
 
-            tbody.innerHTML = backups.map(b => {
+            const totalPages = Math.ceil(filteredBackups.length / PER_PAGE);
+            if (currentPage > totalPages) currentPage = totalPages;
+            const start = (currentPage - 1) * PER_PAGE;
+            const page  = filteredBackups.slice(start, start + PER_PAGE);
+
+            tbody.innerHTML = page.map(b => {
                 const isFiles = b.type === 'files';
                 const typeBadge = isFiles
                     ? 'bg-purple-500/10 border-purple-500/20 text-purple-400'
@@ -491,6 +507,47 @@ const API = '/StegaVault/api/super_admin_backup.php';
                     </td>
                 </tr>`;
             }).join('');
+
+            renderPagination(filteredBackups.length, totalPages);
+        }
+
+        function renderPagination(total, totalPages) {
+            const pag = document.getElementById('backupPagination');
+            if (totalPages <= 1) { pag.classList.add('hidden'); return; }
+            pag.classList.remove('hidden');
+
+            const start = (currentPage - 1) * PER_PAGE + 1;
+            const end   = Math.min(currentPage * PER_PAGE, total);
+            document.getElementById('paginationInfo').textContent =
+                `Showing ${start}–${end} of ${total} backups`;
+
+            const btnBase  = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all';
+            const btnActive = `${btnBase} bg-white text-black`;
+            const btnInactive = `${btnBase} bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10`;
+            const btnDisabled = `${btnBase} bg-white/5 border border-white/5 text-slate-600 cursor-not-allowed`;
+
+            let html = `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}
+                class="${currentPage === 1 ? btnDisabled : btnInactive}">
+                <span class="material-symbols-outlined text-sm" style="font-size:14px;vertical-align:middle">chevron_left</span>
+            </button>`;
+
+            for (let p = 1; p <= totalPages; p++) {
+                html += `<button onclick="goToPage(${p})" class="${p === currentPage ? btnActive : btnInactive}">${p}</button>`;
+            }
+
+            html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}
+                class="${currentPage === totalPages ? btnDisabled : btnInactive}">
+                <span class="material-symbols-outlined text-sm" style="font-size:14px;vertical-align:middle">chevron_right</span>
+            </button>`;
+
+            document.getElementById('paginationButtons').innerHTML = html;
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredBackups.length / PER_PAGE);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderBackupTable();
         }
 
         function setTableEmpty(msg) {
@@ -814,3 +871,4 @@ let msg = `Backup created successfully: ${d.filename} (${d.size}).`;
 </body>
 
 </html>
+

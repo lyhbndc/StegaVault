@@ -13,6 +13,18 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
+$period = in_array($_GET['period'] ?? '', ['daily', 'weekly', 'monthly']) ? $_GET['period'] : 'all';
+$periodLabel = match($period) {
+    'daily'   => 'Daily Report (Last 24 Hours)',
+    'weekly'  => 'Weekly Report (Last 7 Days)',
+    'monthly' => 'Monthly Report (Last 30 Days)',
+    default   => 'All-Time Report'
+};
+$filterDays  = match($period) { 'daily' => 1, 'weekly' => 7, 'monthly' => 30, default => null };
+$trendDays   = match($period) { 'monthly' => 30, default => 7 };
+$fileDateSQL = $filterDays !== null ? "AND f.upload_date >= DATE_SUB(NOW(), INTERVAL {$filterDays} DAY)" : '';
+$actDateSQL  = $filterDays !== null ? "AND al.created_at >= DATE_SUB(NOW(), INTERVAL {$filterDays} DAY)" : '';
+
 $user = [
     'id' => $_SESSION['user_id'],
     'email' => $_SESSION['email'],
@@ -81,8 +93,9 @@ $stmt = $db->prepare("
     FROM files f
     LEFT JOIN users u    ON f.user_id    = u.id
     LEFT JOIN projects p ON f.project_id = p.id
+    WHERE 1=1 {$fileDateSQL}
     ORDER BY f.upload_date DESC
-    LIMIT 10
+    LIMIT 50
 ");
 $stmt->execute();
 $recentFiles = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -92,19 +105,20 @@ $stmt = $db->prepare("
     SELECT al.action, al.description, al.created_at, u.name AS actor
         FROM (SELECT * FROM activity_log_admin UNION ALL SELECT * FROM activity_log_employee UNION ALL SELECT * FROM activity_log_collaborator) al
     LEFT JOIN users u ON al.user_id = u.id
+    WHERE 1=1 {$actDateSQL}
     ORDER BY al.created_at DESC
-    LIMIT 10
+    LIMIT 50
 ");
 $stmt->execute();
 $activityLog = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// ── Upload Trend (Last 7 Days) ───────────────────────────────
+// ── Upload Trend ─────────────────────────────────────────────
 $uploadTrendMap = [];
 $trendStmt = $db->prepare("
-    SELECT upload_date::date AS d, COUNT(*) AS c
+    SELECT DATE(upload_date) AS d, COUNT(*) AS c
     FROM files
-    WHERE upload_date >= CURRENT_DATE - INTERVAL '6 days'
-    GROUP BY upload_date::date
+    WHERE upload_date >= DATE_SUB(NOW(), INTERVAL {$trendDays} DAY)
+    GROUP BY DATE(upload_date)
     ORDER BY d ASC
 ");
 $trendStmt->execute();
@@ -115,7 +129,7 @@ foreach ($trendRows as $row) {
 
 $uploadTrendLabels = [];
 $uploadTrendCounts = [];
-for ($i = 6; $i >= 0; $i--) {
+for ($i = $trendDays - 1; $i >= 0; $i--) {
     $dateKey = date('Y-m-d', strtotime("-$i days"));
     $uploadTrendLabels[] = date('M d', strtotime($dateKey));
     $uploadTrendCounts[] = $uploadTrendMap[$dateKey] ?? 0;
@@ -521,6 +535,18 @@ $generatedAt = date('F j, Y \a\t g:i A');
             <h2 class="text-slate-900 dark:text-white text-lg font-bold tracking-tight flex-shrink-0">Generate Report
             </h2>
             <?php include '../includes/search_bar.php'; ?>
+            <div id="reportFilters" class="flex items-center gap-1.5 flex-shrink-0">
+                <?php foreach (['all' => 'All Time', 'daily' => 'Daily', 'weekly' => 'Weekly', 'monthly' => 'Monthly'] as $val => $label): ?>
+                <a href="?period=<?php echo $val; ?>"
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border
+                    <?php echo $period === $val
+                        ? 'bg-primary text-white border-primary shadow-sm'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'; ?>">
+                    <?php echo $label; ?>
+                </a>
+                <?php endforeach; ?>
+            </div>
+
             <div class="flex items-center gap-3 flex-shrink-0">
                 <div
                     class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-semibold">
@@ -565,6 +591,8 @@ $generatedAt = date('F j, Y \a\t g:i A');
                             Audit Report</h2>
                         <p class="text-slate-500 text-sm">Document ID: SV-REP-
                             <?php echo date('Ymd-Hi'); ?>
+                            &nbsp;&mdash;&nbsp;
+                            <span class="font-semibold text-primary"><?php echo htmlspecialchars($periodLabel); ?></span>
                         </p>
                     </div>
                     <div class="text-right">
@@ -746,7 +774,7 @@ $generatedAt = date('F j, Y \a\t g:i A');
                             <p
                                 class="text-sm font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
                                 <span class="material-symbols-outlined text-[18px]">trending_up</span>
-                                Upload Activity (Last 7 Days)
+                                Upload Activity (<?php echo $trendDays; ?> Days)
                             </p>
                             <div class="chart-canvas-wrap" style="height: 240px;">
                                 <canvas id="uploadTrendChart"></canvas>
@@ -1238,158 +1266,263 @@ $generatedAt = date('F j, Y \a\t g:i A');
         async function generateProfessionalPDF() {
             const btn = document.getElementById('downloadPdfBtn');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> Processing...';
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> Generating PDF...';
             btn.disabled = true;
 
             try {
-                // Ensure charts are rendered completely
-                await new Promise(r => setTimeout(r, 200));
+                await new Promise(r => setTimeout(r, 300));
 
-                const {
-                    jsPDF
-                } = window.jspdf;
-                const doc = new jsPDF('p', 'mm', 'a4');
-                let yPos = 20;
-                const leftMargin = 15;
-                const pageWidth = doc.internal.pageSize.getWidth();
+                const { jsPDF } = window.jspdf;
+                // Landscape A4
+                const doc = new jsPDF('l', 'mm', 'a4');
+                const pW  = doc.internal.pageSize.getWidth();  // 297
+                const pH  = doc.internal.pageSize.getHeight(); // 210
+                const lm  = 14;
+                const rm  = 14;
+                const cW  = pW - lm - rm;
 
-                // ── HEADER ──
-                doc.setFontSize(22);
-                doc.setTextColor(15, 23, 42);
-                doc.text("StegaVault System Report", leftMargin, yPos);
+                const PERIOD_LABEL = '<?php echo addslashes($periodLabel); ?>';
+                const GEN_AT       = '<?php echo $generatedAt; ?>';
+                const DOC_ID       = 'SV-REP-<?php echo date('Ymd-Hi'); ?>';
+                const TREND_DAYS   = <?php echo $trendDays; ?>;
 
-                doc.setFontSize(10);
-                doc.setTextColor(100, 116, 139);
-                doc.text("Generated: <?php echo $generatedAt; ?>", pageWidth - 15, yPos, {
-                    align: "right"
-                });
+                // ── Palette ──────────────────────────────────────
+                const C = {
+                    primary:  [102, 126, 234],
+                    dark:     [15,  23,  42 ],
+                    navy:     [30,  41,  59 ],
+                    slate:    [71,  85,  105],
+                    muted:    [148, 163, 184],
+                    border:   [226, 232, 240],
+                    bg:       [248, 250, 252],
+                    bg2:      [241, 245, 249],
+                    white:    [255, 255, 255],
+                    emerald:  [16,  185, 129],
+                    purple:   [139, 92,  246],
+                    orange:   [249, 115, 22 ],
+                    indigo:   [99,  102, 241],
+                };
 
-                yPos += 12;
-                doc.setDrawColor(226, 232, 240);
-                doc.line(leftMargin, yPos, pageWidth - 15, yPos);
-                yPos += 12;
+                // ── Draw branded page header ──────────────────────
+                function drawPageHeader(subtitle) {
+                    // Dark bar
+                    doc.setFillColor(...C.dark);
+                    doc.rect(0, 0, pW, 20, 'F');
+                    // Primary accent stripe
+                    doc.setFillColor(...C.primary);
+                    doc.rect(0, 20, pW, 1.8, 'F');
 
-                // ── I. EXECUTIVE SUMMARY ──
-                doc.setFontSize(14);
-                doc.setTextColor(30, 41, 59);
-                doc.text("I. Executive Summary", leftMargin, yPos);
-                yPos += 8;
+                    // Brand
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    doc.setTextColor(...C.white);
+                    doc.text('StegaVault', lm, 10);
+                    doc.setFontSize(6.5);
+                    doc.setFont(undefined, 'normal');
+                    doc.setTextColor(...C.muted);
+                    doc.text('SECURE ASSET MANAGEMENT SYSTEM', lm, 16);
 
-                doc.setFontSize(10);
-                doc.setTextColor(71, 85, 105);
-                const summaryText = `Total Users: <?php echo $totalUsers; ?> (Active: <?php echo $activeUsers; ?>)
-Total Files: <?php echo $totalFiles; ?> (Storage: <?php echo fmtSize($totalFileSize); ?>)
-Watermarked Files: <?php echo $watermarkedFiles; ?>
-Active Projects: <?php echo $activeProjects; ?>`;
-                doc.text(summaryText, leftMargin, yPos);
-                yPos += 25;
+                    // Divider
+                    doc.setDrawColor(50, 65, 90);
+                    doc.line(lm + 58, 4, lm + 58, 18);
 
-                // ── II. CHARTS ──
-                doc.setFontSize(14);
-                doc.setTextColor(30, 41, 59);
-                doc.text("II. Activity Charts", leftMargin, yPos);
-                yPos += 10;
+                    // Page title (center)
+                    doc.setFontSize(10);
+                    doc.setFont(undefined, 'bold');
+                    doc.setTextColor(220, 228, 255);
+                    doc.text(subtitle, pW / 2, 10, { align: 'center' });
 
-                // Capture canvas to images
-                const userCanvas = document.getElementById('userStatusChart');
-                const roleCanvas = document.getElementById('roleDistributionChart');
-                if (userCanvas && roleCanvas) {
-                    const userImg = userCanvas.toDataURL('image/png', 1.0);
-                    const roleImg = roleCanvas.toDataURL('image/png', 1.0);
-                    doc.addImage(userImg, 'PNG', leftMargin, yPos, 80, 50);
-                    doc.addImage(roleImg, 'PNG', leftMargin + 90, yPos, 80, 50);
-                    yPos += 55;
+                    // Period badge
+                    doc.setFontSize(7);
+                    doc.setFont(undefined, 'normal');
+                    doc.setTextColor(160, 178, 240);
+                    doc.text(PERIOD_LABEL, pW / 2, 16.5, { align: 'center' });
+
+                    // Right meta
+                    doc.setFontSize(6.5);
+                    doc.setTextColor(...C.muted);
+                    doc.text(DOC_ID, pW - rm, 9, { align: 'right' });
+                    doc.text(GEN_AT, pW - rm, 15.5, { align: 'right' });
                 }
 
-                const wmCanvas = document.getElementById('watermarkCoverageChart');
-                const trendCanvas = document.getElementById('uploadTrendChart');
-                if (wmCanvas && trendCanvas) {
-                    const wmImg = wmCanvas.toDataURL('image/png', 1.0);
-                    const trendImg = trendCanvas.toDataURL('image/png', 1.0);
-                    doc.addImage(wmImg, 'PNG', leftMargin, yPos, 80, 50);
-                    doc.addImage(trendImg, 'PNG', leftMargin + 90, yPos, 80, 50);
-                    yPos += 60;
+                // ── Draw page footer (called after all pages done) ──
+                function drawPageFooter(num, total) {
+                    doc.setFillColor(...C.bg);
+                    doc.rect(0, pH - 9, pW, 9, 'F');
+                    doc.setDrawColor(...C.border);
+                    doc.line(lm, pH - 9, pW - rm, pH - 9);
+                    doc.setFontSize(6.5);
+                    doc.setFont(undefined, 'normal');
+                    doc.setTextColor(...C.muted);
+                    doc.text('StegaVault Security Suite  ·  ' + DOC_ID + '  ·  CONFIDENTIAL — ADMIN ONLY', lm, pH - 3.5);
+                    doc.text('Page ' + num + ' of ' + total, pW - rm, pH - 3.5, { align: 'right' });
                 }
 
-                // ── III. PROJECT INVENTORY ──
-                doc.addPage();
-                yPos = 20;
-                doc.setFontSize(14);
-                doc.setTextColor(30, 41, 59);
-                doc.text("III. Project Inventory", leftMargin, yPos);
-                yPos += 5;
+                // ── Section title bar ──────────────────────────────
+                function drawSection(label, y) {
+                    doc.setFillColor(237, 241, 255);
+                    doc.rect(lm, y, cW, 7.5, 'F');
+                    doc.setFillColor(...C.primary);
+                    doc.rect(lm, y, 3.5, 7.5, 'F');
+                    doc.setFontSize(7.5);
+                    doc.setFont(undefined, 'bold');
+                    doc.setTextColor(...C.navy);
+                    doc.text(label.toUpperCase(), lm + 7, y + 5.2);
+                    return y + 12;
+                }
 
-                doc.autoTable({
-                    html: '#sec-projects table',
-                    startY: yPos,
+                // ── Metric card ───────────────────────────────────
+                function drawCard(x, y, w, h, label, value, subLabel, subVal, accent) {
+                    doc.setFillColor(...C.white);
+                    doc.rect(x, y, w, h, 'F');
+                    doc.setDrawColor(...C.border);
+                    doc.rect(x, y, w, h, 'S');
+                    // Accent top bar
+                    doc.setFillColor(...accent);
+                    doc.rect(x, y, w, 2.5, 'F');
+                    // Label
+                    doc.setFontSize(6.5);
+                    doc.setFont(undefined, 'bold');
+                    doc.setTextColor(...C.muted);
+                    doc.text(label.toUpperCase(), x + 4, y + 8.5);
+                    // Big value
+                    doc.setFontSize(20);
+                    doc.setFont(undefined, 'bold');
+                    doc.setTextColor(...C.dark);
+                    doc.text(String(value), x + 4, y + 21);
+                    // Sub
+                    doc.setFontSize(7);
+                    doc.setFont(undefined, 'normal');
+                    doc.setTextColor(...C.slate);
+                    const subW = doc.getTextWidth(subLabel + ': ');
+                    doc.text(subLabel + ': ', x + 4, y + h - 4);
+                    doc.setFont(undefined, 'bold');
+                    doc.setTextColor(...accent);
+                    doc.text(String(subVal), x + 4 + subW, y + h - 4);
+                }
+
+                // ── autoTable shared styles ───────────────────────
+                const tblStyles = {
+                    margin: { left: lm, right: rm },
                     theme: 'grid',
-                    styles: {
-                        fontSize: 8
-                    },
-                    headStyles: {
-                        fillColor: [102, 126, 234]
+                    styles: { fontSize: 7.5, cellPadding: 2.8, textColor: C.slate, lineColor: C.border, lineWidth: 0.15 },
+                    headStyles: { fillColor: C.primary, textColor: C.white, fontStyle: 'bold', fontSize: 7.5, cellPadding: 3 },
+                    alternateRowStyles: { fillColor: C.bg },
+                };
+
+                // ════════════════════════════════════════════════════
+                //  PAGE 1 — Executive Summary + Charts
+                // ════════════════════════════════════════════════════
+                drawPageHeader('System Status & Forensic Audit Report');
+                let y = 26;
+
+                // KPI cards — 4 across
+                const cGap  = 4;
+                const cardW = (cW - cGap * 3) / 4;
+                const cardH = 34;
+                [
+                    { label: 'Total Users',  value: '<?php echo $totalUsers; ?>',       subLabel: 'Active',   subVal: '<?php echo $activeUsers; ?>',                                                           accent: C.primary },
+                    { label: 'Total Files',  value: '<?php echo $totalFiles; ?>',       subLabel: 'Storage',  subVal: '<?php echo fmtSize($totalFileSize); ?>',                                                accent: C.purple  },
+                    { label: 'Watermarked',  value: '<?php echo $watermarkedFiles; ?>', subLabel: 'Coverage', subVal: '<?php echo $totalFiles > 0 ? round(($watermarkedFiles/$totalFiles)*100) : 0; ?>%',      accent: C.indigo  },
+                    { label: 'Projects',     value: '<?php echo $totalProjects; ?>',    subLabel: 'Active',   subVal: '<?php echo $activeProjects; ?>',                                                         accent: C.orange  },
+                ].forEach((card, i) => {
+                    drawCard(lm + i * (cardW + cGap), y, cardW, cardH, card.label, card.value, card.subLabel, card.subVal, card.accent);
+                });
+                y += cardH + 7;
+
+                // Charts — 2×2 grid
+                const chartGap = 5;
+                const chartW   = (cW - chartGap) / 2;
+                const chartH   = 66;
+                const chartDefs = [
+                    { id: 'userStatusChart',        title: 'User Status Distribution'                  },
+                    { id: 'roleDistributionChart',  title: 'Role Breakdown'                             },
+                    { id: 'watermarkCoverageChart', title: 'Watermark Coverage'                         },
+                    { id: 'uploadTrendChart',        title: 'Upload Activity (' + TREND_DAYS + ' Days)' },
+                ];
+                chartDefs.forEach((ch, i) => {
+                    const col = i % 2;
+                    const row = Math.floor(i / 2);
+                    const cx  = lm + col * (chartW + chartGap);
+                    const cy  = y + row * (chartH + 4);
+
+                    // Panel
+                    doc.setFillColor(...C.white);
+                    doc.rect(cx, cy, chartW, chartH, 'F');
+                    doc.setDrawColor(...C.border);
+                    doc.rect(cx, cy, chartW, chartH, 'S');
+                    // Panel accent bar
+                    doc.setFillColor(...C.primary);
+                    doc.rect(cx, cy, chartW, 1.5, 'F');
+                    // Title
+                    doc.setFontSize(7.5);
+                    doc.setFont(undefined, 'bold');
+                    doc.setTextColor(...C.navy);
+                    doc.text(ch.title, cx + 4, cy + 8);
+
+                    const canvas = document.getElementById(ch.id);
+                    if (canvas) {
+                        doc.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', cx + 3, cy + 11, chartW - 6, chartH - 14);
                     }
                 });
-                yPos = doc.lastAutoTable.finalY + 15;
 
-                if (yPos > 240) {
-                    doc.addPage();
-                    yPos = 20;
-                }
+                // ════════════════════════════════════════════════════
+                //  PAGE 2 — Project Inventory + Personnel Registry
+                // ════════════════════════════════════════════════════
+                doc.addPage();
+                drawPageHeader('Project Inventory & Personnel Registry');
+                y = 26;
 
-                // ── IV. PERSONNEL REGISTRY ──
-                doc.setFontSize(14);
-                doc.setTextColor(30, 41, 59);
-                doc.text("IV. Personnel Registry", leftMargin, yPos);
-                yPos += 8;
+                y = drawSection('I.  Project Inventory', y);
+                doc.autoTable({ html: '#sec-projects table', startY: y, ...tblStyles,
+                    columnStyles: { 0: { fontStyle: 'bold', textColor: C.dark } } });
+                y = doc.lastAutoTable.finalY + 10;
 
-                const userTables = document.querySelectorAll('#sec-users table');
-                userTables.forEach((table) => {
-                    const titleElem = table.closest('.section-table-wrap').previousElementSibling;
-                    const roleTitle = titleElem ? titleElem.innerText : '';
+                if (y > pH - 50) { doc.addPage(); drawPageHeader('Personnel Registry'); y = 26; }
+                y = drawSection('II.  Personnel Registry', y);
 
+                for (const table of document.querySelectorAll('#sec-users table')) {
+                    const prev = table.closest('.section-table-wrap').previousElementSibling;
+                    const roleTitle = prev ? prev.innerText.trim() : '';
+                    if (y > pH - 40) { doc.addPage(); drawPageHeader('Personnel Registry (cont.)'); y = 26; }
                     if (roleTitle) {
-                        doc.setFontSize(11);
-                        doc.setTextColor(71, 85, 105);
-                        doc.text(roleTitle, leftMargin, yPos);
-                        yPos += 4;
+                        doc.setFontSize(8);
+                        doc.setFont(undefined, 'bold');
+                        doc.setTextColor(...C.slate);
+                        doc.text(roleTitle, lm, y);
+                        y += 5;
                     }
-
-                    doc.autoTable({
-                        html: table,
-                        startY: yPos,
-                        theme: 'grid',
-                        styles: {
-                            fontSize: 8
-                        },
-                        headStyles: {
-                            fillColor: [102, 126, 234]
-                        }
-                    });
-
-                    yPos = doc.lastAutoTable.finalY + 12;
-                    if (yPos > 240) {
-                        doc.addPage();
-                        yPos = 20;
-                    }
-                });
-
-                // ── FOOTER PAGE NUMBERS ──
-                const pageCount = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setFontSize(8);
-                    doc.setTextColor(148, 163, 184);
-                    doc.text("StegaVault Security Suite | Audit Report SV-REP-<?php echo date('Ymd'); ?> - Page " + i + " of " + pageCount, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 10, {
-                        align: 'center'
-                    });
+                    doc.autoTable({ html: table, startY: y, ...tblStyles });
+                    y = doc.lastAutoTable.finalY + 8;
                 }
 
-                doc.save('StegaVault_System_Report.pdf');
+                // ════════════════════════════════════════════════════
+                //  PAGE 3 — Recent Uploads + Forensic Audit Trail
+                // ════════════════════════════════════════════════════
+                doc.addPage();
+                drawPageHeader('Data Uploads & Forensic Audit Trail');
+                y = 26;
 
-            } catch (error) {
-                console.error('PDF Error:', error);
-                alert('An error occurred while generating the PDF.');
+                y = drawSection('III.  Recent Data Uploads', y);
+                doc.autoTable({ html: '#sec-files table', startY: y, ...tblStyles });
+                y = doc.lastAutoTable.finalY + 10;
+
+                if (y > pH - 50) { doc.addPage(); drawPageHeader('Forensic Audit Trail'); y = 26; }
+                y = drawSection('IV.  Forensic Audit Trail', y);
+                doc.autoTable({ html: '#sec-activity table', startY: y, ...tblStyles });
+
+                // ── Footers on every page ─────────────────────────
+                const totalPages = doc.internal.getNumberOfPages();
+                for (let p = 1; p <= totalPages; p++) {
+                    doc.setPage(p);
+                    drawPageFooter(p, totalPages);
+                }
+
+                doc.save('StegaVault_' + DOC_ID + '.pdf');
+
+            } catch (err) {
+                console.error('PDF Error:', err);
+                alert('PDF generation failed: ' + err.message);
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
