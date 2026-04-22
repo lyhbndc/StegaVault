@@ -15,6 +15,7 @@ if ($_SESSION['role'] !== 'super_admin') {
     header('Location: login.php');
     exit;
 }
+require_once __DIR__ . '/auth_guard.php';
 
 require_once '../StegaVault/includes/db.php';
 
@@ -441,6 +442,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
             }
         });
     </script>
+    <script src="session-timeout.js"></script>
 </body>
 
 </html>

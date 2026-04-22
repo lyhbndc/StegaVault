@@ -13,6 +13,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'super_admin') {
     header('Location: login.php');
     exit;
 }
+require_once __DIR__ . '/auth_guard.php';
 
 $user = [
     'id' => $_SESSION['user_id'],
@@ -610,6 +611,7 @@ if ($appsResult) {
         // Initialize
         fetchAdmins();
     </script>
+    <script src="session-timeout.js"></script>
 </body>
 
 </html>

@@ -103,6 +103,13 @@ if (isset($_SESSION['user_id'])) {
                 </div>
             </div>
 
+            <?php if (($_GET['reason'] ?? '') === 'timeout'): ?>
+            <div class="mb-6 flex items-center gap-3 px-4 py-3 bg-orange-500/10 border border-orange-500/30 text-orange-300 rounded-xl text-sm">
+                <span class="material-symbols-outlined text-orange-400 text-base flex-shrink-0">timer_off</span>
+                <span>Your session expired due to inactivity. Please sign in again.</span>
+            </div>
+            <?php endif; ?>
+
             <div class="text-center mb-10">
                 <h1 class="text-white text-3xl font-bold tracking-tight mb-2">Super Admin Access</h1>
                 <p class="text-slate-400 text-sm">System level administration only</p>

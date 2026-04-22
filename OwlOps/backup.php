@@ -11,6 +11,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'super_admin') {
     header('Location: login.php');
     exit;
 }
+require_once __DIR__ . '/auth_guard.php';
 
 $user = [
     'id'   => $_SESSION['user_id'],
@@ -148,13 +149,13 @@ $user = [
                         <div class="p-2 bg-purple-500/10 rounded-xl">
                             <span class="material-symbols-outlined text-purple-400">folder_zip</span>
                         </div>
-                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Docker Volumes</span>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">File Backups</span>
                     </div>
                     <div>
-                        <p class="text-slate-400 text-xs font-medium">Detected Volumes</p>
-                        <h3 id="statDockerVolumes" class="text-xl font-bold text-white">—</h3>
+                        <p class="text-slate-400 text-xs font-medium">File Backup Count</p>
+                        <h3 id="statFileBackupCount" class="text-xl font-bold text-white">—</h3>
                     </div>
-                    <div id="dockerVolumeNames" class="text-[10px] text-slate-500 font-mono truncate">Checking...</div>
+                    <p class="text-[10px] text-slate-500">uploads/ folder snapshots</p>
                 </div>
 
                 <div class="bg-slate-card border border-white/10 p-6 rounded-2xl space-y-4">
@@ -291,6 +292,11 @@ $user = [
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination -->
+                <div id="backupPagination" class="hidden flex items-center justify-between px-2 pt-3">
+                    <p id="paginationInfo" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest"></p>
+                    <div id="paginationButtons" class="flex items-center gap-1"></div>
+                </div>
             </div>
         </div>
     </main>
@@ -346,7 +352,10 @@ const API = '/StegaVault/api/super_admin_backup.php';
         let selectedRestoreFile = null;
         let selectedRestoreType = 'database'; // 'database' | 'files'
         let allBackups = [];
+        let filteredBackups = [];
         let currentFilter = 'all';
+        let currentPage = 1;
+        const PER_PAGE = 5;
 
         // ── Init ──────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
@@ -377,19 +386,13 @@ const API = '/StegaVault/api/super_admin_backup.php';
                 const res  = await fetch(`${API}?action=docker_status`);
                 const data = await res.json();
                 const badge = document.getElementById('dockerStatusBadge');
-                const volEl = document.getElementById('statDockerVolumes');
-                const volNames = document.getElementById('dockerVolumeNames');
 
                 if (data.success && data.data.available) {
                     badge.className = 'flex items-center gap-3 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full';
                     badge.innerHTML = `<span class="size-2 rounded-full bg-emerald-500 glow-pulse"></span><span class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Docker: Connected</span>`;
-                    volEl.textContent = data.data.total + (data.data.total === 1 ? ' volume' : ' volumes');
-                    volNames.textContent = data.data.volumes.join(', ') || 'None found';
                 } else {
                     badge.className = 'flex items-center gap-3 px-4 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-full';
                     badge.innerHTML = `<span class="size-2 rounded-full bg-yellow-500"></span><span class="text-[10px] text-yellow-400 font-bold uppercase tracking-widest">Docker: Unavailable</span>`;
-                    volEl.textContent = 'N/A';
-                    volNames.textContent = data.data?.reason || 'Docker not accessible';
                     document.getElementById('includeDocker').disabled = true;
                 }
             } catch (e) {
@@ -413,6 +416,8 @@ const API = '/StegaVault/api/super_admin_backup.php';
 
                 // Update stats
                 document.getElementById('statBackupCount').textContent = allBackups.length + ' stored';
+                const fileCount = allBackups.filter(b => b.type === 'files').length;
+                document.getElementById('statFileBackupCount').textContent = fileCount + (fileCount === 1 ? ' snapshot' : ' snapshots');
                 if (allBackups.length > 0) {
                     const latest = allBackups[0];
                     document.getElementById('statLastBackup').textContent = formatDate(latest.created_at);
@@ -428,6 +433,7 @@ const API = '/StegaVault/api/super_admin_backup.php';
 
         function setFilter(filter) {
             currentFilter = filter;
+            currentPage = 1;
             document.querySelectorAll('.filter-btn').forEach(b => {
                 b.classList.remove('active-filter');
                 b.classList.add('text-slate-400', 'bg-white/5', 'border', 'border-white/10');
@@ -435,20 +441,26 @@ const API = '/StegaVault/api/super_admin_backup.php';
             const active = document.getElementById('filter-' + filter);
             if (active) { active.classList.add('active-filter'); active.classList.remove('text-slate-400', 'bg-white/5', 'border', 'border-white/10'); }
 
-            const filtered = filter === 'all' ? allBackups
+            filteredBackups = filter === 'all' ? allBackups
                 : filter === 'files' ? allBackups.filter(b => b.type === 'files')
                 : allBackups.filter(b => b.type !== 'files');
-            renderBackupTable(filtered);
+            renderBackupTable();
         }
 
-        function renderBackupTable(backups) {
+        function renderBackupTable() {
             const tbody = document.getElementById('backupTableBody');
-            if (backups.length === 0) {
+            if (filteredBackups.length === 0) {
                 setTableEmpty('No backups found. Run your first backup above.');
+                document.getElementById('backupPagination').classList.add('hidden');
                 return;
             }
 
-            tbody.innerHTML = backups.map(b => {
+            const totalPages = Math.ceil(filteredBackups.length / PER_PAGE);
+            if (currentPage > totalPages) currentPage = totalPages;
+            const start = (currentPage - 1) * PER_PAGE;
+            const page  = filteredBackups.slice(start, start + PER_PAGE);
+
+            tbody.innerHTML = page.map(b => {
                 const isFiles = b.type === 'files';
                 const typeBadge = isFiles
                     ? 'bg-purple-500/10 border-purple-500/20 text-purple-400'
@@ -491,6 +503,45 @@ const API = '/StegaVault/api/super_admin_backup.php';
                     </td>
                 </tr>`;
             }).join('');
+
+            renderPagination(filteredBackups.length, totalPages);
+        }
+
+        function renderPagination(total, totalPages) {
+            const pag = document.getElementById('backupPagination');
+            if (totalPages <= 1) { pag.classList.add('hidden'); return; }
+            pag.classList.remove('hidden');
+
+            const start = (currentPage - 1) * PER_PAGE + 1;
+            const end   = Math.min(currentPage * PER_PAGE, total);
+            document.getElementById('paginationInfo').textContent =
+                `Showing ${start}–${end} of ${total} backups`;
+
+            const btnBase     = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all';
+            const btnActive   = `${btnBase} bg-white text-black`;
+            const btnInactive = `${btnBase} bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10`;
+            const btnDisabled = `${btnBase} bg-white/5 border border-white/5 text-slate-600 cursor-not-allowed`;
+
+            let html = `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}
+                class="${currentPage === 1 ? btnDisabled : btnInactive}">
+                <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">chevron_left</span>
+            </button>`;
+            for (let p = 1; p <= totalPages; p++) {
+                html += `<button onclick="goToPage(${p})" class="${p === currentPage ? btnActive : btnInactive}">${p}</button>`;
+            }
+            html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}
+                class="${currentPage === totalPages ? btnDisabled : btnInactive}">
+                <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">chevron_right</span>
+            </button>`;
+
+            document.getElementById('paginationButtons').innerHTML = html;
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredBackups.length / PER_PAGE);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderBackupTable();
         }
 
         function setTableEmpty(msg) {
@@ -807,10 +858,12 @@ let msg = `Backup created successfully: ${d.filename} (${d.size}).`;
         }
 
         // Close modal on backdrop click
+
         document.getElementById('restoreModal').addEventListener('click', function (e) {
             if (e.target === this) closeRestoreModal();
         });
     </script>
+    <script src="session-timeout.js"></script>
 </body>
 
 </html>

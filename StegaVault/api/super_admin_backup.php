@@ -140,9 +140,8 @@ if (!empty($newDirs)) {
     sendResponse(false, null, 'Backup script did not create a new backup folder. Output: ' . trim($output), 500);
 }
 
-        $dbFile     = $latestDir . '/database.dump';
-        $filesFile  = $latestDir . '/files.tar.gz';
-        $configFile = $latestDir . '/config.tar.gz';
+        $dbFile    = $latestDir . '/database.dump';
+        $filesFile = $latestDir . '/files.tar.gz';
 
         if (!file_exists($dbFile)) {
             sendResponse(false, null, 'Backup folder created, but database.dump was not found. Output: ' . $output, 500);
@@ -190,18 +189,6 @@ if (!empty($newDirs)) {
                 'size'       => filesize($filesFile),
                 'size_label' => formatBytes(filesize($filesFile)),
                 'files'      => 0,
-                'created_at' => date('Y-m-d H:i:s'),
-                'created_by' => $_SESSION['name'] ?? 'System',
-            ];
-        }
-
-        if (file_exists($configFile)) {
-            $newEntries[] = [
-                'id'         => $backupId . '-CONFIG',
-                'filename'   => $folderName . '/config.tar.gz',
-                'type'       => 'config',
-                'size'       => filesize($configFile),
-                'size_label' => formatBytes(filesize($configFile)),
                 'created_at' => date('Y-m-d H:i:s'),
                 'created_by' => $_SESSION['name'] ?? 'System',
             ];

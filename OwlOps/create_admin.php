@@ -13,6 +13,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'super_admin') {
     header('Location: login.php');
     exit;
 }
+require_once __DIR__ . '/auth_guard.php';
 
 // Check if a web app context is selected
 if (!isset($_SESSION['manage_web_app_id'])) {
@@ -306,6 +307,7 @@ $webAppName = $_SESSION['manage_web_app_name'];
             }
         });
     </script>
+    <script src="session-timeout.js"></script>
 </body>
 
 </html>

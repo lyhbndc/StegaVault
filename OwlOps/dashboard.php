@@ -13,6 +13,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'super_admin') {
     header('Location: login.php');
     exit;
 }
+require_once __DIR__ . '/auth_guard.php';
 
 $user = [
     'id' => $_SESSION['user_id'],
@@ -29,6 +30,7 @@ $stats = [
     'total_users'         => 0,
     'total_audit_events'  => 0,
     'total_backups'       => 0,
+    'file_backups'        => 0,
     'last_backup'         => null,
     'last_backup_by'      => null,
 ];
@@ -52,10 +54,11 @@ try {
 
 // Backup count from meta file
 $stats['total_backups'] = 0;
-$backupMetaPath = __DIR__ . '/../StegaVault/backups/backups_meta.json';
+$backupMetaPath = '/opt/backups/backups_meta.json';
 if (file_exists($backupMetaPath)) {
     $backupMeta = json_decode(file_get_contents($backupMetaPath), true) ?? [];
     $stats['total_backups'] = count($backupMeta);
+    $stats['file_backups']  = count(array_filter($backupMeta, fn($b) => ($b['type'] ?? '') === 'files'));
     if (!empty($backupMeta)) {
         $stats['last_backup'] = $backupMeta[0]['created_at'] ?? '—';
         $stats['last_backup_by'] = $backupMeta[0]['created_by'] ?? '—';
@@ -138,7 +141,7 @@ $actionMeta = [
     </style>
 </head>
 
-<body class="text-slate-200 min-h-screen flex flex-col relative overflow-hidden">
+<body class="text-slate-200 min-h-screen flex flex-col relative">
 
     <!-- Background Decor -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -224,13 +227,28 @@ $actionMeta = [
                         <h3 class="text-2xl font-bold text-white font-display">Backup & Sync</h3>
                         <p class="text-slate-500 text-sm mt-2 leading-relaxed">System-wide snapshots and environment restoration protocols.</p>
                     </div>
-                    <div class="flex items-center gap-3 pt-4 border-t border-white/5">
+                    <div class="pt-4 border-t border-white/5 space-y-2">
                         <?php if ($stats['total_backups'] > 0): ?>
-                            <span class="material-symbols-outlined text-emerald-500 text-sm">check_circle</span>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Last: <?php echo htmlspecialchars($stats['last_backup'] ?? '—'); ?></p>
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-emerald-500 text-sm">check_circle</span>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Last: <?php echo htmlspecialchars($stats['last_backup'] ?? '—'); ?></p>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div>
+                                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">DB</p>
+                                    <p class="text-sm font-bold text-white"><?php echo $stats['total_backups'] - $stats['file_backups']; ?></p>
+                                </div>
+                                <div class="w-px h-6 bg-white/5"></div>
+                                <div>
+                                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Files</p>
+                                    <p class="text-sm font-bold text-white"><?php echo $stats['file_backups']; ?></p>
+                                </div>
+                            </div>
                         <?php else: ?>
-                            <span class="material-symbols-outlined text-slate-500 text-sm">radio_button_unchecked</span>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">No backups yet</p>
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-slate-500 text-sm">radio_button_unchecked</span>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">No backups yet</p>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -353,6 +371,7 @@ $actionMeta = [
             window.location.href = 'login.php';
         }
     </script>
+    <script src="session-timeout.js"></script>
 </body>
 
 </html>
