@@ -21,6 +21,7 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Audit Log - OwlOps</title>
+    <script>if(localStorage.getItem('owlops-theme')==='dark')document.documentElement.classList.add('dark');</script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -31,7 +32,8 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#ffffff",
+                        "primary": "#2563eb",
+                        "background-light": "#ffffff",
                         "background-dark": "#000000",
                         "slate-card": "#111111",
                     },
@@ -44,53 +46,59 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #000000; }
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
+        html.dark body { background-color: #000000; }
         h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Space Grotesk', sans-serif; }
-        .bg-grid-pattern { background-image: radial-gradient(#ffffff 0.1px, transparent 0.1px); background-size: 30px 30px; }
+        .bg-grid-pattern { background-image: radial-gradient(#cbd5e1 0.5px, transparent 0.5px); background-size: 24px 24px; }
+        html.dark .bg-grid-pattern { background-image: radial-gradient(rgba(255,255,255,0.12) 0.5px, transparent 0.5px); }
     </style>
 </head>
 
-<body class="text-slate-200 min-h-screen flex">
+<body class="bg-white dark:bg-black text-slate-900 dark:text-slate-200 min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside class="w-64 border-r border-slate-200 bg-background-light flex flex-col fixed inset-y-0 left-0 z-50">
+    <aside class="w-64 border-r border-slate-200 dark:border-white/5 bg-white dark:bg-black flex flex-col fixed inset-y-0 left-0 z-50">
         <div class="p-6 flex flex-col h-full gap-8">
             <div class="flex items-center gap-2">
                 <img src="OwlOps.png" alt="OwlOps Logo" class="h-8 w-auto">
                 <div>
-                    <h1 class="text-slate-900 text-base font-bold leading-tight font-display">OwlOps</h1>
+                    <h1 class="text-slate-900 dark:text-white text-base font-bold leading-tight font-display">OwlOps</h1>
                     <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
                 </div>
             </div>
             <nav class="flex flex-col gap-2 flex-1">
-                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2">Systems</p>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="dashboard.php">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-600 mb-2">Systems</p>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="dashboard.php">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
                     <p class="text-sm font-medium">Control Center</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="manage_admins.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="manage_admins.php">
                     <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
                     <p class="text-sm font-medium">Manage Admins</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="backup.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="backup.php">
                     <span class="material-symbols-outlined text-[20px]">backup</span>
                     <p class="text-sm font-medium">Backup &amp; Restore</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20" href="audit-log.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary border border-primary/20 dark:border-primary/30" href="audit-log.php">
                     <span class="material-symbols-outlined text-[20px] text-primary">manage_search</span>
                     <p class="text-sm font-medium">Audit Log</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="reports.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="reports.php">
                     <span class="material-symbols-outlined text-[20px]">assessment</span>
                     <p class="text-sm font-medium">System Report</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="mfa-settings.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="mfa-settings.php">
                     <span class="material-symbols-outlined text-[20px]">phonelink_lock</span>
                     <p class="text-sm font-medium">MFA Settings</p>
                 </a>
             </nav>
-            <div class="pt-6 border-t border-slate-200">
-                <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
+            <div class="pt-6 border-t border-slate-200 dark:border-white/5 space-y-1">
+                <button onclick="toggleTheme()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]" id="themeIcon">dark_mode</span>
+                    <p class="text-sm font-medium" id="themeLabel">Dark Mode</p>
+                </button>
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
                     <span class="material-symbols-outlined text-[20px]">logout</span>
                     <p class="text-sm font-medium">Sign Out</p>
                 </button>
@@ -108,10 +116,10 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
             <!-- Header -->
             <header class="flex items-end justify-between">
                 <div>
-                    <h2 class="text-4xl font-bold text-slate-900 font-display">Audit Log</h2>
-                    <p class="text-slate-600 mt-2">Full record of all super admin actions — logins, backups, admin changes, and MFA events.</p>
+                    <h2 class="text-4xl font-bold text-slate-900 dark:text-white font-display">Audit Log</h2>
+                    <p class="text-slate-600 dark:text-slate-400 mt-2">Full record of all super admin actions — logins, backups, admin changes, and MFA events.</p>
                 </div>
-                <button onclick="loadLogs()" class="flex items-center gap-2 px-4 py-2 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 hover:text-slate-900 text-sm font-medium transition-colors">
+                <button onclick="loadLogs()" class="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm font-medium transition-colors">
                     <span class="material-symbols-outlined text-base">refresh</span> Refresh
                 </button>
             </header>
@@ -122,49 +130,50 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
             <!-- Filters -->
             <div class="flex flex-wrap items-center gap-3">
                 <!-- Category tabs -->
-                <div class="flex items-center gap-1 bg-slate-100 border border-slate-200 rounded-xl p-1">
+                <div class="flex items-center gap-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-1">
                     <button onclick="setCategory('')"    id="cat-all"    class="cat-btn active-cat px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">All</button>
-                    <button onclick="setCategory('auth')"   id="cat-auth"   class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-600 hover:text-slate-900">Auth</button>
-                    <button onclick="setCategory('backup')" id="cat-backup" class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-600 hover:text-slate-900">Backup</button>
-                    <button onclick="setCategory('admin')"  id="cat-admin"  class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-600 hover:text-slate-900">Admin</button>
-                    <button onclick="setCategory('mfa')"    id="cat-mfa"    class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-600 hover:text-slate-900">MFA</button>
+                    <button onclick="setCategory('auth')"   id="cat-auth"   class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Auth</button>
+                    <button onclick="setCategory('backup')" id="cat-backup" class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Backup</button>
+                    <button onclick="setCategory('admin')"  id="cat-admin"  class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Admin</button>
+                    <button onclick="setCategory('mfa')"    id="cat-mfa"    class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">MFA</button>
                 </div>
 
                 <!-- Search -->
                 <div class="relative flex-1 min-w-[220px]">
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 text-lg">search</span>
                     <input id="searchInput" type="text" placeholder="Search by name, email, action…"
-                        class="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-500 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary/50 outline-none transition-all" />
+                        class="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-500 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary/50 outline-none transition-all" />
                 </div>
             </div>
 
             <!-- Log Table -->
-            <div class="bg-card-light border border-slate-200 rounded-2xl overflow-hidden">
+            <div class="bg-white dark:bg-slate-card border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden">
                 <table class="w-full text-left">
                     <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200">
-                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Timestamp</th>
-                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Who</th>
-                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Action</th>
-                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Category</th>
-                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Details</th>
-                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">IP</th>
+                        <tr class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
+                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Timestamp</th>
+                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Who</th>
+                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Action</th>
+                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Category</th>
+                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Details</th>
+                            <th class="px-5 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">IP</th>
                         </tr>
                     </thead>
-                    <tbody id="logTableBody" class="divide-y divide-white/5">
+                    <tbody id="logTableBody" class="divide-y divide-slate-100 dark:divide-white/5">
                         <tr><td colspan="6" class="px-5 py-8 text-center text-slate-500 text-sm">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
 
             <!-- Pagination -->
-            <div id="pagination" class="flex items-center justify-between text-sm text-slate-400"></div>
+            <div id="pagination" class="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400"></div>
 
         </div>
     </main>
 
     <style>
-        .active-cat { background: rgba(255,255,255,0.12); color: white; }
+        .active-cat { background: rgba(37,99,235,0.12); color: #2563eb; }
+        html.dark .active-cat { background: rgba(255,255,255,0.12); color: white; }
     </style>
 
     <script>
@@ -205,16 +214,6 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
             mfa:    'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadSummary();
-            loadLogs();
-
-            document.getElementById('searchInput').addEventListener('input', () => {
-                clearTimeout(searchTimer);
-                searchTimer = setTimeout(() => { currentPage = 1; loadLogs(); }, 400);
-            });
-        });
-
         async function loadSummary() {
             try {
                 const res  = await fetch(`${API}?action=summary`);
@@ -233,7 +232,7 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
                 cards.innerHTML = allCats.map(cat => {
                     const s = summaryMap[cat] || { total: 0, last_event: null };
                     return `
-                    <div onclick="setCategory('${cat}')" class="bg-slate-card border border-white/10 rounded-2xl p-5 cursor-pointer hover:border-white/20 transition-all space-y-3">
+                    <div onclick="setCategory('${cat}')" class="bg-slate-50 dark:bg-slate-card border border-slate-200 dark:border-white/10 rounded-2xl p-5 cursor-pointer hover:border-slate-300 dark:hover:border-white/20 transition-all space-y-3">
                         <div class="flex items-center justify-between">
                             <div class="p-2 rounded-xl ${catColor[cat]}">
                                 <span class="material-symbols-outlined text-xl">${catIcon[cat]}</span>
@@ -241,7 +240,7 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
                             <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">${catMap[cat]}</span>
                         </div>
                         <div>
-                            <p class="text-2xl font-bold text-white">${s.total}</p>
+                            <p class="text-2xl font-bold text-slate-900 dark:text-white">${s.total}</p>
                             <p class="text-xs text-slate-500 mt-1">${s.last_event ? 'Last: ' + formatDate(s.last_event) : 'No events yet'}</p>
                         </div>
                     </div>`;
@@ -294,16 +293,16 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
                 const details  = formatDetails(log.action, log.details || {});
 
                 return `
-                <tr class="hover:bg-white/[0.02] transition-colors">
-                    <td class="px-5 py-3.5 text-xs text-slate-400 whitespace-nowrap font-mono">${formatDate(log.created_at)}</td>
+                <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                    <td class="px-5 py-3.5 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap font-mono">${formatDate(log.created_at)}</td>
                     <td class="px-5 py-3.5">
-                        <p class="text-white text-xs font-semibold">${escHtml(log.super_admin_name)}</p>
+                        <p class="text-slate-900 dark:text-white text-xs font-semibold">${escHtml(log.super_admin_name)}</p>
                         <p class="text-slate-500 text-[10px]">${escHtml(log.super_admin_email)}</p>
                     </td>
                     <td class="px-5 py-3.5">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined ${meta.color} text-base">${meta.icon}</span>
-                            <span class="text-white text-xs font-medium">${meta.label}</span>
+                            <span class="text-slate-900 dark:text-white text-xs font-medium">${meta.label}</span>
                         </div>
                     </td>
                     <td class="px-5 py-3.5">
@@ -311,7 +310,7 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
                             ${log.category}
                         </span>
                     </td>
-                    <td class="px-5 py-3.5 text-xs text-slate-400 max-w-xs truncate" title="${escHtml(JSON.stringify(log.details))}">${details}</td>
+                    <td class="px-5 py-3.5 text-xs text-slate-500 dark:text-slate-400 max-w-xs truncate" title="${escHtml(JSON.stringify(log.details))}">${details}</td>
                     <td class="px-5 py-3.5 text-xs text-slate-500 font-mono">${escHtml(log.ip_address || '—')}</td>
                 </tr>`;
             }).join('');
@@ -338,15 +337,15 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
             const end   = Math.min(data.page * data.per_page, data.total);
 
             el.innerHTML = `
-                <span class="text-slate-500">${start}–${end} of ${data.total} entries</span>
+                <span class="text-slate-500 dark:text-slate-400">${start}–${end} of ${data.total} entries</span>
                 <div class="flex items-center gap-2">
                     <button onclick="goPage(${data.page - 1})" ${data.page <= 1 ? 'disabled' : ''}
-                        class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm disabled:opacity-30 hover:bg-white/10 transition-colors">
+                        class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-sm disabled:opacity-30 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
                         <span class="material-symbols-outlined text-base">chevron_left</span>
                     </button>
                     <span class="text-xs font-mono">Page ${data.page} / ${data.pages}</span>
                     <button onclick="goPage(${data.page + 1})" ${data.page >= data.pages ? 'disabled' : ''}
-                        class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm disabled:opacity-30 hover:bg-white/10 transition-colors">
+                        class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-sm disabled:opacity-30 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
                         <span class="material-symbols-outlined text-base">chevron_right</span>
                     </button>
                 </div>`;
@@ -374,6 +373,31 @@ $user = ['id' => $_SESSION['user_id'], 'name' => $_SESSION['name']];
             await fetch('../StegaVault/api/super_admin_auth.php?action=logout', { method: 'POST' });
             window.location.href = 'login.php';
         }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('owlops-theme', isDark ? 'dark' : 'light');
+            const icon = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
+            if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const icon = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
+            if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+
+            loadSummary();
+            loadLogs();
+
+            document.getElementById('searchInput').addEventListener('input', () => {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => { currentPage = 1; loadLogs(); }, 400);
+            });
+        });
     </script>
     <script src="session-timeout.js"></script>
 </body>

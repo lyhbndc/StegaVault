@@ -39,6 +39,7 @@ if ($appsResult) {
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Manage Administrators - OwlOps</title>
+    <script>if(localStorage.getItem('owlops-theme')==='dark')document.documentElement.classList.add('dark');</script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
@@ -51,8 +52,10 @@ if ($appsResult) {
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#ffffff",
-                        "primary-hover": "#e2e8f0",
+                        "primary": "#2563eb",
+                        "primary-hover": "#1e40af",
+                        "background-light": "#ffffff",
+                        "card-light": "#f8fafc",
                         "background-dark": "#000000",
                         "slate-card": "#111111",
                     },
@@ -65,82 +68,71 @@ if ($appsResult) {
         }
     </script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #000000;
-        }
-
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6,
-        .font-display {
-            font-family: 'Space Grotesk', sans-serif;
-        }
-
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
+        html.dark body { background-color: #000000; }
+        h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Space Grotesk', sans-serif; }
         .bg-grid-pattern {
-            background-image: radial-gradient(#ffffff 0.1px, transparent 0.1px);
+            background-image: radial-gradient(#cbd5e1 0.1px, transparent 0.1px);
             background-size: 30px 30px;
+        }
+        html.dark .bg-grid-pattern {
+            background-image: radial-gradient(rgba(255,255,255,0.12) 0.1px, transparent 0.1px);
         }
     </style>
 </head>
 
-<body class="text-slate-200 min-h-screen flex">
+<body class="text-slate-900 dark:text-slate-200 min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside class="w-64 border-r border-slate-200 bg-background-light flex flex-col fixed inset-y-0 left-0 z-50">
+    <aside class="w-64 border-r border-slate-200 dark:border-white/5 bg-white dark:bg-black flex flex-col fixed inset-y-0 left-0 z-50">
         <div class="p-6 flex flex-col h-full gap-8">
             <div class="flex items-center gap-2">
                 <img src="OwlOps.png" alt="OwlOps Logo" class="h-8 w-auto">
                 <div>
-                    <h1 class="text-slate-900 text-base font-bold leading-tight font-display">OwlOps</h1>
+                    <h1 class="text-slate-900 dark:text-white text-base font-bold leading-tight font-display">OwlOps</h1>
                     <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
                 </div>
             </div>
 
             <nav class="flex flex-col gap-2 flex-1">
-                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2">Systems</p>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors"
-                    href="dashboard.php">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-500 mb-2">Systems</p>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="dashboard.php">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
                     <p class="text-sm font-medium">Control Center</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20"
-                    href="manage_admins.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary border border-primary/20 dark:border-primary/30" href="manage_admins.php">
                     <span class="material-symbols-outlined text-[20px] text-primary">admin_panel_settings</span>
                     <p class="text-sm font-medium">Manage Admins</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors"
-                    href="backup.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="backup.php">
                     <span class="material-symbols-outlined text-[20px]">backup</span>
                     <p class="text-sm font-medium">Backup & Restore</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="audit-log.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="audit-log.php">
                     <span class="material-symbols-outlined text-[20px]">manage_search</span>
                     <p class="text-sm font-medium">Audit Log</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="reports.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="reports.php">
                     <span class="material-symbols-outlined text-[20px]">assessment</span>
                     <p class="text-sm font-medium">System Report</p>
                 </a>
             </nav>
 
-            <div class="pt-6 border-t border-slate-200">
+            <div class="pt-6 border-t border-slate-200 dark:border-white/5">
                 <div class="flex items-center gap-3 px-3 py-2">
-                    <div
-                        class="size-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs">
+                    <div class="size-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs">
                         <?php echo strtoupper(substr($user['name'], 0, 1)); ?>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-slate-900 text-xs font-bold truncate"><?php echo htmlspecialchars($user['name']); ?>
-                        </p>
-                        <p class="text-slate-600 text-[10px] truncate">Super Admin</p>
+                        <p class="text-slate-900 dark:text-white text-xs font-bold truncate"><?php echo htmlspecialchars($user['name']); ?></p>
+                        <p class="text-slate-600 dark:text-slate-400 text-[10px] truncate">Super Admin</p>
                     </div>
                 </div>
-                <button onclick="logout()"
-                    class="w-full mt-4 flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
+                <button onclick="toggleTheme()" class="w-full mt-2 flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]" id="themeIcon">dark_mode</span>
+                    <p class="text-sm font-medium" id="themeLabel">Dark Mode</p>
+                </button>
+                <button onclick="logout()" class="w-full mt-1 flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
                     <span class="material-symbols-outlined text-[20px]">logout</span>
                     <p class="text-sm font-medium">Sign Out</p>
                 </button>
@@ -159,9 +151,8 @@ if ($appsResult) {
             <!-- Header -->
             <header class="flex items-end justify-between">
                 <div>
-                    <h2 class="text-4xl font-bold text-slate-900 font-display">Administrator Management</h2>
-                    <p class="text-slate-600 mt-2">Oversee global system owners and application-level administrators.
-                    </p>
+                    <h2 class="text-4xl font-bold text-slate-900 dark:text-white font-display">Administrator Management</h2>
+                    <p class="text-slate-600 dark:text-slate-400 mt-2">Oversee global system owners and application-level administrators.</p>
                 </div>
                 <div class="flex gap-4">
                     <button onclick="openCreateModal('super')"
@@ -169,40 +160,33 @@ if ($appsResult) {
                         <span class="material-symbols-outlined text-lg">shield_person</span> New Super Admin
                     </button>
                     <button onclick="openCreateModal('app')"
-                        class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-900 border border-slate-300 rounded-xl font-bold text-sm transition-all flex items-center gap-2">
+                        class="px-5 py-2.5 bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-900 dark:text-white border border-slate-300 dark:border-white/10 rounded-xl font-bold text-sm transition-all flex items-center gap-2">
                         <span class="material-symbols-outlined text-lg">person_add</span> New App Admin
                     </button>
                 </div>
             </header>
 
             <!-- Tabs -->
-            <div class="flex border-b border-slate-200 gap-8">
+            <div class="flex border-b border-slate-200 dark:border-white/10 gap-8">
                 <button onclick="switchTab('super')" id="tab-super"
-                    class="pb-4 px-2 text-sm font-bold border-b-2 border-primary text-slate-900 transition-all">Super
-                    Admins</button>
+                    class="pb-4 px-2 text-sm font-bold border-b-2 border-primary text-slate-900 dark:text-white transition-all">Super Admins</button>
                 <button onclick="switchTab('app')" id="tab-app"
-                    class="pb-4 px-2 text-sm font-bold border-b-2 border-transparent text-slate-600 hover:text-slate-900 transition-all">App
-                    Administrators</button>
+                    class="pb-4 px-2 text-sm font-bold border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">App Administrators</button>
             </div>
 
             <!-- Content Area -->
             <div id="content-super" class="space-y-6">
-                <div class="bg-card-light border border-slate-200 rounded-2xl overflow-hidden">
+                <div class="bg-white dark:bg-slate-card border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden">
                     <table class="w-full text-left">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200">
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                                    Name</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                                    Email</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                                    Added Date</th>
-                                <th
-                                    class="px-6 py-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest text-right">
-                                    Actions</th>
+                            <tr class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Name</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Email</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Added Date</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="superAdminTable" class="divide-y divide-white/5">
+                        <tbody id="superAdminTable" class="divide-y divide-slate-100 dark:divide-white/5">
                             <!-- Populated by JS -->
                         </tbody>
                     </table>
@@ -210,21 +194,16 @@ if ($appsResult) {
             </div>
 
             <div id="content-app" class="hidden space-y-6">
-                <div class="bg-slate-card border border-white/10 rounded-2xl overflow-hidden">
+                <div class="bg-white dark:bg-slate-card border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden">
                     <table class="w-full text-left">
                         <thead>
-                            <tr class="bg-white/5 border-b border-white/10">
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    Name</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    Email</th>
-
-                                <th
-                                    class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">
-                                    Actions</th>
+                            <tr class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Name</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Email</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="appAdminTable" class="divide-y divide-white/5">
+                        <tbody id="appAdminTable" class="divide-y divide-slate-100 dark:divide-white/5">
                             <!-- Populated by JS -->
                         </tbody>
                     </table>
@@ -237,19 +216,18 @@ if ($appsResult) {
     <div id="adminModal"
         class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
         <div
-            class="bg-slate-card border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-300">
-            <div class="p-8 border-b border-white/5 flex items-center justify-between">
+            class="bg-white dark:bg-slate-card border border-slate-200 dark:border-white/10 rounded-3xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="p-8 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <div class="p-3 bg-primary/10 rounded-2xl">
-                        <span class="material-symbols-outlined text-primary text-2xl"
-                            id="modalIcon">shield_person</span>
+                        <span class="material-symbols-outlined text-primary text-2xl" id="modalIcon">shield_person</span>
                     </div>
                     <div>
-                        <h3 class="text-2xl font-bold text-white font-display" id="modalTitle">New Super Admin</h3>
+                        <h3 class="text-2xl font-bold text-slate-900 dark:text-white font-display" id="modalTitle">New Super Admin</h3>
                         <p class="text-slate-500 text-sm" id="modalSubtitle">Grant global administrative privileges.</p>
                     </div>
                 </div>
-                <button onclick="closeModal()" class="p-2 text-slate-400 hover:text-white transition-colors">
+                <button onclick="closeModal()" class="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
@@ -259,25 +237,23 @@ if ($appsResult) {
                 <input type="hidden" id="adminId" name="id" value="">
 
                 <div class="space-y-2">
-                    <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Full Name</label>
+                    <label class="block text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Full Name</label>
                     <input type="text" id="adminName" required
-                        class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
+                        class="w-full px-5 py-4 rounded-xl bg-slate-50 dark:bg-black border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
                         placeholder="e.g. Alexander Pierce" />
                 </div>
 
                 <div class="space-y-2">
-                    <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Email
-                        Address</label>
+                    <label class="block text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Email Address</label>
                     <input type="email" id="adminEmail" required
-                        class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
+                        class="w-full px-5 py-4 rounded-xl bg-slate-50 dark:bg-black border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
                         placeholder="name@company.com" />
                 </div>
 
                 <div id="appScopeField" class="hidden space-y-2">
-                    <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Application
-                        Scope</label>
+                    <label class="block text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Application Scope</label>
                     <select id="adminWebAppId"
-                        class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
+                        class="w-full px-5 py-4 rounded-xl bg-slate-50 dark:bg-black border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
                         <?php foreach ($webApps as $app): ?>
                             <?php if (stripos($app['name'], 'stegavault') !== false): ?>
                                 <option value="<?php echo $app['id']; ?>"><?php echo htmlspecialchars($app['name']); ?></option>
@@ -287,32 +263,29 @@ if ($appsResult) {
                 </div>
 
                 <div class="space-y-2">
-                    <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">
+                    <label class="block text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">
                         <span id="passwordLabel">Initial Password</span>
-                        <span id="passwordHint"
-                            class="hidden font-normal text-slate-600 lowercase tracking-normal">(Leave blank to keep
-                            current)</span>
+                        <span id="passwordHint" class="hidden font-normal text-slate-500 lowercase tracking-normal">(Leave blank to keep current)</span>
                     </label>
                     <div class="relative group">
                         <input type="password" id="adminPassword"
-                            class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
+                            class="w-full px-5 py-4 rounded-xl bg-slate-50 dark:bg-black border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
                             placeholder="Min 12 characters" />
                         <button type="button" onclick="togglePasswordVisibility('adminPassword')"
-                            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
                             <span class="material-symbols-outlined text-[20px]">visibility</span>
                         </button>
                     </div>
                 </div>
 
                 <div class="space-y-2">
-                    <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest">Confirm
-                        Password</label>
+                    <label class="block text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Confirm Password</label>
                     <div class="relative group">
                         <input type="password" id="adminConfirmPassword"
-                            class="w-full px-5 py-4 rounded-xl bg-background-dark border border-white/10 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
+                            class="w-full px-5 py-4 rounded-xl bg-slate-50 dark:bg-black border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
                             placeholder="••••••••••••" />
                         <button type="button" onclick="togglePasswordVisibility('adminConfirmPassword')"
-                            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
                             <span class="material-symbols-outlined text-[20px]">visibility</span>
                         </button>
                     </div>
@@ -323,16 +296,30 @@ if ($appsResult) {
 
                 <div class="pt-4 flex gap-4">
                     <button type="button" onclick="closeModal()"
-                        class="flex-1 px-5 py-4 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm">Cancel</button>
+                        class="flex-1 px-5 py-4 rounded-xl font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all text-sm">Cancel</button>
                     <button type="submit" id="submitBtn"
-                        class="flex-1 px-5 py-4 bg-primary hover:bg-slate-200 text-black rounded-xl font-bold transition-all shadow-lg text-sm">Create
-                        Admin</button>
+                        class="flex-1 px-5 py-4 bg-primary hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg text-sm">Create Admin</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('owlops-theme', isDark ? 'dark' : 'light');
+            const icon = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
+            if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const icon = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
+            if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        });
         let currentTab = 'super';
         const webAppNameMap = <?php echo json_encode(array_column($webApps, 'name', 'id')); ?>;
         let superAdminsList = [];

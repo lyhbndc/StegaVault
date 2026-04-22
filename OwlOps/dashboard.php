@@ -108,12 +108,14 @@ $actionMeta = [
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Control Center - OwlOps</title>
+    <script>if(localStorage.getItem('owlops-theme')==='dark')document.documentElement.classList.add('dark');</script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script>
         tailwind.config = {
+            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
@@ -121,6 +123,8 @@ $actionMeta = [
                         "primary-hover": "#1e40af",
                         "background-light": "#ffffff",
                         "card-light": "#f8fafc",
+                        "background-dark": "#000000",
+                        "slate-card": "#111111",
                     },
                     fontFamily: {
                         "display": ["Space Grotesk", "sans-serif"],
@@ -132,15 +136,19 @@ $actionMeta = [
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
+        html.dark body { background-color: #000000; }
         h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Space Grotesk', sans-serif; }
         .bg-grid-pattern {
             background-image: radial-gradient(#cbd5e1 0.1px, transparent 0.1px);
             background-size: 40px 40px;
         }
+        html.dark .bg-grid-pattern {
+            background-image: radial-gradient(rgba(255,255,255,0.12) 0.1px, transparent 0.1px);
+        }
     </style>
 </head>
 
-<body class="text-slate-900 min-h-screen flex flex-col relative">
+<body class="text-slate-900 dark:text-slate-100 min-h-screen flex flex-col relative">
 
     <!-- Background Decor -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -149,11 +157,11 @@ $actionMeta = [
     </div>
 
     <!-- Header -->
-    <header class="relative z-10 w-full px-8 py-6 flex items-center justify-between border-b border-slate-200 bg-background-light/80 backdrop-blur-md sticky top-0">
+    <header class="relative z-10 w-full px-8 py-6 flex items-center justify-between border-b border-slate-200 dark:border-white/10 bg-background-light/80 dark:bg-black/80 backdrop-blur-md sticky top-0">
         <div class="flex items-center gap-4">
             <img src="OwlOps.png" alt="OwlOps Logo" class="h-12 w-auto">
             <div>
-                <h2 class="text-slate-900 text-2xl font-bold tracking-tight font-display">OwlOps</h2>
+                <h2 class="text-slate-900 dark:text-white text-2xl font-bold tracking-tight font-display">OwlOps</h2>
                 <div class="flex items-center gap-2">
                     <span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                     <p class="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Global Control Node</p>
@@ -161,18 +169,21 @@ $actionMeta = [
             </div>
         </div>
 
-        <div class="flex items-center gap-8">
-            <div class="flex items-center gap-4 bg-slate-100 border border-slate-200 rounded-2xl px-5 py-2.5">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleTheme()" class="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors" title="Toggle theme">
+                <span class="material-symbols-outlined text-[20px]" id="themeIcon">dark_mode</span>
+            </button>
+            <div class="flex items-center gap-4 bg-slate-100 dark:bg-[#111111] border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-2.5">
                 <div class="size-8 rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center text-white font-bold text-xs">
                     <?php echo strtoupper(substr($user['name'], 0, 1)); ?>
                 </div>
                 <div class="hidden md:block">
-                    <p class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars($user['name']); ?></p>
+                    <p class="text-sm font-bold text-slate-900 dark:text-white"><?php echo htmlspecialchars($user['name']); ?></p>
                     <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Root Authority</p>
                 </div>
-                <div class="h-6 w-px bg-slate-200 mx-1"></div>
+                <div class="h-6 w-px bg-slate-200 dark:bg-white/10 mx-1"></div>
                 <a href="mfa-settings.php" title="MFA Settings" class="material-symbols-outlined text-slate-500 hover:text-primary transition-colors text-[20px]">phonelink_lock</a>
-                <div class="h-6 w-px bg-slate-200 mx-1"></div>
+                <div class="h-6 w-px bg-slate-200 dark:bg-white/10 mx-1"></div>
                 <button onclick="logout()" class="material-symbols-outlined text-slate-500 hover:text-red-500 transition-colors text-[20px]">logout</button>
             </div>
         </div>
@@ -182,8 +193,8 @@ $actionMeta = [
         
         <!-- Welcome Section -->
         <div class="max-w-3xl">
-            <h1 class="text-5xl font-bold text-slate-900 mb-6 font-display tracking-tight leading-tight">Welcome back, <span class="text-primary/70 italic"><?php echo explode(' ', $user['name'])[0]; ?>.</span></h1>
-            <p class="text-lg text-slate-600 leading-relaxed font-body">The infrastructure is currently synchronized. You have full oversight of all administrators and system preservation tasks.</p>
+            <h1 class="text-5xl font-bold text-slate-900 dark:text-white mb-6 font-display tracking-tight leading-tight">Welcome back, <span class="text-primary/70 italic"><?php echo explode(' ', $user['name'])[0]; ?>.</span></h1>
+            <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed font-body">The infrastructure is currently synchronized. You have full oversight of all administrators and system preservation tasks.</p>
         </div>
 
         <!-- Quick Access Control Cards -->
@@ -292,6 +303,15 @@ $actionMeta = [
             await fetch('../StegaVault/api/super_admin_auth.php?action=logout', { method: 'POST' });
             window.location.href = 'login.php';
         }
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('owlops-theme', isDark ? 'dark' : 'light');
+            document.getElementById('themeIcon').textContent = isDark ? 'light_mode' : 'dark_mode';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = document.documentElement.classList.contains('dark') ? 'light_mode' : 'dark_mode';
+        });
     </script>
     <script src="session-timeout.js"></script>
 </body>

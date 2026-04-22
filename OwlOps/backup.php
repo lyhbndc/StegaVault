@@ -25,18 +25,21 @@ $user = [
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>System Maintenance - OwlOps</title>
+    <script>if(localStorage.getItem('owlops-theme')==='dark')document.documentElement.classList.add('dark');</script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script>
         tailwind.config = {
+            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
                         "primary": "#2563eb",
                         "background-light": "#ffffff",
                         "card-light": "#f8fafc",
+                        "slate-card": "#111111",
                         "accent-blue": "#3b82f6",
                     },
                     fontFamily: {
@@ -49,10 +52,14 @@ $user = [
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
+        html.dark body { background-color: #000000; }
         h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Space Grotesk', sans-serif; }
         .bg-grid-pattern {
-            background-image: radial-gradient(#cbd5e1 0.1px, transparent 0.1px);
-            background-size: 30px 30px;
+            background-image: radial-gradient(#cbd5e1 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+        }
+        html.dark .bg-grid-pattern {
+            background-image: radial-gradient(rgba(255,255,255,0.12) 0.5px, transparent 0.5px);
         }
         .glow-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
@@ -62,47 +69,51 @@ $user = [
     </style>
 </head>
 
-<body class="text-slate-900 min-h-screen flex">
+<body class="bg-white dark:bg-black text-slate-900 dark:text-slate-200 min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside class="w-64 border-r border-slate-200 bg-background-light flex flex-col fixed inset-y-0 left-0 z-50">
+    <aside class="w-64 border-r border-slate-200 dark:border-white/5 bg-white dark:bg-black flex flex-col fixed inset-y-0 left-0 z-50">
         <div class="p-6 flex flex-col h-full gap-8">
             <div class="flex items-center gap-2">
                 <img src="OwlOps.png" alt="OwlOps Logo" class="h-8 w-auto">
                 <div>
-                    <h1 class="text-slate-900 text-base font-bold leading-tight font-display">OwlOps</h1>
+                    <h1 class="text-slate-900 dark:text-white text-base font-bold leading-tight font-display">OwlOps</h1>
                     <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
                 </div>
             </div>
             <nav class="flex flex-col gap-2 flex-1">
-                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2">Systems</p>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="dashboard.php">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-600 mb-2">Systems</p>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="dashboard.php">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
                     <p class="text-sm font-medium">Control Center</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="manage_admins.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="manage_admins.php">
                     <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
                     <p class="text-sm font-medium">Manage Admins</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20" href="backup.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary border border-primary/20 dark:border-primary/30" href="backup.php">
                     <span class="material-symbols-outlined text-[20px] text-primary">backup</span>
                     <p class="text-sm font-medium">Backup &amp; Restore</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="audit-log.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="audit-log.php">
                     <span class="material-symbols-outlined text-[20px]">manage_search</span>
                     <p class="text-sm font-medium">Audit Log</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="reports.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="reports.php">
                     <span class="material-symbols-outlined text-[20px]">assessment</span>
                     <p class="text-sm font-medium">System Report</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="mfa-settings.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="mfa-settings.php">
                     <span class="material-symbols-outlined text-[20px]">phonelink_lock</span>
                     <p class="text-sm font-medium">MFA Settings</p>
                 </a>
             </nav>
-            <div class="pt-6 border-t border-slate-200">
-                <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
+            <div class="pt-6 border-t border-slate-200 dark:border-white/5 space-y-1">
+                <button onclick="toggleTheme()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]" id="themeIcon">dark_mode</span>
+                    <p class="text-sm font-medium" id="themeLabel">Dark Mode</p>
+                </button>
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
                     <span class="material-symbols-outlined text-[20px]">logout</span>
                     <p class="text-sm font-medium">Sign Out</p>
                 </button>
@@ -121,46 +132,46 @@ $user = [
             <!-- Header -->
             <header class="flex items-end justify-between">
                 <div>
-                    <h2 class="text-4xl font-bold text-slate-900 font-display">System Maintenance</h2>
-                    <p class="text-slate-600 mt-2">Manage infrastructure snapshots, database backups, and environment restoration.</p>
+                    <h2 class="text-4xl font-bold text-slate-900 dark:text-white font-display">System Maintenance</h2>
+                    <p class="text-slate-600 dark:text-slate-400 mt-2">Manage infrastructure snapshots, database backups, and environment restoration.</p>
                 </div>
-                <div id="dockerStatusBadge" class="flex items-center gap-3 px-4 py-2 bg-slate-100 border border-slate-200 rounded-full">
+                <div id="dockerStatusBadge" class="flex items-center gap-3 px-4 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full">
                     <span class="size-2 rounded-full bg-slate-400"></span>
-                    <span class="text-[10px] text-slate-600 font-bold uppercase tracking-widest">Checking Docker...</span>
+                    <span class="text-[10px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-widest">Checking Docker...</span>
                 </div>
             </header>
 
             <!-- Status Grid -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-card-light border border-slate-200 p-6 rounded-2xl space-y-4">
+                <div class="bg-slate-50 dark:bg-slate-card border border-slate-200 dark:border-white/10 p-6 rounded-2xl space-y-4">
                     <div class="flex items-center justify-between">
-                        <div class="p-2 bg-blue-100 rounded-xl">
-                            <span class="material-symbols-outlined text-blue-600">database</span>
+                        <div class="p-2 bg-blue-100 dark:bg-blue-500/10 rounded-xl">
+                            <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">database</span>
                         </div>
-                        <span class="text-[10px] text-slate-600 font-bold uppercase tracking-widest">Supabase DB</span>
+                        <span class="text-[10px] text-slate-600 dark:text-slate-500 font-bold uppercase tracking-widest">Supabase DB</span>
                     </div>
                     <div>
-                        <p class="text-slate-600 text-xs font-medium">Backup Count</p>
-                        <h3 id="statBackupCount" class="text-xl font-bold text-slate-900">—</h3>
+                        <p class="text-slate-600 dark:text-slate-400 text-xs font-medium">Backup Count</p>
+                        <h3 id="statBackupCount" class="text-xl font-bold text-slate-900 dark:text-white">—</h3>
                     </div>
                     <p class="text-[10px] text-slate-500">Retention: 30 most recent snapshots</p>
                 </div>
 
-                <div class="bg-card-light border border-slate-200 p-6 rounded-2xl space-y-4">
+                <div class="bg-slate-50 dark:bg-slate-card border border-slate-200 dark:border-white/10 p-6 rounded-2xl space-y-4">
                     <div class="flex items-center justify-between">
-                        <div class="p-2 bg-purple-100 rounded-xl">
-                            <span class="material-symbols-outlined text-purple-600">folder_zip</span>
+                        <div class="p-2 bg-purple-100 dark:bg-purple-500/10 rounded-xl">
+                            <span class="material-symbols-outlined text-purple-600 dark:text-purple-400">folder_zip</span>
                         </div>
                         <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">File Backups</span>
                     </div>
                     <div>
-                        <p class="text-slate-400 text-xs font-medium">File Backup Count</p>
-                        <h3 id="statFileBackupCount" class="text-xl font-bold text-white">—</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-xs font-medium">File Backup Count</p>
+                        <h3 id="statFileBackupCount" class="text-xl font-bold text-slate-900 dark:text-white">—</h3>
                     </div>
                     <p class="text-[10px] text-slate-500">uploads/ folder snapshots</p>
                 </div>
 
-                <div class="bg-slate-card border border-white/10 p-6 rounded-2xl space-y-4">
+                <div class="bg-slate-50 dark:bg-slate-card border border-slate-200 dark:border-white/10 p-6 rounded-2xl space-y-4">
                     <div class="flex items-center justify-between">
                         <div class="p-2 bg-orange-500/10 rounded-xl">
                             <span class="material-symbols-outlined text-orange-400">history</span>
@@ -168,8 +179,8 @@ $user = [
                         <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Last Backup</span>
                     </div>
                     <div>
-                        <p class="text-slate-400 text-xs font-medium">Most Recent</p>
-                        <h3 id="statLastBackup" class="text-xl font-bold text-white">—</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-xs font-medium">Most Recent</p>
+                        <h3 id="statLastBackup" class="text-xl font-bold text-slate-900 dark:text-white">—</h3>
                     </div>
                     <p id="statLastBackupBy" class="text-[10px] text-slate-500">—</p>
                 </div>
@@ -181,28 +192,28 @@ $user = [
             <!-- Primary Actions -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
                 <!-- Database Backup Panel -->
-                <div class="bg-white/5 border border-white/10 rounded-3xl p-8 flex flex-col group hover:border-primary/30 transition-all duration-500 overflow-hidden relative">
+                <div class="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl p-8 flex flex-col group hover:border-primary/30 transition-all duration-500 overflow-hidden relative">
                     <div class="absolute -right-20 -top-20 size-64 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
                     <div class="relative z-10 flex flex-col flex-1 gap-4">
                         <div class="flex items-center gap-3">
                             <div class="p-2.5 bg-blue-500/10 rounded-xl">
                                 <span class="material-symbols-outlined text-blue-400">database</span>
                             </div>
-                            <h3 class="text-xl font-bold text-white font-display">Database Backup</h3>
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white font-display">Database Backup</h3>
                         </div>
-                        <p class="text-slate-400 text-sm leading-relaxed">Export all Supabase tables as a SQL file. Safe upsert — won't overwrite unrelated rows.</p>
-                        <ul class="space-y-1.5 text-xs text-slate-300">
+                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">Export all Supabase tables as a SQL file. Safe upsert — won't overwrite unrelated rows.</p>
+                        <ul class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
                             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> All public schema tables</li>
                             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> INSERT … ON CONFLICT upsert</li>
                             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> Downloads as .sql file</li>
                         </ul>
-                        <div class="pb-4 border-b border-white/5">
+                        <div class="pb-4 border-b border-slate-200 dark:border-white/5">
                             <label class="flex items-center gap-3 cursor-pointer select-none">
                                 <input type="checkbox" id="includeDocker" class="rounded bg-white/10 border-white/20 text-primary focus:ring-primary/50" />
-                                <span class="text-xs text-slate-400">Include Docker volume backup</span>
+                                <span class="text-xs text-slate-600 dark:text-slate-400">Include Docker volume backup</span>
                             </label>
                         </div>
-                        <button id="runBackupBtn" onclick="runBackup()" class="mt-auto w-full py-3.5 bg-white hover:bg-slate-200 text-black rounded-2xl font-bold flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all text-sm">
+                        <button id="runBackupBtn" onclick="runBackup()" class="mt-auto w-full py-3.5 bg-primary hover:bg-blue-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all text-sm">
                             <span class="material-symbols-outlined text-xl" id="backupBtnIcon">backup</span>
                             <span id="backupBtnText">Run Backup Now</span>
                         </button>
@@ -210,22 +221,22 @@ $user = [
                 </div>
 
                 <!-- Files Backup Panel -->
-                <div class="bg-white/5 border border-white/10 rounded-3xl p-8 flex flex-col group hover:border-purple-500/30 transition-all duration-500 overflow-hidden relative">
+                <div class="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl p-8 flex flex-col group hover:border-purple-500/30 transition-all duration-500 overflow-hidden relative">
                     <div class="absolute -right-20 -top-20 size-64 bg-purple-500/5 rounded-full blur-3xl group-hover:bg-purple-500/10 transition-colors"></div>
                     <div class="relative z-10 flex flex-col flex-1 gap-4">
                         <div class="flex items-center gap-3">
                             <div class="p-2.5 bg-purple-500/10 rounded-xl">
                                 <span class="material-symbols-outlined text-purple-400">folder_zip</span>
                             </div>
-                            <h3 class="text-xl font-bold text-white font-display">Files Backup</h3>
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white font-display">Files Backup</h3>
                         </div>
-                        <p class="text-slate-400 text-sm leading-relaxed">ZIP the entire <span class="font-mono text-slate-300">uploads/</span> folder — all encrypted files, PDFs, images, and watermarked assets.</p>
-                        <ul class="space-y-1.5 text-xs text-slate-300">
+                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">ZIP the entire <span class="font-mono text-slate-500 dark:text-slate-300">uploads/</span> folder — all encrypted files, PDFs, images, and watermarked assets.</p>
+                        <ul class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
                             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> Encrypted uploads + watermarked</li>
                             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> All file types (PNG, PDF, MP4, XLSX)</li>
                             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> Downloads as .zip archive</li>
                         </ul>
-                        <div class="pb-4 border-b border-white/5">
+                        <div class="pb-4 border-b border-slate-200 dark:border-white/5">
                             <p id="uploadsSize" class="text-xs text-slate-500">Calculating folder size...</p>
                         </div>
                         <button id="runFilesBackupBtn" onclick="runFilesBackup()" class="mt-auto w-full py-3.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 hover:text-white border border-purple-500/30 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all text-sm">
@@ -236,7 +247,7 @@ $user = [
                 </div>
 
                 <!-- Restore Panel -->
-                <div class="bg-slate-card border border-white/10 rounded-3xl p-8 flex flex-col group hover:border-red-500/30 transition-all duration-500 overflow-hidden relative">
+                <div class="bg-slate-50 dark:bg-slate-card border border-slate-200 dark:border-white/10 rounded-3xl p-8 flex flex-col group hover:border-red-500/30 transition-all duration-500 overflow-hidden relative">
                     <div class="absolute -right-20 -top-20 size-64 bg-red-500/5 rounded-full blur-3xl group-hover:bg-red-500/10 transition-colors"></div>
                     <div class="relative z-10 flex flex-col flex-1 gap-4">
                         <div class="flex items-center gap-3">
@@ -245,12 +256,12 @@ $user = [
                             </div>
                             <h3 class="text-xl font-bold text-red-400 font-display">Restore</h3>
                         </div>
-                        <p class="text-slate-400 text-sm leading-relaxed">Roll back to a previous snapshot. Existing rows are overwritten via upsert. <span class="text-red-400/80">Use with caution.</span></p>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">Roll back to a previous snapshot. Existing rows are overwritten via upsert. <span class="text-red-500 dark:text-red-400/80">Use with caution.</span></p>
                         <div class="bg-red-500/5 border border-red-500/20 rounded-xl p-3 flex items-start gap-3">
                             <span class="material-symbols-outlined text-red-400 mt-0.5 flex-shrink-0 text-base">warning</span>
-                            <p class="text-[10px] text-red-300/60 leading-relaxed uppercase tracking-widest font-bold">Rows matching primary keys will be overwritten. Full wipe option available in the wizard.</p>
+                            <p class="text-[10px] text-red-600 dark:text-red-300/60 leading-relaxed uppercase tracking-widest font-bold">Rows matching primary keys will be overwritten. Full wipe option available in the wizard.</p>
                         </div>
-                        <div class="pb-4 border-b border-white/5 space-y-1">
+                        <div class="pb-4 border-b border-slate-200 dark:border-white/5 space-y-1">
                             <p class="text-xs text-slate-500 flex items-center gap-1.5"><span class="material-symbols-outlined text-blue-400 text-sm">database</span> Database (.sql) — upsert or full wipe</p>
                             <p class="text-xs text-slate-500 flex items-center gap-1.5"><span class="material-symbols-outlined text-purple-400 text-sm">folder_zip</span> Files (.zip) — extracts back to uploads/</p>
                         </div>
@@ -264,30 +275,30 @@ $user = [
             <!-- Backup History -->
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-xl font-bold text-white font-display">All Backups</h3>
-                    <button onclick="loadBackups()" class="text-[10px] text-slate-500 hover:text-white font-bold uppercase tracking-widest flex items-center gap-1 transition-colors">
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white font-display">All Backups</h3>
+                    <button onclick="loadBackups()" class="text-[10px] text-slate-500 hover:text-slate-900 dark:hover:text-white font-bold uppercase tracking-widest flex items-center gap-1 transition-colors">
                         <span class="material-symbols-outlined text-sm">refresh</span> Refresh
                     </button>
                 </div>
                 <!-- Type filter -->
                 <div class="flex items-center gap-2">
                     <button onclick="setFilter('all')"      id="filter-all"      class="filter-btn active-filter px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">All</button>
-                    <button onclick="setFilter('database')" id="filter-database" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-400 hover:text-white bg-white/5 border border-white/10">Database</button>
-                    <button onclick="setFilter('files')"    id="filter-files"    class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-400 hover:text-white bg-white/5 border border-white/10">Files</button>
+                    <button onclick="setFilter('database')" id="filter-database" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">Database</button>
+                    <button onclick="setFilter('files')"    id="filter-files"    class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">Files</button>
                 </div>
-                <div class="bg-slate-card border border-white/10 rounded-2xl overflow-hidden">
+                <div class="bg-white dark:bg-slate-card border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden">
                     <table class="w-full text-left">
                         <thead>
-                            <tr class="bg-white/5 border-b border-white/10">
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Backup ID</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Type</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tables / Rows</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Size</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Created</th>
-                                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                            <tr class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Backup ID</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Type</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Tables / Rows</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Size</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Created</th>
+                                <th class="px-6 py-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="backupTableBody" class="divide-y divide-white/5">
+                        <tbody id="backupTableBody" class="divide-y divide-slate-100 dark:divide-white/5">
                             <tr>
                                 <td colspan="6" class="px-6 py-8 text-center text-slate-500 text-sm">Loading backups...</td>
                             </tr>
@@ -305,9 +316,9 @@ $user = [
 
     <!-- ── Restore Modal ─────────────────────────────── -->
     <div id="restoreModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-        <div class="bg-[#111111] border border-red-500/20 rounded-2xl p-8 max-w-lg w-full">
-            <h3 class="text-xl font-bold text-red-400 mb-2 font-display">Restore from Backup</h3>
-            <p class="text-slate-400 text-sm mb-6">Select a backup to restore. Matching rows will be overwritten via upsert.</p>
+        <div class="bg-white dark:bg-[#111111] border border-red-500/20 rounded-2xl p-8 max-w-lg w-full">
+            <h3 class="text-xl font-bold text-red-500 dark:text-red-400 mb-2 font-display">Restore from Backup</h3>
+            <p class="text-slate-600 dark:text-slate-400 text-sm mb-6">Select a backup to restore. Matching rows will be overwritten via upsert.</p>
 
             <div id="restoreBackupList" class="space-y-2 max-h-64 overflow-y-auto mb-6">
                 <p class="text-slate-500 text-sm text-center py-4">Loading...</p>
@@ -333,15 +344,15 @@ $user = [
                     <strong>Warning:</strong> All current data will be wiped before the backup is loaded. This cannot be undone.
                 </div>
 
-                <p class="text-xs text-slate-400">Type <strong class="text-white" id="restoreConfirmWord">RESTORE</strong> to confirm:</p>
+                <p class="text-xs text-slate-600 dark:text-slate-400">Type <strong class="text-slate-900 dark:text-white" id="restoreConfirmWord">RESTORE</strong> to confirm:</p>
                 <input id="restoreConfirmInput" type="text" placeholder="RESTORE"
-                    class="w-full px-4 py-3 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white placeholder:text-slate-600 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all" />
+                    class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-[#1b1f27] border border-slate-300 dark:border-[#3b4354] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all" />
             </div>
 
             <div id="restoreMsg" class="hidden mt-4 p-3 rounded-lg text-sm"></div>
 
             <div class="flex gap-3 mt-6">
-                <button onclick="closeRestoreModal()" class="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white font-semibold rounded-xl transition-all">Cancel</button>
+                <button onclick="closeRestoreModal()" class="flex-1 py-3 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-900 dark:text-white font-semibold rounded-xl transition-all">Cancel</button>
                 <button id="restoreExecBtn" onclick="executeRestore()" class="flex-1 py-3 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white font-bold rounded-xl border border-red-500/30 transition-all">
                     Restore
                 </button>
@@ -358,13 +369,6 @@ const API = '/StegaVault/api/super_admin_backup.php';
         let currentFilter = 'all';
         let currentPage = 1;
         const PER_PAGE = 5;
-
-        // ── Init ──────────────────────────────────────
-        document.addEventListener('DOMContentLoaded', () => {
-            loadBackups();
-            checkDockerStatus();
-            checkUploadsSize();
-        });
 
         // ── Uploads Folder Size ───────────────────────
         async function checkUploadsSize() {
@@ -438,10 +442,10 @@ const API = '/StegaVault/api/super_admin_backup.php';
             currentPage = 1;
             document.querySelectorAll('.filter-btn').forEach(b => {
                 b.classList.remove('active-filter');
-                b.classList.add('text-slate-400', 'bg-white/5', 'border', 'border-white/10');
+                b.classList.add('text-slate-500', 'dark:text-slate-400', 'bg-slate-100', 'dark:bg-white/5', 'border', 'border-slate-200', 'dark:border-white/10');
             });
             const active = document.getElementById('filter-' + filter);
-            if (active) { active.classList.add('active-filter'); active.classList.remove('text-slate-400', 'bg-white/5', 'border', 'border-white/10'); }
+            if (active) { active.classList.add('active-filter'); active.classList.remove('text-slate-500', 'dark:text-slate-400', 'bg-slate-100', 'dark:bg-white/5', 'border', 'border-slate-200', 'dark:border-white/10'); }
 
             filteredBackups = filter === 'all' ? allBackups
                 : filter === 'files' ? allBackups.filter(b => b.type === 'files')
@@ -471,13 +475,13 @@ const API = '/StegaVault/api/super_admin_backup.php';
                         : 'bg-white/5 border-white/10 text-slate-400';
                 const typeIcon = isFiles ? 'folder_zip' : 'database';
                 const detail = isFiles
-                    ? `<p class="text-slate-300 text-xs">${(b.files || 0).toLocaleString()} files</p><p class="text-slate-500 text-[10px]">uploads/ folder</p>`
-                    : `<p class="text-slate-300 text-xs">${b.tables || '—'} tables</p><p class="text-slate-500 text-[10px]">${(b.rows || 0).toLocaleString()} rows</p>`;
+                    ? `<p class="text-slate-700 dark:text-slate-300 text-xs">${(b.files || 0).toLocaleString()} files</p><p class="text-slate-500 text-[10px]">uploads/ folder</p>`
+                    : `<p class="text-slate-700 dark:text-slate-300 text-xs">${b.tables || '—'} tables</p><p class="text-slate-500 text-[10px]">${(b.rows || 0).toLocaleString()} rows</p>`;
                 return `
-                <tr class="hover:bg-white/[0.02] transition-colors">
+                <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                     <td class="px-6 py-4">
-                        <p class="text-white font-mono text-xs">${escHtml(b.id)}</p>
-                        <p class="text-slate-600 text-[10px] font-mono mt-0.5">${escHtml(b.filename)}</p>
+                        <p class="text-slate-900 dark:text-white font-mono text-xs">${escHtml(b.id)}</p>
+                        <p class="text-slate-500 dark:text-slate-600 text-[10px] font-mono mt-0.5">${escHtml(b.filename)}</p>
                     </td>
                     <td class="px-6 py-4">
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 ${typeBadge} border text-[10px] font-bold uppercase rounded-full">
@@ -486,19 +490,19 @@ const API = '/StegaVault/api/super_admin_backup.php';
                         </span>
                     </td>
                     <td class="px-6 py-4">${detail}</td>
-                    <td class="px-6 py-4"><p class="text-slate-400 text-xs">${b.size_label || b.size || '—'}</p></td>
+                    <td class="px-6 py-4"><p class="text-slate-500 dark:text-slate-400 text-xs">${b.size_label || b.size || '—'}</p></td>
                     <td class="px-6 py-4">
-                        <p class="text-slate-300 text-xs">${formatDate(b.created_at)}</p>
+                        <p class="text-slate-700 dark:text-slate-300 text-xs">${formatDate(b.created_at)}</p>
                         <p class="text-slate-500 text-[10px]">by ${escHtml(b.created_by || 'System')}</p>
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
                             <a href="${API}?action=download&file=${encodeURIComponent(b.filename)}" title="Download"
-                               class="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white transition-colors">
+                               class="p-1.5 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                                 <span class="material-symbols-outlined text-base">download</span>
                             </a>
                             <button onclick="deleteBackup('${escHtml(b.filename)}', '${escHtml(b.id)}')" title="Delete"
-                                class="p-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-colors">
+                                class="p-1.5 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-red-500/20 text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
                                 <span class="material-symbols-outlined text-base">delete</span>
                             </button>
                         </div>
@@ -680,12 +684,12 @@ let msg = `Backup created successfully: ${d.filename} (${d.size}).`;
                                 : `${b.tables||'—'} tables · ${b.size_label||'—'}`;
                             return `
                             <div onclick="selectRestoreFile('${escHtml(b.filename)}', '${escHtml(b.id)}', '${isFiles ? 'files' : 'database'}')"
-                                 class="restore-item flex items-center justify-between p-3 rounded-xl border border-white/10 hover:border-red-500/40 hover:bg-red-500/5 cursor-pointer transition-all mb-1"
+                                 class="restore-item flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-white/10 hover:border-red-500/40 hover:bg-red-500/5 cursor-pointer transition-all mb-1"
                                  data-file="${escHtml(b.filename)}">
                                 <div class="flex items-center gap-3">
                                     <span class="material-symbols-outlined ${color} text-base">${icon}</span>
                                     <div>
-                                        <p class="text-white text-xs font-mono">${escHtml(b.id)}</p>
+                                        <p class="text-slate-900 dark:text-white text-xs font-mono">${escHtml(b.id)}</p>
                                         <p class="text-slate-500 text-[10px]">${formatDate(b.created_at)} · ${detail}</p>
                                     </div>
                                 </div>
@@ -858,6 +862,27 @@ let msg = `Backup created successfully: ${d.filename} (${d.size}).`;
             await fetch('../StegaVault/api/super_admin_auth.php?action=logout', { method: 'POST' });
             window.location.href = 'login.php';
         }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('owlops-theme', isDark ? 'dark' : 'light');
+            const icon = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
+            if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const icon = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
+            if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+
+            loadBackups();
+            checkDockerStatus();
+            checkUploadsSize();
+        });
 
         // Close modal on backdrop click
 

@@ -120,6 +120,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>System Report - OwlOps</title>
+    <script>if(localStorage.getItem('owlops-theme')==='dark')document.documentElement.classList.add('dark');</script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -129,12 +130,14 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script>
         tailwind.config = {
+            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
                         "primary": "#2563eb",
                         "background-light": "#ffffff",
                         "card-light": "#f8fafc",
+                        "slate-card": "#111111",
                     },
                     fontFamily: {
                         "display": ["Space Grotesk", "sans-serif"],
@@ -146,8 +149,10 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
+        html.dark body { background-color: #000000; }
         h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Space Grotesk', sans-serif; }
-        .bg-grid-pattern { background-image: radial-gradient(#cbd5e1 0.1px, transparent 0.1px); background-size: 30px 30px; }
+        .bg-grid-pattern { background-image: radial-gradient(#cbd5e1 0.5px, transparent 0.5px); background-size: 24px 24px; }
+        html.dark .bg-grid-pattern { background-image: radial-gradient(rgba(255,255,255,0.12) 0.5px, transparent 0.5px); }
 
         @media print {
             aside, .no-print { display: none !important; }
@@ -162,56 +167,60 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
     </style>
 </head>
 
-<body class="text-slate-900 min-h-screen flex">
+<body class="bg-white dark:bg-black text-slate-900 dark:text-slate-200 min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside class="w-64 border-r border-slate-200 bg-background-light flex flex-col fixed inset-y-0 left-0 z-50">
+    <aside class="w-64 border-r border-slate-200 dark:border-white/5 bg-white dark:bg-black flex flex-col fixed inset-y-0 left-0 z-50">
         <div class="p-6 flex flex-col h-full gap-8">
             <div class="flex items-center gap-2">
                 <img src="OwlOps.png" alt="OwlOps Logo" class="h-8 w-auto">
                 <div>
-                    <h1 class="text-slate-900 text-base font-bold leading-tight font-display">OwlOps</h1>
+                    <h1 class="text-slate-900 dark:text-white text-base font-bold leading-tight font-display">OwlOps</h1>
                     <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
                 </div>
             </div>
             <nav class="flex flex-col gap-2 flex-1">
-                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2">Systems</p>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="dashboard.php">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-600 mb-2">Systems</p>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="dashboard.php">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
                     <p class="text-sm font-medium">Control Center</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="manage_admins.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="manage_admins.php">
                     <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
                     <p class="text-sm font-medium">Manage Admins</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="backup.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="backup.php">
                     <span class="material-symbols-outlined text-[20px]">backup</span>
                     <p class="text-sm font-medium">Backup &amp; Restore</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="audit-log.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="audit-log.php">
                     <span class="material-symbols-outlined text-[20px]">manage_search</span>
                     <p class="text-sm font-medium">Audit Log</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20" href="reports.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary border border-primary/20 dark:border-primary/30" href="reports.php">
                     <span class="material-symbols-outlined text-[20px] text-primary">assessment</span>
                     <p class="text-sm font-medium">System Report</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="mfa-settings.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="mfa-settings.php">
                     <span class="material-symbols-outlined text-[20px]">phonelink_lock</span>
                     <p class="text-sm font-medium">MFA Settings</p>
                 </a>
             </nav>
-            <div class="pt-6 border-t border-white/5">
+            <div class="pt-6 border-t border-slate-200 dark:border-white/5 space-y-1">
                 <div class="flex items-center gap-3 px-3 py-2">
-                    <div class="size-8 rounded-full bg-primary flex items-center justify-center text-black font-bold text-xs">
+                    <div class="size-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs">
                         <?php echo strtoupper(substr($user['name'], 0, 1)); ?>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-white text-xs font-bold truncate"><?php echo htmlspecialchars($user['name']); ?></p>
+                        <p class="text-slate-900 dark:text-white text-xs font-bold truncate"><?php echo htmlspecialchars($user['name']); ?></p>
                         <p class="text-slate-500 text-[10px] truncate">Super Admin</p>
                     </div>
                 </div>
-                <button onclick="logout()" class="w-full mt-4 flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors">
+                <button onclick="toggleTheme()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]" id="themeIcon">dark_mode</span>
+                    <p class="text-sm font-medium" id="themeLabel">Dark Mode</p>
+                </button>
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 transition-colors">
                     <span class="material-symbols-outlined text-[20px]">logout</span>
                     <p class="text-sm font-medium">Sign Out</p>
                 </button>
@@ -229,22 +238,22 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
             <!-- Header -->
             <header class="flex items-end justify-between">
                 <div>
-                    <h2 class="text-4xl font-bold text-white font-display">System Report</h2>
-                    <p class="text-slate-400 mt-2">
+                    <h2 class="text-4xl font-bold text-slate-900 dark:text-white font-display">System Report</h2>
+                    <p class="text-slate-600 dark:text-slate-400 mt-2">
                         Full platform snapshot across users, files, projects, backups, and audit activity.
                     </p>
-                    <p class="text-[10px] text-slate-600 font-mono mt-1 uppercase tracking-widest">
+                    <p class="text-[10px] text-slate-500 dark:text-slate-600 font-mono mt-1 uppercase tracking-widest">
                         <?php echo $periodLabel; ?> &mdash; Generated <?php echo $generatedAt; ?>
                     </p>
                 </div>
                 <div class="flex items-center gap-3 no-print">
-                    <button onclick="window.location.reload()" class="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-slate-400 hover:text-white text-sm font-medium transition-colors">
+                    <button onclick="window.location.reload()" class="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm font-medium transition-colors">
                         <span class="material-symbols-outlined text-base">refresh</span> Refresh
                     </button>
-                    <button id="downloadPdfBtn" onclick="generatePDF()" class="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-slate-400 hover:text-white text-sm font-medium transition-colors">
+                    <button id="downloadPdfBtn" onclick="generatePDF()" class="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm font-medium transition-colors">
                         <span class="material-symbols-outlined text-base">download</span> Download PDF
                     </button>
-                    <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 bg-primary text-black rounded-xl text-sm font-bold transition-colors hover:bg-primary/80">
+                    <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-bold transition-colors hover:bg-blue-700">
                         <span class="material-symbols-outlined text-base">print</span> Print Report
                     </button>
                 </div>
@@ -258,7 +267,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                     $isActive = $period === $key;
                 ?>
                 <a href="?period=<?php echo $key; ?>"
-                   class="px-4 py-2 rounded-xl text-sm font-bold transition-colors <?php echo $isActive ? 'bg-primary/10 text-white border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/5'; ?>">
+                   class="px-4 py-2 rounded-xl text-sm font-bold transition-colors <?php echo $isActive ? 'bg-primary/10 text-primary dark:text-white border border-primary/20 dark:border-white/10' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'; ?>">
                     <?php echo $label; ?>
                 </a>
                 <?php endforeach; ?>
@@ -266,7 +275,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
 
             <!-- ── KPI Cards ───────────────────────────────────────── -->
             <section>
-                <p class="px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-4">Platform Overview</p>
+                <p class="px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-500 mb-4">Platform Overview</p>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <?php
                     $kpis = [
@@ -280,14 +289,14 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                         ['label'=>'Audit Events',   'value'=>number_format($totalAuditEvents),'icon'=>'policy',          'color'=>'text-rose-400',      'bg'=>'bg-rose-500/10'],
                     ];
                     foreach ($kpis as $kpi): ?>
-                    <div class="print-card bg-slate-card border border-white/5 rounded-2xl p-5 space-y-3">
+                    <div class="print-card bg-slate-50 dark:bg-slate-card border border-slate-200 dark:border-white/5 rounded-2xl p-5 space-y-3">
                         <div class="flex items-center justify-between">
                             <div class="p-2 rounded-xl <?php echo $kpi['bg']; ?>">
                                 <span class="material-symbols-outlined text-xl <?php echo $kpi['color']; ?>"><?php echo $kpi['icon']; ?></span>
                             </div>
                         </div>
                         <div>
-                            <p class="text-2xl font-bold text-white"><?php echo $kpi['value']; ?></p>
+                            <p class="text-2xl font-bold text-slate-900 dark:text-white"><?php echo $kpi['value']; ?></p>
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1"><?php echo $kpi['label']; ?></p>
                         </div>
                     </div>
@@ -299,9 +308,9 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
             <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                 <!-- User Roles Donut -->
-                <div class="print-card bg-slate-card border border-white/5 rounded-2xl p-6 space-y-4">
+                <div class="print-card bg-slate-50 dark:bg-slate-card border border-slate-200 dark:border-white/5 rounded-2xl p-6 space-y-4">
                     <div>
-                        <h3 class="text-sm font-bold text-white font-display">Users by Role</h3>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white font-display">Users by Role</h3>
                         <p class="text-xs text-slate-500 mt-0.5">Distribution across account types</p>
                     </div>
                     <div class="flex justify-center">
@@ -310,23 +319,23 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                     <div class="space-y-2">
                         <div class="flex items-center justify-between text-xs">
                             <span class="flex items-center gap-2"><span class="size-2 rounded-full bg-blue-500 inline-block"></span> Admins</span>
-                            <span class="font-bold text-white"><?php echo $adminCount; ?></span>
+                            <span class="font-bold text-slate-900 dark:text-white"><?php echo $adminCount; ?></span>
                         </div>
                         <div class="flex items-center justify-between text-xs">
                             <span class="flex items-center gap-2"><span class="size-2 rounded-full bg-emerald-500 inline-block"></span> Employees</span>
-                            <span class="font-bold text-white"><?php echo $employeeCount; ?></span>
+                            <span class="font-bold text-slate-900 dark:text-white"><?php echo $employeeCount; ?></span>
                         </div>
                         <div class="flex items-center justify-between text-xs">
                             <span class="flex items-center gap-2"><span class="size-2 rounded-full bg-purple-500 inline-block"></span> Collaborators</span>
-                            <span class="font-bold text-white"><?php echo $collaboratorCount; ?></span>
+                            <span class="font-bold text-slate-900 dark:text-white"><?php echo $collaboratorCount; ?></span>
                         </div>
                     </div>
                 </div>
 
                 <!-- User Status Donut -->
-                <div class="print-card bg-slate-card border border-white/5 rounded-2xl p-6 space-y-4">
+                <div class="print-card bg-slate-50 dark:bg-slate-card border border-slate-200 dark:border-white/5 rounded-2xl p-6 space-y-4">
                     <div>
-                        <h3 class="text-sm font-bold text-white font-display">Users by Status</h3>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white font-display">Users by Status</h3>
                         <p class="text-xs text-slate-500 mt-0.5">Account activation and access state</p>
                     </div>
                     <div class="flex justify-center">
@@ -335,27 +344,27 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                     <div class="space-y-2">
                         <div class="flex items-center justify-between text-xs">
                             <span class="flex items-center gap-2"><span class="size-2 rounded-full bg-emerald-500 inline-block"></span> Active</span>
-                            <span class="font-bold text-white"><?php echo $activeUsers; ?></span>
+                            <span class="font-bold text-slate-900 dark:text-white"><?php echo $activeUsers; ?></span>
                         </div>
                         <div class="flex items-center justify-between text-xs">
                             <span class="flex items-center gap-2"><span class="size-2 rounded-full bg-yellow-500 inline-block"></span> Pending</span>
-                            <span class="font-bold text-white"><?php echo $pendingUsers; ?></span>
+                            <span class="font-bold text-slate-900 dark:text-white"><?php echo $pendingUsers; ?></span>
                         </div>
                         <div class="flex items-center justify-between text-xs">
                             <span class="flex items-center gap-2"><span class="size-2 rounded-full bg-slate-500 inline-block"></span> Disabled</span>
-                            <span class="font-bold text-white"><?php echo $disabledUsers; ?></span>
+                            <span class="font-bold text-slate-900 dark:text-white"><?php echo $disabledUsers; ?></span>
                         </div>
                         <div class="flex items-center justify-between text-xs">
                             <span class="flex items-center gap-2"><span class="size-2 rounded-full bg-red-500 inline-block"></span> Expired</span>
-                            <span class="font-bold text-white"><?php echo $expiredUsers; ?></span>
+                            <span class="font-bold text-slate-900 dark:text-white"><?php echo $expiredUsers; ?></span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Audit Events Bar -->
-                <div class="print-card bg-slate-card border border-white/5 rounded-2xl p-6 space-y-4">
+                <div class="print-card bg-slate-50 dark:bg-slate-card border border-slate-200 dark:border-white/5 rounded-2xl p-6 space-y-4">
                     <div>
-                        <h3 class="text-sm font-bold text-white font-display">Audit Events by Category</h3>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white font-display">Audit Events by Category</h3>
                         <p class="text-xs text-slate-500 mt-0.5">Breakdown of system audit actions</p>
                     </div>
                     <div class="flex justify-center items-center h-[180px]">
@@ -376,7 +385,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                                 <span class="size-2 rounded-full <?php echo $dot; ?> inline-block"></span>
                                 <?php echo ucfirst(htmlspecialchars($as['category'])); ?>
                             </span>
-                            <span class="font-bold text-white"><?php echo number_format($as['total']); ?></span>
+                            <span class="font-bold text-slate-900 dark:text-white"><?php echo number_format($as['total']); ?></span>
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -387,69 +396,69 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
             <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 <!-- Security Snapshot -->
-                <div class="print-card bg-slate-card border border-white/5 rounded-2xl p-6 space-y-5">
+                <div class="print-card bg-slate-50 dark:bg-slate-card border border-slate-200 dark:border-white/5 rounded-2xl p-6 space-y-5">
                     <div class="flex items-center gap-3">
                         <div class="p-2 bg-emerald-500/10 rounded-xl">
                             <span class="material-symbols-outlined text-emerald-400 text-xl">verified_user</span>
                         </div>
                         <div>
-                            <h3 class="text-sm font-bold text-white font-display">Security Snapshot</h3>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white font-display">Security Snapshot</h3>
                             <p class="text-xs text-slate-500">MFA adoption and access controls</p>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-white/5 rounded-xl p-4">
+                        <div class="bg-slate-100 dark:bg-white/5 rounded-xl p-4">
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">MFA Enabled</p>
-                            <p class="text-2xl font-bold text-white mt-1"><?php echo $mfaEnabledCount; ?></p>
+                            <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?php echo $mfaEnabledCount; ?></p>
                             <p class="text-xs text-slate-500 mt-0.5"><?php echo $totalUsers > 0 ? round($mfaEnabledCount / $totalUsers * 100) : 0; ?>% of users</p>
                         </div>
-                        <div class="bg-white/5 rounded-xl p-4">
+                        <div class="bg-slate-100 dark:bg-white/5 rounded-xl p-4">
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">MFA Not Set</p>
-                            <p class="text-2xl font-bold text-white mt-1"><?php echo $totalUsers - $mfaEnabledCount; ?></p>
+                            <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?php echo $totalUsers - $mfaEnabledCount; ?></p>
                             <p class="text-xs text-slate-500 mt-0.5"><?php echo $totalUsers > 0 ? round(($totalUsers - $mfaEnabledCount) / $totalUsers * 100) : 0; ?>% of users</p>
                         </div>
-                        <div class="bg-white/5 rounded-xl p-4">
+                        <div class="bg-slate-100 dark:bg-white/5 rounded-xl p-4">
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Pending Acct</p>
-                            <p class="text-2xl font-bold text-white mt-1"><?php echo $pendingUsers; ?></p>
+                            <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?php echo $pendingUsers; ?></p>
                             <p class="text-xs text-slate-500 mt-0.5">Awaiting activation</p>
                         </div>
-                        <div class="bg-white/5 rounded-xl p-4">
+                        <div class="bg-slate-100 dark:bg-white/5 rounded-xl p-4">
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Disabled</p>
-                            <p class="text-2xl font-bold text-white mt-1"><?php echo $disabledUsers + $expiredUsers; ?></p>
+                            <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?php echo $disabledUsers + $expiredUsers; ?></p>
                             <p class="text-xs text-slate-500 mt-0.5">Disabled + expired</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- File & Project Stats -->
-                <div class="print-card bg-slate-card border border-white/5 rounded-2xl p-6 space-y-5">
+                <div class="print-card bg-slate-50 dark:bg-slate-card border border-slate-200 dark:border-white/5 rounded-2xl p-6 space-y-5">
                     <div class="flex items-center gap-3">
                         <div class="p-2 bg-yellow-500/10 rounded-xl">
                             <span class="material-symbols-outlined text-yellow-400 text-xl">folder_open</span>
                         </div>
                         <div>
-                            <h3 class="text-sm font-bold text-white font-display">Files &amp; Projects</h3>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white font-display">Files &amp; Projects</h3>
                             <p class="text-xs text-slate-500">Storage and project health overview</p>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-white/5 rounded-xl p-4">
+                        <div class="bg-slate-100 dark:bg-white/5 rounded-xl p-4">
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Total Files</p>
-                            <p class="text-2xl font-bold text-white mt-1"><?php echo number_format($totalFiles); ?></p>
+                            <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?php echo number_format($totalFiles); ?></p>
                             <p class="text-xs text-slate-500 mt-0.5"><?php echo formatBytes($totalFileSize); ?> stored</p>
                         </div>
-                        <div class="bg-white/5 rounded-xl p-4">
+                        <div class="bg-slate-100 dark:bg-white/5 rounded-xl p-4">
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Watermarked</p>
-                            <p class="text-2xl font-bold text-white mt-1"><?php echo number_format($watermarkedFiles); ?></p>
+                            <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?php echo number_format($watermarkedFiles); ?></p>
                             <p class="text-xs text-slate-500 mt-0.5"><?php echo $totalFiles > 0 ? round($watermarkedFiles / $totalFiles * 100) : 0; ?>% of files</p>
                         </div>
-                        <div class="bg-white/5 rounded-xl p-4">
+                        <div class="bg-slate-100 dark:bg-white/5 rounded-xl p-4">
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Total Downloads</p>
-                            <p class="text-2xl font-bold text-white mt-1"><?php echo number_format($totalDownloads); ?></p>
+                            <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?php echo number_format($totalDownloads); ?></p>
                         </div>
-                        <div class="bg-white/5 rounded-xl p-4">
+                        <div class="bg-slate-100 dark:bg-white/5 rounded-xl p-4">
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Projects</p>
-                            <p class="text-2xl font-bold text-white mt-1"><?php echo number_format($totalProjects); ?></p>
+                            <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1"><?php echo number_format($totalProjects); ?></p>
                             <p class="text-xs text-slate-500 mt-0.5"><?php echo $activeProjects; ?> active</p>
                         </div>
                     </div>
@@ -460,7 +469,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
             <section class="print-card bg-slate-card border border-white/5 rounded-2xl p-6 space-y-5">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-sm font-bold text-white font-display">Project Status</h3>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white font-display">Project Status</h3>
                         <p class="text-xs text-slate-500 mt-0.5">All projects across the platform by lifecycle stage</p>
                     </div>
                 </div>
@@ -472,12 +481,12 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                         ['label'=>'Completed', 'value'=>$completedProjects, 'icon'=>'task_alt',      'color'=>'text-blue-400 bg-blue-500/10'],
                     ];
                     foreach ($pStatuses as $ps): ?>
-                    <div class="bg-white/5 rounded-2xl p-5 flex items-center gap-4">
+                    <div class="bg-slate-100 dark:bg-white/5 rounded-2xl p-5 flex items-center gap-4">
                         <div class="p-3 rounded-xl <?php echo explode(' ', $ps['color'])[1]; ?>">
                             <span class="material-symbols-outlined <?php echo explode(' ', $ps['color'])[0]; ?> text-2xl"><?php echo $ps['icon']; ?></span>
                         </div>
                         <div>
-                            <p class="text-2xl font-bold text-white"><?php echo $ps['value']; ?></p>
+                            <p class="text-2xl font-bold text-slate-900 dark:text-white"><?php echo $ps['value']; ?></p>
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5"><?php echo $ps['label']; ?></p>
                         </div>
                     </div>
@@ -492,7 +501,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                         <span class="material-symbols-outlined text-blue-400 text-xl">backup</span>
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-white font-display">Backup Status</h3>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white font-display">Backup Status</h3>
                         <p class="text-xs text-slate-500"><?php echo $totalBackups; ?> backup<?php echo $totalBackups !== 1 ? 's' : ''; ?> stored</p>
                     </div>
                 </div>
@@ -503,7 +512,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
                         <thead>
-                            <tr class="border-b border-white/5">
+                            <tr class="border-b border-slate-200 dark:border-white/5">
                                 <th class="pb-3 pr-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Backup ID</th>
                                 <th class="pb-3 pr-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Type</th>
                                 <th class="pb-3 pr-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Created By</th>
@@ -511,9 +520,9 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                                 <th class="pb-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Size</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-white/5">
+                        <tbody class="divide-y divide-slate-100 dark:divide-white/5">
                             <?php foreach (array_slice($backups, 0, 8) as $bk): ?>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
+                            <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                                 <td class="py-3 pr-6 font-mono text-slate-400 truncate max-w-[140px]"><?php echo htmlspecialchars($bk['id'] ?? '—'); ?></td>
                                 <td class="py-3 pr-6">
                                     <?php
@@ -529,8 +538,8 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                                         <?php echo htmlspecialchars(ucfirst($btype)); ?>
                                     </span>
                                 </td>
-                                <td class="py-3 pr-6 text-white"><?php echo htmlspecialchars($bk['created_by'] ?? '—'); ?></td>
-                                <td class="py-3 pr-6 text-slate-400 font-mono"><?php echo htmlspecialchars($bk['created_at'] ?? '—'); ?></td>
+                                <td class="py-3 pr-6 text-slate-900 dark:text-white"><?php echo htmlspecialchars($bk['created_by'] ?? '—'); ?></td>
+                                <td class="py-3 pr-6 text-slate-500 dark:text-slate-400 font-mono"><?php echo htmlspecialchars($bk['created_at'] ?? '—'); ?></td>
                                 <td class="py-3 text-slate-400"><?php echo isset($bk['size']) ? formatBytes((int)$bk['size']) : '—'; ?></td>
                             </tr>
                             <?php endforeach; ?>
@@ -550,7 +559,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                         <span class="material-symbols-outlined text-purple-400 text-xl">shield_person</span>
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-white font-display">Super Admin Accounts</h3>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white font-display">Super Admin Accounts</h3>
                         <p class="text-xs text-slate-500"><?php echo $superAdminCount; ?> account<?php echo $superAdminCount !== 1 ? 's' : ''; ?> with root authority</p>
                     </div>
                 </div>
@@ -560,21 +569,21 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
                         <thead>
-                            <tr class="border-b border-white/5">
+                            <tr class="border-b border-slate-200 dark:border-white/5">
                                 <th class="pb-3 pr-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Name</th>
                                 <th class="pb-3 pr-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Email</th>
                                 <th class="pb-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Added</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-white/5">
+                        <tbody class="divide-y divide-slate-100 dark:divide-white/5">
                             <?php foreach ($superAdmins as $sa): ?>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
+                            <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                                 <td class="py-3 pr-6">
                                     <div class="flex items-center gap-3">
                                         <div class="size-7 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-[10px] flex-shrink-0">
                                             <?php echo strtoupper(substr($sa['name'], 0, 1)); ?>
                                         </div>
-                                        <span class="text-white font-semibold"><?php echo htmlspecialchars($sa['name']); ?></span>
+                                        <span class="text-slate-900 dark:text-white font-semibold"><?php echo htmlspecialchars($sa['name']); ?></span>
                                     </div>
                                 </td>
                                 <td class="py-3 pr-6 text-slate-400 font-mono"><?php echo htmlspecialchars($sa['email']); ?></td>
@@ -595,11 +604,11 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                             <span class="material-symbols-outlined text-rose-400 text-xl">policy</span>
                         </div>
                         <div>
-                            <h3 class="text-sm font-bold text-white font-display">Recent Audit Activity</h3>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white font-display">Recent Audit Activity</h3>
                             <p class="text-xs text-slate-500">Last 10 super admin actions</p>
                         </div>
                     </div>
-                    <a href="audit-log.php" class="no-print text-[10px] text-slate-500 hover:text-white font-bold uppercase tracking-widest flex items-center gap-1 transition-colors">
+                    <a href="audit-log.php" class="no-print text-[10px] text-slate-500 hover:text-slate-900 dark:hover:text-white font-bold uppercase tracking-widest flex items-center gap-1 transition-colors">
                         <span class="material-symbols-outlined text-sm">open_in_new</span> Full Log
                     </a>
                 </div>
@@ -610,7 +619,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
                         <thead>
-                            <tr class="border-b border-white/5">
+                            <tr class="border-b border-slate-200 dark:border-white/5">
                                 <th class="pb-3 pr-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Timestamp</th>
                                 <th class="pb-3 pr-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Actor</th>
                                 <th class="pb-3 pr-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Action</th>
@@ -618,7 +627,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                                 <th class="pb-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">IP</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-white/5">
+                        <tbody class="divide-y divide-slate-100 dark:divide-white/5">
                             <?php
                             $actionLabels = [
                                 'login_success'         => ['Login',              'login',           'text-emerald-400'],
@@ -648,18 +657,18 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                                 $meta  = $actionLabels[$ev['action']] ?? [ucwords(str_replace('_',' ',$ev['action'])), 'info', 'text-slate-400'];
                                 $badge = $catBadge[$ev['category']] ?? 'bg-white/5 text-slate-400 border-white/10';
                             ?>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
+                            <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                                 <td class="py-3 pr-6 text-slate-500 font-mono whitespace-nowrap">
                                     <?php echo date('M j, Y H:i', strtotime($ev['created_at'])); ?>
                                 </td>
                                 <td class="py-3 pr-6">
-                                    <p class="text-white font-semibold"><?php echo htmlspecialchars($ev['actor_name'] ?? '—'); ?></p>
+                                    <p class="text-slate-900 dark:text-white font-semibold"><?php echo htmlspecialchars($ev['actor_name'] ?? '—'); ?></p>
                                     <p class="text-slate-500 text-[10px]"><?php echo htmlspecialchars($ev['actor_email'] ?? ''); ?></p>
                                 </td>
                                 <td class="py-3 pr-6">
                                     <div class="flex items-center gap-2">
                                         <span class="material-symbols-outlined <?php echo $meta[2]; ?> text-base"><?php echo $meta[1]; ?></span>
-                                        <span class="text-white"><?php echo htmlspecialchars($meta[0]); ?></span>
+                                        <span class="text-slate-900 dark:text-white"><?php echo htmlspecialchars($meta[0]); ?></span>
                                     </div>
                                 </td>
                                 <td class="py-3 pr-6">
@@ -677,11 +686,11 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
             </section>
 
             <!-- Footer -->
-            <footer class="border-t border-white/5 pt-6 pb-4 flex items-center justify-between">
-                <p class="text-[10px] text-slate-600 font-mono uppercase tracking-widest">
+            <footer class="border-t border-slate-200 dark:border-white/5 pt-6 pb-4 flex items-center justify-between">
+                <p class="text-[10px] text-slate-500 dark:text-slate-600 font-mono uppercase tracking-widest">
                     OwlOps &mdash; StegaVault Super Admin Report
                 </p>
-                <p class="text-[10px] text-slate-600 font-mono uppercase tracking-widest">
+                <p class="text-[10px] text-slate-500 dark:text-slate-600 font-mono uppercase tracking-widest">
                     <?php echo $generatedAt; ?>
                 </p>
             </footer>
@@ -769,6 +778,23 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
             await fetch('../StegaVault/api/super_admin_auth.php?action=logout', { method: 'POST' });
             window.location.href = 'login.php';
         }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('owlops-theme', isDark ? 'dark' : 'light');
+            const icon = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
+            if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const icon = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
+            if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        });
 
         async function generatePDF() {
             const btn = document.getElementById('downloadPdfBtn');

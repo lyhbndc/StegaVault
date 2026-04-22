@@ -19,17 +19,21 @@ if (!isset($_SESSION['pending_mfa_user_id']) || !isset($_SESSION['pending_mfa_po
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>MFA Verification - OwlOps</title>
+    <script>if(localStorage.getItem('owlops-theme')==='dark')document.documentElement.classList.add('dark');</script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <script>
         tailwind.config = {
+            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
                         "primary": "#2563eb",
                         "background-light": "#ffffff",
-                        "slate-card": "#f8fafc",
+                        "card-light": "#f8fafc",
+                        "background-dark": "#000000",
+                        "slate-card": "#111111",
                     },
                     fontFamily: {
                         "display": ["Space Grotesk", "sans-serif"]
@@ -42,18 +46,19 @@ if (!isset($_SESSION['pending_mfa_user_id']) || !isset($_SESSION['pending_mfa_po
         }
     </script>
     <style>
-        body {
-            font-family: 'Space Grotesk', sans-serif;
-        }
-
+        body { font-family: 'Space Grotesk', sans-serif; }
+        html.dark body { background-color: #000000; }
         .bg-grid-pattern {
             background-image: radial-gradient(#cbd5e1 0.5px, transparent 0.5px);
             background-size: 24px 24px;
         }
+        html.dark .bg-grid-pattern {
+            background-image: radial-gradient(rgba(255,255,255,0.12) 0.5px, transparent 0.5px);
+        }
     </style>
 </head>
 
-<body class="bg-background-light min-h-screen flex flex-col font-display text-slate-900">
+<body class="bg-background-light dark:bg-black min-h-screen flex flex-col font-display text-slate-900 dark:text-slate-100">
     <!-- Background Effects -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden">
         <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
@@ -62,11 +67,14 @@ if (!isset($_SESSION['pending_mfa_user_id']) || !isset($_SESSION['pending_mfa_po
     </div>
 
     <!-- Header -->
-    <header class="relative z-10 w-full px-6 py-6 lg:px-12 flex items-center justify-between border-b border-slate-200 bg-background-light/50 backdrop-blur-md">
+    <header class="relative z-10 w-full px-6 py-6 lg:px-12 flex items-center justify-between border-b border-slate-200 dark:border-white/10 bg-background-light/50 dark:bg-black/50 backdrop-blur-md">
         <div class="flex items-center gap-3">
             <img src="OwlOps.png" alt="OwlOps Logo" class="h-10 w-auto">
-            <h2 class="text-slate-900 text-xl font-bold tracking-tight">OwlOps <span class="text-slate-600 font-medium">Super Admin</span></h2>
+            <h2 class="text-slate-900 dark:text-white text-xl font-bold tracking-tight">OwlOps <span class="text-slate-600 dark:text-slate-400 font-medium">Super Admin</span></h2>
         </div>
+        <button onclick="toggleTheme()" class="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors" title="Toggle theme">
+            <span class="material-symbols-outlined text-[20px]" id="themeIcon">dark_mode</span>
+        </button>
     </header>
 
     <!-- Main Content -->
@@ -76,11 +84,11 @@ if (!isset($_SESSION['pending_mfa_user_id']) || !isset($_SESSION['pending_mfa_po
                 <div class="inline-flex items-center justify-center size-16 bg-primary/10 rounded-full mb-4 ring-4 ring-primary/10">
                     <span class="material-symbols-outlined text-3xl text-primary">phonelink_lock</span>
                 </div>
-                <h1 class="text-slate-900 text-3xl font-bold tracking-tight mb-2">Two-Factor Auth</h1>
-                <p class="text-slate-600 text-sm">Enter the 6-digit code from your Authenticator app, or a recovery code.</p>
+                <h1 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-2">Two-Factor Auth</h1>
+                <p class="text-slate-600 dark:text-slate-400 text-sm">Enter the 6-digit code from your Authenticator app, or a recovery code.</p>
                         <input type="text" id="mfaCode" name="code" required autofocus autocomplete="one-time-code"
                             maxlength="20"
-                            class="w-full text-center tracking-[0.4em] text-2xl py-4 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
+                            class="w-full text-center tracking-[0.4em] text-2xl py-4 rounded-xl bg-slate-50 dark:bg-[#111111] border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
                             placeholder="000000" />
                         <p class="text-center text-xs text-slate-500">6-digit TOTP code or XXXX-XXXX recovery code</p>
                     </div>
@@ -100,11 +108,20 @@ if (!isset($_SESSION['pending_mfa_user_id']) || !isset($_SESSION['pending_mfa_po
     </main>
 
     <!-- Footer -->
-    <footer class="relative z-10 w-full px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-white/5 text-[12px] text-slate-500">
+    <footer class="relative z-10 w-full px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-slate-200 dark:border-white/5 text-[12px] text-slate-500">
         <p>© <?php echo date('Y'); ?> StegaVault. Global Administration System.</p>
     </footer>
 
     <script>
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('owlops-theme', isDark ? 'dark' : 'light');
+            document.getElementById('themeIcon').textContent = isDark ? 'light_mode' : 'dark_mode';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = document.documentElement.classList.contains('dark') ? 'light_mode' : 'dark_mode';
+        });
         const form = document.getElementById('mfaForm');
         const codeInput = document.getElementById('mfaCode');
         const submitBtn = document.getElementById('submitBtn');

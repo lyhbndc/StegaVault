@@ -36,12 +36,13 @@ while ($row = $result->fetch_assoc()) {
 }
 ?>
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Admins - <?php echo htmlspecialchars($webAppName); ?></title>
+    <script>if(localStorage.getItem('owlops-theme')==='dark')document.documentElement.classList.add('dark');</script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -52,8 +53,8 @@ while ($row = $result->fetch_assoc()) {
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#ffffff",
-                        "primary-hover": "#e2e8f0",
+                        "primary": "#2563eb",
+                        "primary-hover": "#1e40af",
                         "background-dark": "#000000",
                         "slate-card": "#111111",
                     },
@@ -66,33 +67,25 @@ while ($row = $result->fetch_assoc()) {
         }
     </script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #000000;
-        }
-
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6,
-        .font-display {
-            font-family: 'Space Grotesk', sans-serif;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
+        html.dark body { background-color: #000000; }
+        h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Space Grotesk', sans-serif; }
     </style>
 </head>
 
-<body class="text-slate-200 min-h-screen flex">
+<body class="bg-white dark:bg-black text-slate-900 dark:text-slate-200 min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside class="w-64 border-r border-white/5 bg-background-dark flex flex-col fixed inset-y-0 left-0 z-50 shadow-xl shadow-black/50">
+    <aside class="w-64 border-r border-slate-200 dark:border-white/5 bg-white dark:bg-black flex flex-col fixed inset-y-0 left-0 z-50">
         <div class="p-6 flex flex-col h-full gap-8">
             <div class="flex items-start justify-between">
                 <div>
-                    <h1 class="text-white text-base font-bold leading-tight font-display">OwlOps</h1>
+                    <h1 class="text-slate-900 dark:text-white text-base font-bold leading-tight font-display">OwlOps</h1>
                     <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
                 </div>
+                <button onclick="toggleTheme()" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors" title="Toggle theme">
+                    <span class="material-symbols-outlined text-[18px]" id="themeIcon">dark_mode</span>
+                </button>
             </div>
 
             <!-- Context Banner -->
@@ -100,7 +93,7 @@ while ($row = $result->fetch_assoc()) {
                 <div class="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent"></div>
                 <div class="relative z-10">
                     <p class="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">Active Context</p>
-                    <p class="text-white text-sm font-semibold truncate" title="<?php echo htmlspecialchars($webAppName); ?>">
+                    <p class="text-slate-900 dark:text-white text-sm font-semibold truncate" title="<?php echo htmlspecialchars($webAppName); ?>">
                         <?php echo htmlspecialchars($webAppName); ?>
                     </p>
                 </div>
@@ -108,26 +101,26 @@ while ($row = $result->fetch_assoc()) {
 
             <nav class="flex flex-col gap-2 flex-1 relative z-10">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Systems</p>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="dashboard.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="dashboard.php">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
                     <p class="text-sm font-medium">Control Center</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="manage_admins.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="manage_admins.php">
                     <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
                     <p class="text-sm font-medium">Manage Admins</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="backup.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="backup.php">
                     <span class="material-symbols-outlined text-[20px]">backup</span>
-                    <p class="text-sm font-medium">Backup & Restore</p>
+                    <p class="text-sm font-medium">Backup &amp; Restore</p>
                 </a>
 
                 <div class="mt-8">
                     <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Environment</p>
-                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="app_dashboard.php">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="app_dashboard.php">
                         <span class="material-symbols-outlined text-[20px]">monitoring</span>
                         <p class="text-sm font-medium">App Overview</p>
                     </a>
-                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/20 text-white border border-primary/30" href="admins.php">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary border border-primary/20 dark:border-primary/30" href="admins.php">
                         <span class="material-symbols-outlined text-[20px] text-primary">group</span>
                         <p class="text-sm font-medium">App Admins</p>
                     </a>
@@ -141,11 +134,11 @@ while ($row = $result->fetch_assoc()) {
         <!-- Header -->
         <header class="flex items-center justify-between">
             <div>
-                <h2 class="text-3xl font-bold text-white mb-2 font-display">App Administrators</h2>
-                <p class="text-slate-400">Manage the administrative accounts governing <span class="text-white font-medium"><?php echo htmlspecialchars($webAppName); ?></span>.</p>
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2 font-display">App Administrators</h2>
+                <p class="text-slate-600 dark:text-slate-400">Manage the administrative accounts governing <span class="text-slate-900 dark:text-white font-medium"><?php echo htmlspecialchars($webAppName); ?></span>.</p>
             </div>
 
-            <a href="create_admin.php" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-black rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_-3px_rgba(255,255,255,0.3)] flex items-center gap-2">
+            <a href="create_admin.php" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-xl font-bold text-sm transition-all flex items-center gap-2">
                 <span class="material-symbols-outlined text-lg">person_add</span> Create Admin
             </a>
         </header>
@@ -154,47 +147,47 @@ while ($row = $result->fetch_assoc()) {
         <div id="statusMessage" class="hidden px-4 py-3 rounded-xl text-sm font-medium border"></div>
 
         <!-- Admins Table -->
-        <div class="bg-slate-card border border-white/10 rounded-2xl overflow-hidden shadow-lg shadow-black/20">
+        <div class="bg-white dark:bg-slate-card border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-white/5 border-b border-white/10">
-                        <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Administrator</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Contact Email</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Date Added</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                    <tr class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
+                        <th class="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Administrator</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Contact Email</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Date Added</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-white/5">
+                <tbody class="divide-y divide-slate-100 dark:divide-white/5">
                     <?php if (count($admins) > 0): ?>
                         <?php foreach ($admins as $admin): ?>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
+                            <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="size-9 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white font-bold text-xs border border-white/10">
+                                        <div class="size-9 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white font-bold text-xs">
                                             <?php echo strtoupper(substr($admin['name'], 0, 2)); ?>
                                         </div>
-                                        <p class="text-white font-semibold text-sm"><?php echo htmlspecialchars($admin['name']); ?></p>
+                                        <p class="text-slate-900 dark:text-white font-semibold text-sm"><?php echo htmlspecialchars($admin['name']); ?></p>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <p class="text-slate-300 text-sm font-mono"><?php echo htmlspecialchars($admin['email']); ?></p>
+                                    <p class="text-slate-600 dark:text-slate-300 text-sm font-mono"><?php echo htmlspecialchars($admin['email']); ?></p>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <p class="text-slate-400 text-sm"><?php echo date('M d, Y', strtotime($admin['created_at'])); ?></p>
+                                    <p class="text-slate-500 dark:text-slate-400 text-sm"><?php echo date('M d, Y', strtotime($admin['created_at'])); ?></p>
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="relative inline-block text-left">
-                                        <button onclick="toggleMenu(<?php echo $admin['id']; ?>)" class="p-2 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-transparent hover:border-white/10" title="Options">
+                                        <button onclick="toggleMenu(<?php echo $admin['id']; ?>)" class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg transition-colors" title="Options">
                                             <span class="material-symbols-outlined text-[20px]">more_vert</span>
                                         </button>
 
                                         <!-- Dropdown menu -->
-                                        <div id="menu-<?php echo $admin['id']; ?>" class="hidden absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-xl bg-slate-card border border-white/10 shadow-xl focus:outline-none">
+                                        <div id="menu-<?php echo $admin['id']; ?>" class="hidden absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-xl bg-white dark:bg-slate-card border border-slate-200 dark:border-white/10 shadow-xl focus:outline-none">
                                             <div class="py-1" role="none">
-                                                <button onclick="editAdmin(<?php echo $admin['id']; ?>, '<?php echo htmlspecialchars($admin['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($admin['email'], ENT_QUOTES); ?>')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                                                <button onclick="editAdmin(<?php echo $admin['id']; ?>, '<?php echo htmlspecialchars($admin['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($admin['email'], ENT_QUOTES); ?>')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-colors">
                                                     <span class="material-symbols-outlined text-[18px]">edit</span> Edit Details
                                                 </button>
-                                                <button onclick="deleteAdmin(<?php echo $admin['id']; ?>)" class="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-400/10 hover:text-red-300 transition-colors">
+                                                <button onclick="deleteAdmin(<?php echo $admin['id']; ?>)" class="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 transition-colors">
                                                     <span class="material-symbols-outlined text-[18px]">delete</span> Remove Admin
                                                 </button>
                                             </div>
@@ -221,30 +214,30 @@ while ($row = $result->fetch_assoc()) {
 
     <!-- Edit Admin Modal -->
     <div id="editModal" class="fixed inset-0 z-[100] hidden">
-        <div class="absolute inset-0 bg-background-dark/80 backdrop-blur-sm" onclick="closeEditModal()"></div>
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeEditModal()"></div>
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-            <div class="relative bg-slate-card rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg w-full border border-white/10">
-                <div class="px-6 py-6 border-b border-white/5">
-                    <h3 class="text-xl font-bold text-white font-display">Edit Administrator</h3>
+            <div class="relative bg-white dark:bg-slate-card rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg w-full border border-slate-200 dark:border-white/10">
+                <div class="px-6 py-6 border-b border-slate-200 dark:border-white/5">
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white font-display">Edit Administrator</h3>
                 </div>
                 <div class="px-6 py-6">
                     <form id="editForm" class="space-y-4">
                         <input type="hidden" id="edit_admin_id">
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
-                            <input type="text" id="edit_admin_name" required class="w-full px-4 py-3 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+                            <input type="text" id="edit_admin_name" required class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-[#1b1f27] border border-slate-300 dark:border-[#3b4354] text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
-                            <input type="email" id="edit_admin_email" required class="w-full px-4 py-3 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
+                            <input type="email" id="edit_admin_email" required class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-[#1b1f27] border border-slate-300 dark:border-[#3b4354] text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-1">New Password <span class="text-xs text-slate-500 font-normal">(Leave blank to keep current)</span></label>
-                            <input type="password" id="edit_admin_password" class="w-full px-4 py-3 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="••••••••">
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">New Password <span class="text-xs text-slate-400 font-normal">(Leave blank to keep current)</span></label>
+                            <input type="password" id="edit_admin_password" class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-[#1b1f27] border border-slate-300 dark:border-[#3b4354] text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="••••••••">
                         </div>
                         <div class="mt-8 flex gap-3 justify-end">
-                            <button type="button" onclick="closeEditModal()" class="px-5 py-2.5 rounded-xl font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
-                            <button type="submit" id="saveEditBtn" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-black rounded-xl font-bold transition-shadow shadow-glow flex items-center justify-center gap-2">
+                            <button type="button" onclick="closeEditModal()" class="px-5 py-2.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Cancel</button>
+                            <button type="submit" id="saveEditBtn" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
                                 Save Changes
                             </button>
                         </div>
@@ -362,6 +355,17 @@ while ($row = $result->fetch_assoc()) {
                 btn.disabled = false;
                 btn.innerHTML = 'Save Changes';
             }
+        });
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('owlops-theme', isDark ? 'dark' : 'light');
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = document.documentElement.classList.contains('dark') ? 'light_mode' : 'dark_mode';
         });
 
         // Status Message Helper

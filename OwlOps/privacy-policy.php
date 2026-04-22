@@ -8,12 +8,14 @@ session_start();
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Privacy Policy - OwlOps</title>
+    <script>if(localStorage.getItem('owlops-theme')==='dark')document.documentElement.classList.add('dark');</script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script>
         tailwind.config = {
+            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
@@ -21,6 +23,7 @@ session_start();
                         "primary-hover": "#1e40af",
                         "background-light": "#ffffff",
                         "card-light": "#f8fafc",
+                        "slate-card": "#111111",
                     },
                     fontFamily: {
                         "display": ["Space Grotesk", "sans-serif"],
@@ -32,15 +35,19 @@ session_start();
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
+        html.dark body { background-color: #000000; }
         h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Space Grotesk', sans-serif; }
         .bg-grid-pattern {
             background-image: radial-gradient(#cbd5e1 0.1px, transparent 0.1px);
             background-size: 40px 40px;
         }
+        html.dark .bg-grid-pattern {
+            background-image: radial-gradient(rgba(255,255,255,0.08) 0.1px, transparent 0.1px);
+        }
     </style>
 </head>
 
-<body class="text-slate-900 min-h-screen flex flex-col relative">
+<body class="bg-white dark:bg-black text-slate-900 dark:text-slate-200 min-h-screen flex flex-col relative">
 
     <!-- Background Decor -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -49,38 +56,43 @@ session_start();
     </div>
 
     <!-- Header -->
-    <header class="relative z-10 w-full px-8 py-6 flex items-center justify-between border-b border-slate-200 bg-background-light/80 backdrop-blur-md">
+    <header class="relative z-10 w-full px-8 py-6 flex items-center justify-between border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-black/80 backdrop-blur-md">
         <div class="flex items-center gap-4">
             <img src="OwlOps.png" alt="OwlOps Logo" class="h-12 w-auto">
             <div>
-                <h2 class="text-slate-900 text-2xl font-bold tracking-tight font-display">OwlOps</h2>
+                <h2 class="text-slate-900 dark:text-white text-2xl font-bold tracking-tight font-display">OwlOps</h2>
                 <div class="flex items-center gap-2">
                     <span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                     <p class="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Global Control Node</p>
                 </div>
             </div>
         </div>
-        <a href="javascript:history.back()" class="text-sm text-slate-600 hover:text-primary transition-colors">← Back</a>
+        <div class="flex items-center gap-4">
+            <button onclick="toggleTheme()" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors" title="Toggle theme">
+                <span class="material-symbols-outlined text-[20px]" id="themeIcon">dark_mode</span>
+            </button>
+            <a href="javascript:history.back()" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors">← Back</a>
+        </div>
     </header>
 
     <!-- Content -->
     <main class="relative z-10 flex-1 max-w-4xl w-full mx-auto px-8 py-16">
 
-        <div class="bg-card-light border border-slate-200 rounded-[2.5rem] p-12 backdrop-blur-xl shadow-lg">
+        <div class="bg-slate-50 dark:bg-slate-card border border-slate-200 dark:border-white/10 rounded-[2.5rem] p-12 backdrop-blur-xl shadow-lg">
 
             <div class="text-center mb-12">
                 <h1 class="text-4xl font-bold mb-4 text-primary font-display">OwlOps Privacy Policy</h1>
-                <p class="text-slate-600 text-sm">
+                <p class="text-slate-600 dark:text-slate-400 text-sm">
                     Effective Date: [Insert Date] <br>
                     Peanut Gallery Media Network — OwlOps System
                 </p>
             </div>
 
-            <div class="space-y-10 text-sm text-slate-700 leading-relaxed font-body">
+            <div class="space-y-10 text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-body">
 
                 <!-- INTRO -->
                 <section>
-                    <h2 class="text-slate-900 font-semibold mb-4 text-lg">1. Introduction</h2>
+                    <h2 class="text-slate-900 dark:text-white font-semibold mb-4 text-lg">1. Introduction</h2>
                     <ul class="list-disc ml-6 space-y-2">
                         <li>Super Administrator account information (name, email, encrypted password)</li>
                         <li>Application management data and system configurations</li>
@@ -92,7 +104,7 @@ session_start();
 
                 <!-- PURPOSE -->
                 <section>
-                    <h2 class="text-white font-semibold mb-4 text-lg">3. Purpose of Data Collection</h2>
+                    <h2 class="text-slate-900 dark:text-white font-semibold mb-4 text-lg">3. Purpose of Data Collection</h2>
                     <ul class="list-disc ml-6 space-y-2">
                         <li>Super administrator authentication and secure access control</li>
                         <li>System-wide infrastructure management and monitoring</li>
@@ -104,7 +116,7 @@ session_start();
 
                 <!-- LEGAL BASIS -->
                 <section>
-                    <h2 class="text-white font-semibold mb-4 text-lg">4. Legal Basis for Processing</h2>
+                    <h2 class="text-slate-900 dark:text-white font-semibold mb-4 text-lg">4. Legal Basis for Processing</h2>
                     <p>
                         Data processing is based on system security requirements, administrative necessity, and compliance with
                         applicable laws such as the Data Privacy Act of 2012 and international security principles
@@ -114,7 +126,7 @@ session_start();
 
                 <!-- DATA PROTECTION -->
                 <section>
-                    <h2 class="text-white font-semibold mb-4 text-lg">5. Data Protection and Security</h2>
+                    <h2 class="text-slate-900 dark:text-white font-semibold mb-4 text-lg">5. Data Protection and Security</h2>
                     <ul class="list-disc ml-6 space-y-2">
                         <li>Advanced encryption for sensitive administrative data</li>
                         <li>Multi-factor authentication and secure session management</li>
@@ -126,7 +138,7 @@ session_start();
 
                 <!-- DATA SHARING -->
                 <section>
-                    <h2 class="text-white font-semibold mb-4 text-lg">6. Data Sharing and Disclosure</h2>
+                    <h2 class="text-slate-900 dark:text-white font-semibold mb-4 text-lg">6. Data Sharing and Disclosure</h2>
                     <p>
                         We do not sell or trade personal data. Data may only be shared under the following conditions:
                     </p>
@@ -140,7 +152,7 @@ session_start();
 
                 <!-- DATA RETENTION -->
                 <section>
-                    <h2 class="text-white font-semibold mb-4 text-lg">7. Data Retention</h2>
+                    <h2 class="text-slate-900 dark:text-white font-semibold mb-4 text-lg">7. Data Retention</h2>
                     <p>
                         Administrative data is retained only as long as necessary for system operation, legal compliance, and
                         organizational requirements.
@@ -150,7 +162,7 @@ session_start();
 
                 <!-- USER RIGHTS -->
                 <section>
-                    <h2 class="text-white font-semibold mb-4 text-lg">8. User Rights</h2>
+                    <h2 class="text-slate-900 dark:text-white font-semibold mb-4 text-lg">8. User Rights</h2>
                     <ul class="list-disc ml-6 space-y-2">
                         <li>Right to access stored personal data</li>
                         <li>Right to correct inaccurate information</li>
@@ -165,7 +177,7 @@ session_start();
 
                 <!-- COOKIES -->
                 <section>
-                    <h2 class="text-white font-semibold mb-4 text-lg">9. Cookies and Tracking</h2>
+                    <h2 class="text-slate-900 dark:text-white font-semibold mb-4 text-lg">9. Cookies and Tracking</h2>
                     <p>
                         OwlOps may use session cookies for authentication, security, and performance monitoring.
                         No advertising or third-party tracking cookies are used.
@@ -174,7 +186,7 @@ session_start();
 
                 <!-- SECURITY LIMITATION -->
                 <section>
-                    <h2 class="text-white font-semibold mb-4 text-lg">10. Security Limitations</h2>
+                    <h2 class="text-slate-900 dark:text-white font-semibold mb-4 text-lg">10. Security Limitations</h2>
                     <p>
                         While we implement strong security measures including encryption and multi-factor authentication,
                         no system is completely immune to threats. Users acknowledge inherent risks in digital systems.
@@ -183,7 +195,7 @@ session_start();
 
                 <!-- CHANGES -->
                 <section>
-                    <h2 class="text-white font-semibold mb-4 text-lg">11. Policy Updates</h2>
+                    <h2 class="text-slate-900 dark:text-white font-semibold mb-4 text-lg">11. Policy Updates</h2>
                     <p>
                         This Privacy Policy may be updated periodically. Continued use of the system constitutes
                         acceptance of any changes.
@@ -192,7 +204,7 @@ session_start();
 
                 <!-- CONTACT -->
                 <section>
-                    <h2 class="text-slate-900 font-semibold mb-4 text-lg">12. Contact Information</h2>
+                    <h2 class="text-slate-900 dark:text-white font-semibold mb-4 text-lg">12. Contact Information</h2>
                     <p>
                         For questions regarding this Privacy Policy, contact:
                     </p>
@@ -212,7 +224,7 @@ session_start();
 
             </div>
 
-            <div class="mt-16 text-xs text-slate-500 border-t border-slate-200 pt-6 text-center">
+            <div class="mt-16 text-xs text-slate-500 dark:text-slate-600 border-t border-slate-200 dark:border-white/10 pt-6 text-center">
                 © OwlOps Systems — All Rights Reserved
             </div>
 
@@ -220,6 +232,18 @@ session_start();
 
     </main>
 
+    <script>
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('owlops-theme', isDark ? 'dark' : 'light');
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = document.documentElement.classList.contains('dark') ? 'light_mode' : 'dark_mode';
+        });
+    </script>
 </body>
 
 </html>

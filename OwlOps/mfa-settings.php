@@ -33,18 +33,23 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Two-Factor Authentication - OwlOps</title>
+    <script>if(localStorage.getItem('owlops-theme')==='dark')document.documentElement.classList.add('dark');</script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script>
         tailwind.config = {
+            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
                         "primary": "#2563eb",
+                        "primary-hover": "#1e40af",
                         "background-light": "#ffffff",
-                        "slate-card": "#f8fafc",
+                        "card-light": "#f8fafc",
+                        "background-dark": "#000000",
+                        "slate-card": "#111111",
                     },
                     fontFamily: {
                         "display": ["Space Grotesk", "sans-serif"]
@@ -58,64 +63,72 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
+        html.dark body { background-color: #000000; }
         h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Space Grotesk', sans-serif; }
         .bg-grid-pattern {
             background-image: radial-gradient(#cbd5e1 0.1px, transparent 0.1px);
             background-size: 30px 30px;
         }
+        html.dark .bg-grid-pattern {
+            background-image: radial-gradient(rgba(255,255,255,0.12) 0.1px, transparent 0.1px);
+        }
     </style>
 </head>
 
-<body class="text-slate-900 min-h-screen flex">
+<body class="text-slate-900 dark:text-slate-100 min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside class="w-64 border-r border-slate-200 bg-background-light flex flex-col fixed inset-y-0 left-0 z-50">
+    <aside class="w-64 border-r border-slate-200 dark:border-white/5 bg-white dark:bg-black flex flex-col fixed inset-y-0 left-0 z-50">
         <div class="p-6 flex flex-col h-full gap-8">
             <div class="flex items-center gap-2">
                 <img src="OwlOps.png" alt="OwlOps Logo" class="h-8 w-auto">
                 <div>
-                    <h1 class="text-slate-900 text-base font-bold leading-tight font-display">OwlOps</h1>
+                    <h1 class="text-slate-900 dark:text-white text-base font-bold leading-tight font-display">OwlOps</h1>
                     <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
                 </div>
             </div>
             <nav class="flex flex-col gap-2 flex-1">
-                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2">Systems</p>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors" href="dashboard.php">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-500 mb-2">Systems</p>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="dashboard.php">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
                     <p class="text-sm font-medium">Control Center</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:text-primary hover:bg-primary/5 transition-colors" href="manage_admins.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="manage_admins.php">
                     <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
                     <p class="text-sm font-medium">Manage Admins</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:text-primary hover:bg-primary/5 transition-colors" href="backup.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="backup.php">
                     <span class="material-symbols-outlined text-[20px]">backup</span>
                     <p class="text-sm font-medium">Backup &amp; Restore</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:text-primary hover:bg-primary/5 transition-colors" href="audit-log.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="audit-log.php">
                     <span class="material-symbols-outlined text-[20px]">manage_search</span>
                     <p class="text-sm font-medium">Audit Log</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:text-primary hover:bg-primary/5 transition-colors" href="reports.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="reports.php">
                     <span class="material-symbols-outlined text-[20px]">assessment</span>
                     <p class="text-sm font-medium">System Report</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20" href="mfa-settings.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary border border-primary/20 dark:border-primary/30" href="mfa-settings.php">
                     <span class="material-symbols-outlined text-[20px] text-primary">phonelink_lock</span>
                     <p class="text-sm font-medium">MFA Settings</p>
                 </a>
             </nav>
-            <div class="pt-6 border-t border-slate-200">
+            <div class="pt-6 border-t border-slate-200 dark:border-white/5">
                 <div class="flex items-center gap-3 px-3 py-2">
                     <div class="size-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs">
                         <?php echo strtoupper(substr($user['name'], 0, 1)); ?>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-slate-900 text-xs font-bold truncate"><?php echo htmlspecialchars($user['name']); ?></p>
+                        <p class="text-slate-900 dark:text-white text-xs font-bold truncate"><?php echo htmlspecialchars($user['name']); ?></p>
                         <p class="text-slate-500 text-[10px] truncate">Super Admin</p>
                     </div>
                 </div>
-                <button onclick="logout()" class="w-full mt-4 flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
+                <button onclick="toggleTheme()" class="w-full mt-2 flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]" id="themeIcon">dark_mode</span>
+                    <p class="text-sm font-medium" id="themeLabel">Dark Mode</p>
+                </button>
+                <button onclick="logout()" class="w-full mt-1 flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
                     <span class="material-symbols-outlined text-[20px]">logout</span>
                     <p class="text-sm font-medium">Sign Out</p>
                 </button>
@@ -134,19 +147,19 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
 
         <!-- Header -->
         <header>
-            <h2 class="text-4xl font-bold text-white font-display">MFA Settings</h2>
-            <p class="text-slate-400 mt-2">Manage two-factor authentication for your super admin account.</p>
+            <h2 class="text-4xl font-bold text-slate-900 dark:text-white font-display">MFA Settings</h2>
+            <p class="text-slate-600 dark:text-slate-400 mt-2">Manage two-factor authentication for your super admin account.</p>
         </header>
 
         <!-- Status Card -->
-        <div class="mb-8 rounded-2xl border <?php echo $mfaEnabled ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/10 bg-white/5'; ?> p-6 lg:p-8">
+        <div class="mb-8 rounded-2xl border <?php echo $mfaEnabled ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5'; ?> p-6 lg:p-8">
             <div class="flex items-start justify-between">
                 <div>
                     <div class="flex items-center gap-3 mb-2">
                         <span class="material-symbols-outlined text-4xl <?php echo $mfaEnabled ? 'text-emerald-500' : 'text-slate-400'; ?>">
                             <?php echo $mfaEnabled ? 'verified' : 'phonelink_lock'; ?>
                         </span>
-                        <h2 class="text-3xl font-bold">
+                        <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
                             <?php echo $mfaEnabled ? 'MFA Enabled' : 'MFA Disabled'; ?>
                         </h2>
                     </div>
@@ -170,38 +183,38 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
         </div>
 
         <!-- Setup / Manage Section -->
-        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 lg:p-8">
+        <div class="rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-6 lg:p-8">
             <?php if (!$mfaEnabled): ?>
                 <!-- SETUP SECTION -->
-                <h3 class="text-lg font-bold mb-6">Enable Two-Factor Authentication</h3>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Enable Two-Factor Authentication</h3>
 
                 <div class="space-y-8">
                     <!-- Step 1 -->
                     <div>
-                        <h4 class="text-sm font-semibold text-slate-300 mb-3">Step 1: Install an Authenticator App</h4>
-                        <p class="text-sm text-slate-400 mb-4">Download one of these authenticator apps on your phone:</p>
+                        <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Step 1: Install an Authenticator App</h4>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Download one of these authenticator apps on your phone:</p>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <div class="border border-white/10 rounded-lg p-4 text-center hover:border-primary/40 hover:bg-primary/5 transition-all">
-                                <p class="font-semibold text-sm">Google Authenticator</p>
+                            <div class="border border-slate-200 dark:border-white/10 rounded-lg p-4 text-center hover:border-primary/40 hover:bg-primary/5 transition-all">
+                                <p class="font-semibold text-sm text-slate-800 dark:text-slate-200">Google Authenticator</p>
                             </div>
-                            <div class="border border-white/10 rounded-lg p-4 text-center hover:border-primary/40 hover:bg-primary/5 transition-all">
-                                <p class="font-semibold text-sm">Microsoft Authenticator</p>
+                            <div class="border border-slate-200 dark:border-white/10 rounded-lg p-4 text-center hover:border-primary/40 hover:bg-primary/5 transition-all">
+                                <p class="font-semibold text-sm text-slate-800 dark:text-slate-200">Microsoft Authenticator</p>
                             </div>
-                            <div class="border border-white/10 rounded-lg p-4 text-center hover:border-primary/40 hover:bg-primary/5 transition-all">
-                                <p class="font-semibold text-sm">Authy</p>
+                            <div class="border border-slate-200 dark:border-white/10 rounded-lg p-4 text-center hover:border-primary/40 hover:bg-primary/5 transition-all">
+                                <p class="font-semibold text-sm text-slate-800 dark:text-slate-200">Authy</p>
                             </div>
-                            <div class="border border-white/10 rounded-lg p-4 text-center hover:border-primary/40 hover:bg-primary/5 transition-all">
-                                <p class="font-semibold text-sm">FreeOTP</p>
+                            <div class="border border-slate-200 dark:border-white/10 rounded-lg p-4 text-center hover:border-primary/40 hover:bg-primary/5 transition-all">
+                                <p class="font-semibold text-sm text-slate-800 dark:text-slate-200">FreeOTP</p>
                             </div>
                         </div>
                     </div>
 
-                    <hr class="border-white/10" />
+                    <hr class="border-slate-200 dark:border-white/10" />
 
                     <!-- Step 2 -->
                     <div>
-                        <h4 class="text-sm font-semibold text-slate-300 mb-3">Step 2: Scan QR Code</h4>
-                        <p class="text-sm text-slate-400 mb-4">Scan this QR code with your authenticator app:</p>
+                        <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Step 2: Scan QR Code</h4>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Scan this QR code with your authenticator app:</p>
                         <div id="mfaQrContainer" class="flex justify-center p-6 bg-white rounded-xl mb-4 min-h-[160px] items-center">
                             <span class="text-slate-400 text-sm">Generating QR code...</span>
                         </div>
@@ -209,11 +222,11 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
 
                     <!-- Step 3 -->
                     <div>
-                        <h4 class="text-sm font-semibold text-slate-300 mb-3">Step 3: Enter Verification Code</h4>
-                        <p class="text-sm text-slate-400 mb-4">Enter the 6-digit code shown in your authenticator app:</p>
+                        <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Step 3: Enter Verification Code</h4>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Enter the 6-digit code shown in your authenticator app:</p>
                         <div class="flex gap-3">
                             <input id="mfaVerifyCode" type="text" inputmode="numeric" pattern="\d{6}" maxlength="6" placeholder="000000"
-                                class="flex-1 max-w-xs text-center text-2xl tracking-[0.5em] bg-[#1b1f27] border border-[#3b4354] rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" />
+                                class="flex-1 max-w-xs text-center text-2xl tracking-[0.5em] bg-slate-100 dark:bg-[#1b1f27] border border-slate-300 dark:border-[#3b4354] rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" />
                             <button onclick="verifyMfaSetup()" class="px-6 py-3 bg-primary hover:bg-white/90 text-black font-bold rounded-xl transition-all flex items-center gap-2">
                                 <span>Verify</span>
                                 <span class="material-symbols-outlined">check_circle</span>
@@ -228,7 +241,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
                     </div>
 
                     <!-- Recovery Codes -->
-                    <div id="recoveryCodesSection" class="hidden p-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                    <div id="recoveryCodesSection" class="hidden p-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl dark:bg-yellow-500/10 dark:border-yellow-500/30">
                         <div class="flex items-start gap-3 mb-4">
                             <span class="material-symbols-outlined text-yellow-500 text-2xl flex-shrink-0">warning</span>
                             <div>
@@ -236,7 +249,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
                                 <p class="text-sm text-yellow-300/80">Store these codes in a safe place. Each code can be used once to access your account if you lose your authenticator app.</p>
                             </div>
                         </div>
-                        <div id="recoveryCodesList" class="bg-black/30 border border-white/10 rounded-lg p-4 mb-4 font-mono text-sm text-slate-300 max-h-64 overflow-y-auto"></div>
+                        <div id="recoveryCodesList" class="bg-slate-100 dark:bg-black/30 border border-slate-200 dark:border-white/10 rounded-lg p-4 mb-4 font-mono text-sm text-slate-700 dark:text-slate-300 max-h-64 overflow-y-auto"></div>
                         <div class="flex gap-2">
                             <button onclick="copyRecoveryCodes()" class="flex-1 py-2 px-4 bg-primary hover:bg-white/90 text-black font-semibold rounded-lg transition-all flex items-center justify-center gap-2">
                                 <span class="material-symbols-outlined text-sm">content_copy</span>
@@ -268,8 +281,8 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
                         </div>
                     </div>
 
-                    <div class="border border-white/10 rounded-xl p-6">
-                        <h3 class="font-semibold text-white mb-3 flex items-center gap-2">
+                    <div class="border border-slate-200 dark:border-white/10 rounded-xl p-6">
+                        <h3 class="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                             <span class="material-symbols-outlined text-slate-400">backup</span>
                             Recovery Codes
                         </h3>
@@ -295,6 +308,21 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
     </main>
 
     <script>
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('owlops-theme', isDark ? 'dark' : 'light');
+            const icon = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
+            if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const icon = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
+            if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        });
         async function logout() {
             await fetch('../StegaVault/api/super_admin_auth.php?action=logout', { method: 'POST' });
             window.location.href = 'login.php';
