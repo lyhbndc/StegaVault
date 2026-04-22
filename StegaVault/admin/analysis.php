@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['suspect_file'])) {
 
                 $userId = $extractedData['crypto']['public']['user_id'];
                 $stmt = $db->prepare("SELECT id, email FROM users WHERE id = ?");
-                
+
                 if ($stmt) {
                     $stmt->bind_param('i', $userId);
                     $stmt->execute();
@@ -84,10 +84,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['suspect_file'])) {
                     }
                 } else {
                     // Suppress DB errors here but flag that crypto verification was skipped
-                    $hasCrypto = false; 
+                    $hasCrypto = false;
                     error_log("Forensic Analysis: DB unreachable for crypto verification");
                 }
             }
+        }
+
+        // Persist analysis result to forensic_analysis_log for reports
+        $logStatus = ($extractedData === false) ? 'NO_WATERMARK'
+            : ($extractedData['content_tampered'] ? 'TAMPERED' : 'VALID');
+        $wFound    = ($extractedData !== false) ? 1 : 0;
+        $logMime   = $file['type'] ?? null;
+        $logHash   = $extractedData['content_hash'] ?? null;
+        $logUid    = isset($extractedData['u_id']) ? (string)(int)$extractedData['u_id']
+            : (isset($extractedData['user_id']) ? (string)(int)$extractedData['user_id'] : null);
+        $logUname  = $extractedData['u_name'] ?? $extractedData['user_name'] ?? null;
+        $logUrole  = $extractedData['u_role'] ?? null;
+        $logIp     = $extractedData['ip'] ?? null;
+        $logCrypto = $hasCrypto
+            ? ($cryptoVerification && ($cryptoVerification['valid'] ?? false) ? '1' : '0')
+            : null;
+
+        @$db->query("CREATE TABLE IF NOT EXISTS forensic_analysis_log (
+            id SERIAL PRIMARY KEY,
+            analyzed_by INT NOT NULL,
+            file_name VARCHAR(255) NOT NULL,
+            file_size BIGINT DEFAULT 0,
+            mime_type VARCHAR(100) DEFAULT NULL,
+            integrity_status VARCHAR(20) NOT NULL CHECK (integrity_status IN ('VALID','TAMPERED','NO_WATERMARK')),
+            watermark_found SMALLINT DEFAULT 0,
+            content_hash VARCHAR(64) DEFAULT NULL,
+            extracted_user_id INT DEFAULT NULL,
+            extracted_user_name VARCHAR(255) DEFAULT NULL,
+            extracted_user_role VARCHAR(50) DEFAULT NULL,
+            extracted_ip VARCHAR(45) DEFAULT NULL,
+            crypto_verified SMALLINT DEFAULT NULL,
+            analysis_time_ms DOUBLE PRECISION DEFAULT NULL,
+            analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )");
+
+        $insStmt = $db->prepare("INSERT INTO forensic_analysis_log
+            (analyzed_by, file_name, file_size, mime_type, integrity_status, watermark_found,
+             content_hash, extracted_user_id, extracted_user_name, extracted_user_role,
+             extracted_ip, crypto_verified, analysis_time_ms)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        if ($insStmt) {
+            $insStmt->bind_param('issssissssssd',
+                $user['id'], $fileName, $fileSize, $logMime, $logStatus,
+                $wFound, $logHash, $logUid, $logUname, $logUrole,
+                $logIp, $logCrypto, $extractionTime
+            );
+            $insStmt->execute();
         }
     }
     else {

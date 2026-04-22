@@ -160,6 +160,45 @@ function fmtSize(int $bytes): string
     return $bytes . ' B';
 }
 
+// ── Forensic Analysis Log ──────────────────────────────────────
+$forensicLogs = [];
+@$db->query("CREATE TABLE IF NOT EXISTS forensic_analysis_log (
+    id SERIAL PRIMARY KEY,
+    analyzed_by INT NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_size BIGINT DEFAULT 0,
+    mime_type VARCHAR(100) DEFAULT NULL,
+    integrity_status VARCHAR(20) NOT NULL CHECK (integrity_status IN ('VALID','TAMPERED','NO_WATERMARK')),
+    watermark_found SMALLINT DEFAULT 0,
+    content_hash VARCHAR(64) DEFAULT NULL,
+    extracted_user_id INT DEFAULT NULL,
+    extracted_user_name VARCHAR(255) DEFAULT NULL,
+    extracted_user_role VARCHAR(50) DEFAULT NULL,
+    extracted_ip VARCHAR(45) DEFAULT NULL,
+    crypto_verified SMALLINT DEFAULT NULL,
+    analysis_time_ms DOUBLE PRECISION DEFAULT NULL,
+    analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+$falDateSQL = $filterDays !== null ? "AND fal.analyzed_at >= DATE_SUB(NOW(), INTERVAL {$filterDays} DAY)" : '';
+$falStmt = $db->prepare("
+    SELECT fal.file_name, fal.file_size, fal.integrity_status, fal.watermark_found,
+           fal.extracted_user_name, fal.extracted_user_role, fal.extracted_ip,
+           fal.crypto_verified, fal.analysis_time_ms, fal.analyzed_at,
+           u.name AS analyst_name
+    FROM forensic_analysis_log fal
+    LEFT JOIN users u ON fal.analyzed_by = u.id
+    WHERE 1=1 {$falDateSQL}
+    ORDER BY fal.analyzed_at DESC
+    LIMIT 50
+");
+if ($falStmt) {
+    $falStmt->execute();
+    $forensicLogs = $falStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+$totalForensicScans   = (int)($db->query("SELECT COUNT(*) FROM forensic_analysis_log")->fetch_row()[0] ?? 0);
+$tamperedCount        = (int)($db->query("SELECT COUNT(*) FROM forensic_analysis_log WHERE integrity_status='TAMPERED'")->fetch_row()[0] ?? 0);
+$noWatermarkCount     = (int)($db->query("SELECT COUNT(*) FROM forensic_analysis_log WHERE integrity_status='NO_WATERMARK'")->fetch_row()[0] ?? 0);
+
 $generatedAt = date('F j, Y \a\t g:i A');
 ?>
 <!DOCTYPE html>
@@ -1079,6 +1118,94 @@ $generatedAt = date('F j, Y \a\t g:i A');
                                     <td class="text-right text-xs">
                                         <?php echo date('M d, Y H:i', strtotime($log['created_at'])); ?>
                                     </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ─ SECTION 6: Forensic Analysis History ───────────── -->
+                <div id="sec-forensic" class="mb-12">
+                    <div class="report-section-title mb-6">VI. Forensic File Analysis History</div>
+
+                    <!-- KPI strip -->
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="section-table-wrap text-center py-4">
+                            <p class="text-2xl font-black text-slate-900 dark:text-white"><?php echo $totalForensicScans; ?></p>
+                            <p class="text-xs text-slate-400 uppercase tracking-wider mt-1">Total Scans</p>
+                        </div>
+                        <div class="section-table-wrap text-center py-4">
+                            <p class="text-2xl font-black text-rose-500"><?php echo $tamperedCount; ?></p>
+                            <p class="text-xs text-slate-400 uppercase tracking-wider mt-1">Tampered Files</p>
+                        </div>
+                        <div class="section-table-wrap text-center py-4">
+                            <p class="text-2xl font-black text-amber-500"><?php echo $noWatermarkCount; ?></p>
+                            <p class="text-xs text-slate-400 uppercase tracking-wider mt-1">No Watermark</p>
+                        </div>
+                    </div>
+
+                    <div class="section-table-wrap">
+                        <table class="table-doc">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">File Analyzed</th>
+                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Result</th>
+                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Analyst</th>
+                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Leaked To</th>
+                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Leak IP</th>
+                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Crypto</th>
+                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Analyzed At</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <?php if (empty($forensicLogs)): ?>
+                                <tr>
+                                    <td colspan="7" class="px-5 py-8 text-center text-slate-400 dark:text-slate-500">No forensic analyses have been run yet</td>
+                                </tr>
+                                <?php endif; ?>
+                                <?php foreach ($forensicLogs as $fl): ?>
+                                <?php
+                                    $rs = $fl['integrity_status'];
+                                    $rsClass = match($rs) {
+                                        'VALID'         => 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+                                        'TAMPERED'      => 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+                                        'NO_WATERMARK'  => 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+                                        default         => 'bg-slate-100 text-slate-500 border-slate-200',
+                                    };
+                                    $rsLabel = match($rs) {
+                                        'VALID'        => 'Valid',
+                                        'TAMPERED'     => 'Tampered',
+                                        'NO_WATERMARK' => 'No Watermark',
+                                        default        => $rs,
+                                    };
+                                    $cryptoVal = $fl['crypto_verified'];
+                                    if ($cryptoVal === null) {
+                                        $cryptoLabel = '—'; $cryptoClass = 'text-slate-400';
+                                    } elseif ($cryptoVal) {
+                                        $cryptoLabel = 'Valid'; $cryptoClass = 'text-emerald-500';
+                                    } else {
+                                        $cryptoLabel = 'Invalid'; $cryptoClass = 'text-rose-500';
+                                    }
+                                    $leakedTo = $fl['extracted_user_name']
+                                        ? htmlspecialchars($fl['extracted_user_name']) . ($fl['extracted_user_role'] ? ' <span class="text-slate-400">(' . htmlspecialchars($fl['extracted_user_role']) . ')</span>' : '')
+                                        : '<span class="text-slate-400">—</span>';
+                                    $leakIp = $fl['extracted_ip'] ?? null;
+                                    $leakIpDisplay = $leakIp ? htmlspecialchars($leakIp) : '—';
+                                ?>
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                    <td class="px-5 py-3">
+                                        <p class="font-medium text-slate-900 dark:text-white truncate max-w-[180px]"><?php echo htmlspecialchars($fl['file_name']); ?></p>
+                                        <p class="text-xs text-slate-400"><?php echo fmtSize((int)$fl['file_size']); ?></p>
+                                    </td>
+                                    <td class="px-5 py-3 text-center">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border <?php echo $rsClass; ?>"><?php echo $rsLabel; ?></span>
+                                    </td>
+                                    <td class="px-5 py-3 text-slate-500 dark:text-slate-400"><?php echo htmlspecialchars($fl['analyst_name'] ?? '—'); ?></td>
+                                    <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400"><?php echo $leakedTo; ?></td>
+                                    <td class="px-5 py-3 font-mono text-xs text-slate-500 dark:text-slate-400"><?php echo $leakIpDisplay; ?></td>
+                                    <td class="px-5 py-3 text-center text-xs font-semibold <?php echo $cryptoClass; ?>"><?php echo $cryptoLabel; ?></td>
+                                    <td class="px-5 py-3 text-right text-xs text-slate-400"><?php echo date('M d, Y H:i', strtotime($fl['analyzed_at'])); ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>

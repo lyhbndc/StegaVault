@@ -141,6 +141,13 @@ if ($action === 'create_app_admin' && $method === 'POST') {
         sendResponse(false, null, 'Email, Name, and Password are required', 400);
     }
 
+    $check = $db->prepare("SELECT id FROM users WHERE email = ?");
+    $check->bind_param('s', $email);
+    $check->execute();
+    if ($check->get_result()->num_rows > 0) {
+        sendResponse(false, null, 'Email is already in use by an existing account', 400);
+    }
+
     $passwordHash     = password_hash($password, PASSWORD_BCRYPT);
     $activation_token = bin2hex(random_bytes(32));
     $status           = 'pending_activation';
