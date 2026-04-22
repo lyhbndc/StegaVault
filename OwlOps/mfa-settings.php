@@ -36,6 +36,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -57,54 +58,83 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
         }
     </script>
     <style>
-        body {
-            font-family: 'Space Grotesk', sans-serif;
-        }
-
+        body { font-family: 'Inter', sans-serif; background-color: #000000; }
+        h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Space Grotesk', sans-serif; }
         .bg-grid-pattern {
             background-image: radial-gradient(#ffffff 0.1px, transparent 0.1px);
-            background-size: 40px 40px;
+            background-size: 30px 30px;
         }
     </style>
 </head>
 
-<body class="bg-background-dark text-white min-h-screen font-display">
-    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
-        <div class="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]"></div>
-    </div>
+<body class="text-slate-200 min-h-screen flex">
 
-    <!-- Header -->
-    <header class="relative z-10 w-full px-6 py-6 lg:px-12 border-b border-white/5 bg-background-dark/80 backdrop-blur-md sticky top-0">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <a href="dashboard.php" class="p-2 rounded-lg hover:bg-white/5 transition-colors">
-                    <span class="material-symbols-outlined text-2xl">arrow_back</span>
-                </a>
-                <div class="flex items-center gap-3">
-                    <div class="bg-primary p-2 rounded-lg shadow-glow">
-                        <span class="material-symbols-outlined text-black text-xl">local_police</span>
-                    </div>
-                    <div>
-                        <h1 class="text-xl font-bold">Two-Factor Authentication</h1>
-                        <p class="text-slate-400 text-xs">Secure your super admin account with MFA</p>
-                    </div>
-                </div>
+    <!-- Sidebar -->
+    <aside class="w-64 border-r border-white/5 bg-background-dark flex flex-col fixed inset-y-0 left-0 z-50">
+        <div class="p-6 flex flex-col h-full gap-8">
+            <div>
+                <h1 class="text-white text-base font-bold leading-tight font-display">OwlOps</h1>
+                <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="text-right hidden md:block">
-                    <p class="text-sm font-semibold"><?php echo htmlspecialchars($user['name']); ?></p>
-                    <p class="text-xs text-slate-400"><?php echo htmlspecialchars($user['email']); ?></p>
+            <nav class="flex flex-col gap-2 flex-1">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Systems</p>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="dashboard.php">
+                    <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                    <p class="text-sm font-medium">Control Center</p>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="manage_admins.php">
+                    <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                    <p class="text-sm font-medium">Manage Admins</p>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="backup.php">
+                    <span class="material-symbols-outlined text-[20px]">backup</span>
+                    <p class="text-sm font-medium">Backup &amp; Restore</p>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="audit-log.php">
+                    <span class="material-symbols-outlined text-[20px]">manage_search</span>
+                    <p class="text-sm font-medium">Audit Log</p>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="reports.php">
+                    <span class="material-symbols-outlined text-[20px]">assessment</span>
+                    <p class="text-sm font-medium">System Report</p>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-white border border-white/10" href="mfa-settings.php">
+                    <span class="material-symbols-outlined text-[20px] text-primary">phonelink_lock</span>
+                    <p class="text-sm font-medium">MFA Settings</p>
+                </a>
+            </nav>
+            <div class="pt-6 border-t border-white/5">
+                <div class="flex items-center gap-3 px-3 py-2">
+                    <div class="size-8 rounded-full bg-primary flex items-center justify-center text-black font-bold text-xs">
+                        <?php echo strtoupper(substr($user['name'], 0, 1)); ?>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-white text-xs font-bold truncate"><?php echo htmlspecialchars($user['name']); ?></p>
+                        <p class="text-slate-500 text-[10px] truncate">Super Admin</p>
+                    </div>
                 </div>
-                <div class="size-10 rounded-full bg-primary flex items-center justify-center font-bold text-sm text-black">
-                    <?php echo strtoupper(substr($user['name'], 0, 2)); ?>
-                </div>
+                <button onclick="logout()" class="w-full mt-4 flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <p class="text-sm font-medium">Sign Out</p>
+                </button>
             </div>
         </div>
-    </header>
+    </aside>
 
     <!-- Main Content -->
-    <main class="relative z-10 max-w-4xl mx-auto px-6 py-12 lg:px-12">
+    <main class="flex-1 ml-64 p-12 relative overflow-x-hidden">
+        <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+            <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
+            <div class="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]"></div>
+        </div>
+
+        <div class="relative z-10 max-w-4xl mx-auto space-y-8">
+
+        <!-- Header -->
+        <header>
+            <h2 class="text-4xl font-bold text-white font-display">MFA Settings</h2>
+            <p class="text-slate-400 mt-2">Manage two-factor authentication for your super admin account.</p>
+        </header>
 
         <!-- Status Card -->
         <div class="mb-8 rounded-2xl border <?php echo $mfaEnabled ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/10 bg-white/5'; ?> p-6 lg:p-8">
@@ -258,9 +288,16 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
                 <div id="mfaError" class="hidden mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm"></div>
             <?php endif; ?>
         </div>
+
+        </div><!-- end z-10 wrapper -->
     </main>
 
     <script>
+        async function logout() {
+            await fetch('../StegaVault/api/super_admin_auth.php?action=logout', { method: 'POST' });
+            window.location.href = 'login.php';
+        }
+
         async function generateQRCode() {
             const btn = document.getElementById('generateBtnText');
             const errorDiv = document.getElementById('mfaError');

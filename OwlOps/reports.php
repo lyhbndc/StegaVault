@@ -19,6 +19,16 @@ $user = [
     'email'=> $_SESSION['email'],
 ];
 
+$period      = in_array($_GET['period'] ?? '', ['daily', 'weekly', 'monthly']) ? $_GET['period'] : 'all';
+$periodLabel = match($period) {
+    'daily'   => 'Daily Report (Last 24 Hours)',
+    'weekly'  => 'Weekly Report (Last 7 Days)',
+    'monthly' => 'Monthly Report (Last 30 Days)',
+    default   => 'All-Time Report'
+};
+$filterDays  = match($period) { 'daily' => 1, 'weekly' => 7, 'monthly' => 30, default => null };
+$auditDateSQL = $filterDays !== null ? "AND sal.created_at >= DATE_SUB(NOW(), INTERVAL {$filterDays} DAY)" : '';
+
 $generatedAt = date('F j, Y \a\t g:i A');
 
 // ── User Stats ────────────────────────────────────────────────────
@@ -66,7 +76,7 @@ $completedProjects = (int) $db->query("SELECT COUNT(*) FROM projects WHERE statu
 $auditStats = [];
 try {
     $auditResult = $db->query(
-        "SELECT category, COUNT(*) as total FROM super_admin_audit_log GROUP BY category ORDER BY total DESC"
+        "SELECT category, COUNT(*) as total FROM super_admin_audit_log WHERE 1=1 {$auditDateSQL} GROUP BY category ORDER BY total DESC"
     );
     if ($auditResult) {
         while ($row = $auditResult->fetch_assoc()) $auditStats[] = $row;
@@ -83,6 +93,7 @@ try {
                 sa.name AS actor_name, sa.email AS actor_email
          FROM super_admin_audit_log sal
          LEFT JOIN super_admins sa ON sal.super_admin_id = sa.id
+         WHERE 1=1 {$auditDateSQL}
          ORDER BY sal.created_at DESC LIMIT 10"
     );
     if ($r) while ($row = $r->fetch_assoc()) $recentAudit[] = $row;
@@ -92,7 +103,7 @@ try {
 $backups = [];
 $totalBackups = 0;
 $lastBackup = null;
-$backupMetaPath = __DIR__ . '/../StegaVault/backups/backups_meta.json';
+$backupMetaPath = '/opt/backups/backups_meta.json';
 if (file_exists($backupMetaPath)) {
     $backups = json_decode(file_get_contents($backupMetaPath), true) ?? [];
     $totalBackups = count($backups);
@@ -111,6 +122,8 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
     <title>System Report - OwlOps</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -219,18 +232,35 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                         Full platform snapshot across users, files, projects, backups, and audit activity.
                     </p>
                     <p class="text-[10px] text-slate-600 font-mono mt-1 uppercase tracking-widest">
-                        Generated <?php echo $generatedAt; ?>
+                        <?php echo $periodLabel; ?> &mdash; Generated <?php echo $generatedAt; ?>
                     </p>
                 </div>
                 <div class="flex items-center gap-3 no-print">
                     <button onclick="window.location.reload()" class="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-slate-400 hover:text-white text-sm font-medium transition-colors">
                         <span class="material-symbols-outlined text-base">refresh</span> Refresh
                     </button>
+                    <button id="downloadPdfBtn" onclick="generatePDF()" class="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-slate-400 hover:text-white text-sm font-medium transition-colors">
+                        <span class="material-symbols-outlined text-base">download</span> Download PDF
+                    </button>
                     <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 bg-primary text-black rounded-xl text-sm font-bold transition-colors hover:bg-primary/80">
                         <span class="material-symbols-outlined text-base">print</span> Print Report
                     </button>
                 </div>
             </header>
+
+            <!-- Period Filter Tabs -->
+            <div class="flex items-center gap-2 no-print">
+                <?php
+                $tabs = ['all' => 'All Time', 'daily' => 'Daily', 'weekly' => 'Weekly', 'monthly' => 'Monthly'];
+                foreach ($tabs as $key => $label):
+                    $isActive = $period === $key;
+                ?>
+                <a href="?period=<?php echo $key; ?>"
+                   class="px-4 py-2 rounded-xl text-sm font-bold transition-colors <?php echo $isActive ? 'bg-primary/10 text-white border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/5'; ?>">
+                    <?php echo $label; ?>
+                </a>
+                <?php endforeach; ?>
+            </div>
 
             <!-- ── KPI Cards ───────────────────────────────────────── -->
             <section>
@@ -736,6 +766,186 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
         async function logout() {
             await fetch('../StegaVault/api/super_admin_auth.php?action=logout', { method: 'POST' });
             window.location.href = 'login.php';
+        }
+
+        async function generatePDF() {
+            const btn = document.getElementById('downloadPdfBtn');
+            btn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">progress_activity</span> Generating...';
+            btn.disabled = true;
+
+            await new Promise(r => setTimeout(r, 300));
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('l', 'mm', 'a4');
+                const pW  = doc.internal.pageSize.getWidth();
+                const pH  = doc.internal.pageSize.getHeight();
+                const lm  = 14, rm = 14;
+                const cW  = pW - lm - rm;
+
+                const PERIOD_LABEL = '<?php echo addslashes($periodLabel); ?>';
+                const GEN_AT       = '<?php echo $generatedAt; ?>';
+                const DOC_ID       = 'OWL-REP-<?php echo date('Ymd-Hi'); ?>';
+
+                const C = {
+                    primary: [255, 255, 255], dark: [10, 10, 10], navy: [20, 20, 30],
+                    slate: [71, 85, 105], muted: [148, 163, 184], border: [50, 60, 80],
+                    bg: [20, 22, 28], bg2: [26, 31, 46], white: [255, 255, 255],
+                    emerald: [16, 185, 129], purple: [139, 92, 246], blue: [59, 130, 246],
+                    rose: [244, 63, 94], yellow: [234, 179, 8],
+                };
+
+                function drawHeader(subtitle) {
+                    doc.setFillColor(...C.dark);
+                    doc.rect(0, 0, pW, 20, 'F');
+                    doc.setFillColor(80, 80, 80);
+                    doc.rect(0, 20, pW, 1.5, 'F');
+                    doc.setFontSize(12); doc.setFont(undefined, 'bold');
+                    doc.setTextColor(...C.white);
+                    doc.text('OwlOps', lm, 10);
+                    doc.setFontSize(6.5); doc.setFont(undefined, 'normal');
+                    doc.setTextColor(...C.muted);
+                    doc.text('STEGAVAULT SUPER ADMIN SYSTEM', lm, 16);
+                    doc.setFontSize(10); doc.setFont(undefined, 'bold');
+                    doc.setTextColor(220, 220, 255);
+                    doc.text(subtitle, pW / 2, 10, { align: 'center' });
+                    doc.setFontSize(7); doc.setFont(undefined, 'normal');
+                    doc.setTextColor(160, 160, 200);
+                    doc.text(PERIOD_LABEL, pW / 2, 16.5, { align: 'center' });
+                    doc.setFontSize(6.5); doc.setTextColor(...C.muted);
+                    doc.text(DOC_ID, pW - rm, 9, { align: 'right' });
+                    doc.text(GEN_AT, pW - rm, 15.5, { align: 'right' });
+                }
+
+                function drawFooter(num, total) {
+                    doc.setFillColor(15, 15, 20);
+                    doc.rect(0, pH - 9, pW, 9, 'F');
+                    doc.setFontSize(6.5); doc.setFont(undefined, 'normal');
+                    doc.setTextColor(...C.muted);
+                    doc.text('OwlOps Super Admin Report  ·  ' + DOC_ID + '  ·  CONFIDENTIAL', lm, pH - 3.5);
+                    doc.text('Page ' + num + ' of ' + total, pW - rm, pH - 3.5, { align: 'right' });
+                }
+
+                function drawSection(label, y) {
+                    doc.setFillColor(30, 32, 45);
+                    doc.rect(lm, y, cW, 7.5, 'F');
+                    doc.setFillColor(100, 100, 120);
+                    doc.rect(lm, y, 3.5, 7.5, 'F');
+                    doc.setFontSize(7.5); doc.setFont(undefined, 'bold');
+                    doc.setTextColor(200, 200, 220);
+                    doc.text(label.toUpperCase(), lm + 7, y + 5.2);
+                    return y + 12;
+                }
+
+                const tblStyles = {
+                    margin: { left: lm, right: rm },
+                    theme: 'grid',
+                    styles: { fontSize: 7.5, cellPadding: 2.8, textColor: [180, 190, 210], lineColor: [40, 50, 70], lineWidth: 0.15, fillColor: [18, 20, 28] },
+                    headStyles: { fillColor: [35, 40, 60], textColor: [200, 210, 240], fontStyle: 'bold', fontSize: 7.5, cellPadding: 3 },
+                    alternateRowStyles: { fillColor: [22, 25, 35] },
+                };
+
+                // ── Page 1: Overview ──
+                drawHeader('System Status & Audit Report');
+                let y = 26;
+
+                y = drawSection('Platform Overview', y);
+                doc.autoTable({
+                    ...tblStyles,
+                    startY: y,
+                    head: [['Metric', 'Value', 'Metric', 'Value']],
+                    body: [
+                        ['Total Users', '<?php echo number_format($totalUsers); ?>', 'Total Files', '<?php echo number_format($totalFiles); ?>'],
+                        ['Active Users', '<?php echo number_format($activeUsers); ?>', 'Storage Used', '<?php echo formatBytes($totalFileSize); ?>'],
+                        ['App Admins', '<?php echo number_format($adminCount); ?>', 'Watermarked', '<?php echo number_format($watermarkedFiles); ?>'],
+                        ['Super Admins', '<?php echo number_format($superAdminCount); ?>', 'Total Projects', '<?php echo number_format($totalProjects); ?>'],
+                        ['MFA Enabled', '<?php echo $mfaEnabledCount; ?> (<?php echo $totalUsers > 0 ? round($mfaEnabledCount / $totalUsers * 100) : 0; ?>%)', 'Audit Events', '<?php echo number_format($totalAuditEvents); ?>'],
+                        ['Pending Accounts', '<?php echo $pendingUsers; ?>', 'Total Backups', '<?php echo $totalBackups; ?>'],
+                    ],
+                });
+                y = doc.lastAutoTable.finalY + 8;
+
+                <?php if (!empty($recentAudit)): ?>
+                y = drawSection('Recent Audit Activity', y);
+                doc.autoTable({
+                    ...tblStyles,
+                    startY: y,
+                    head: [['Timestamp', 'Actor', 'Action', 'Category', 'IP Address']],
+                    body: [
+                        <?php
+                        $actionLabelsJS = [
+                            'login_success' => 'Login', 'login_failed' => 'Login Failed',
+                            'logout' => 'Logout', 'backup_db_created' => 'DB Backup',
+                            'backup_files_created' => 'Files Backup', 'backup_db_restored' => 'DB Restored',
+                            'backup_deleted' => 'Backup Deleted', 'super_admin_created' => 'Super Admin Created',
+                            'super_admin_deleted' => 'Super Admin Deleted', 'mfa_enabled' => 'MFA Enabled',
+                            'mfa_disabled' => 'MFA Disabled',
+                        ];
+                        foreach ($recentAudit as $ev):
+                            $label = $actionLabelsJS[$ev['action']] ?? ucwords(str_replace('_', ' ', $ev['action']));
+                        ?>
+                        ['<?php echo addslashes(date('M j H:i', strtotime($ev['created_at']))); ?>',
+                         '<?php echo addslashes($ev['actor_name'] ?? '—'); ?>',
+                         '<?php echo addslashes($label); ?>',
+                         '<?php echo ucfirst(addslashes($ev['category'])); ?>',
+                         '<?php echo addslashes($ev['ip_address'] ?? '—'); ?>'],
+                        <?php endforeach; ?>
+                    ],
+                });
+                y = doc.lastAutoTable.finalY + 8;
+                <?php endif; ?>
+
+                <?php if (!empty($backups)): ?>
+                if (y > pH - 50) { doc.addPage(); drawHeader('System Status & Audit Report'); y = 26; }
+                y = drawSection('Backup History', y);
+                doc.autoTable({
+                    ...tblStyles,
+                    startY: y,
+                    head: [['Backup ID', 'Type', 'Created By', 'Created At', 'Size']],
+                    body: [
+                        <?php foreach (array_slice($backups, 0, 10) as $bk): ?>
+                        ['<?php echo addslashes($bk['id'] ?? '—'); ?>',
+                         '<?php echo ucfirst(addslashes($bk['type'] ?? 'unknown')); ?>',
+                         '<?php echo addslashes($bk['created_by'] ?? '—'); ?>',
+                         '<?php echo addslashes($bk['created_at'] ?? '—'); ?>',
+                         '<?php echo isset($bk['size']) ? formatBytes((int)$bk['size']) : '—'; ?>'],
+                        <?php endforeach; ?>
+                    ],
+                });
+                <?php endif; ?>
+
+                <?php if (!empty($superAdmins)): ?>
+                doc.addPage(); drawHeader('System Status & Audit Report'); y = 26;
+                y = drawSection('Super Admin Accounts', y);
+                doc.autoTable({
+                    ...tblStyles,
+                    startY: y,
+                    head: [['Name', 'Email', 'Added']],
+                    body: [
+                        <?php foreach ($superAdmins as $sa): ?>
+                        ['<?php echo addslashes($sa['name']); ?>',
+                         '<?php echo addslashes($sa['email']); ?>',
+                         '<?php echo date('M j, Y', strtotime($sa['created_at'])); ?>'],
+                        <?php endforeach; ?>
+                    ],
+                });
+                <?php endif; ?>
+
+                // Add footers
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    drawFooter(i, pageCount);
+                }
+
+                doc.save('OwlOps-Report-<?php echo date('Ymd'); ?>.pdf');
+            } catch (err) {
+                console.error('PDF error:', err);
+                alert('Failed to generate PDF. Please try again.');
+            } finally {
+                btn.innerHTML = '<span class="material-symbols-outlined text-base">download</span> Download PDF';
+                btn.disabled = false;
+            }
         }
     </script>
     <script src="session-timeout.js"></script>
