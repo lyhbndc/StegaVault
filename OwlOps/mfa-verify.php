@@ -13,7 +13,7 @@ if (!isset($_SESSION['pending_mfa_user_id']) || !isset($_SESSION['pending_mfa_po
 }
 ?>
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 
 <head>
     <meta charset="utf-8" />
@@ -24,19 +24,18 @@ if (!isset($_SESSION['pending_mfa_user_id']) || !isset($_SESSION['pending_mfa_po
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <script>
         tailwind.config = {
-            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#ffffff",
-                        "background-dark": "#000000",
-                        "slate-card": "#111111",
+                        "primary": "#2563eb",
+                        "background-light": "#ffffff",
+                        "slate-card": "#f8fafc",
                     },
                     fontFamily: {
                         "display": ["Space Grotesk", "sans-serif"]
                     },
                     boxShadow: {
-                        'glow': '0 0 15px -3px rgba(255, 255, 255, 0.3)',
+                        'glow': '0 0 15px -3px rgba(37, 99, 235, 0.2)',
                     }
                 },
             },
@@ -48,27 +47,27 @@ if (!isset($_SESSION['pending_mfa_user_id']) || !isset($_SESSION['pending_mfa_po
         }
 
         .bg-grid-pattern {
-            background-image: radial-gradient(#ffffff 0.5px, transparent 0.5px);
+            background-image: radial-gradient(#cbd5e1 0.5px, transparent 0.5px);
             background-size: 24px 24px;
         }
     </style>
 </head>
 
-<body class="bg-background-dark min-h-screen flex flex-col font-display">
+<body class="bg-background-light min-h-screen flex flex-col font-display text-slate-900">
     <!-- Background Effects -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden">
-        <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
-        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]"></div>
+        <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/3 rounded-full blur-[120px]"></div>
     </div>
 
     <!-- Header -->
-    <header class="relative z-10 w-full px-6 py-6 lg:px-12 flex items-center justify-between border-b border-white/5 bg-background-dark/50 backdrop-blur-md">
+    <header class="relative z-10 w-full px-6 py-6 lg:px-12 flex items-center justify-between border-b border-slate-200 bg-background-light/50 backdrop-blur-md">
         <div class="flex items-center gap-3">
             <div class="bg-primary p-2 rounded-lg shadow-glow">
-                <span class="material-symbols-outlined text-black text-2xl">local_police</span>
+                <span class="material-symbols-outlined text-white text-2xl">local_police</span>
             </div>
-            <h2 class="text-white text-xl font-bold tracking-tight">OwlOps <span class="text-white/80 font-medium">Super Admin</span></h2>
+            <h2 class="text-slate-900 text-xl font-bold tracking-tight">OwlOps <span class="text-slate-600 font-medium">Super Admin</span></h2>
         </div>
     </header>
 
@@ -79,25 +78,25 @@ if (!isset($_SESSION['pending_mfa_user_id']) || !isset($_SESSION['pending_mfa_po
                 <div class="inline-flex items-center justify-center size-16 bg-primary/10 rounded-full mb-4 ring-4 ring-primary/10">
                     <span class="material-symbols-outlined text-3xl text-primary">phonelink_lock</span>
                 </div>
-                <h1 class="text-white text-3xl font-bold tracking-tight mb-2">Two-Factor Auth</h1>
-                <p class="text-slate-400 text-sm">Enter the 6-digit code from your Authenticator app, or a recovery code.</p>
+                <h1 class="text-slate-900 text-3xl font-bold tracking-tight mb-2">Two-Factor Auth</h1>
+                <p class="text-slate-600 text-sm">Enter the 6-digit code from your Authenticator app, or a recovery code.</p>
             </div>
 
-            <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl">
-                <div id="errorMsg" style="display: none;" class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm text-center"></div>
+            <div class="bg-white backdrop-blur-xl border border-slate-200 p-8 rounded-2xl shadow-lg">
+                <div id="errorMsg" style="display: none;" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-center"></div>
 
                 <form id="mfaForm" class="space-y-6">
                     <div class="space-y-2">
-                        <label class="block text-white text-sm font-medium text-center">Verification Code</label>
+                        <label class="block text-slate-900 text-sm font-medium text-center">Verification Code</label>
                         <input type="text" id="mfaCode" name="code" required autofocus autocomplete="one-time-code"
                             maxlength="20"
-                            class="w-full text-center tracking-[0.4em] text-2xl py-4 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
+                            class="w-full text-center tracking-[0.4em] text-2xl py-4 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none"
                             placeholder="000000" />
                         <p class="text-center text-xs text-slate-500">6-digit TOTP code or XXXX-XXXX recovery code</p>
                     </div>
 
                     <button id="submitBtn" type="submit"
-                        class="w-full py-4 bg-primary hover:bg-white/90 text-black rounded-xl font-bold text-base transition-all shadow-glow flex items-center justify-center gap-2 group">
+                        class="w-full py-4 bg-primary hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-all shadow-glow flex items-center justify-center gap-2 group">
                         <span id="submitText">Verify Identity</span>
                         <span class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">verified_user</span>
                     </button>

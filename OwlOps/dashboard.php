@@ -102,7 +102,7 @@ $actionMeta = [
 
 ?>
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 
 <head>
     <meta charset="utf-8" />
@@ -114,14 +114,13 @@ $actionMeta = [
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script>
         tailwind.config = {
-            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#ffffff",
-                        "primary-hover": "#e2e8f0",
-                        "background-dark": "#000000",
-                        "slate-card": "#111111",
+                        "primary": "#2563eb",
+                        "primary-hover": "#1e40af",
+                        "background-light": "#ffffff",
+                        "card-light": "#f8fafc",
                     },
                     fontFamily: {
                         "display": ["Space Grotesk", "sans-serif"],
@@ -132,31 +131,31 @@ $actionMeta = [
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #000000; }
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
         h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Space Grotesk', sans-serif; }
         .bg-grid-pattern {
-            background-image: radial-gradient(#ffffff 0.1px, transparent 0.1px);
+            background-image: radial-gradient(#cbd5e1 0.1px, transparent 0.1px);
             background-size: 40px 40px;
         }
     </style>
 </head>
 
-<body class="text-slate-200 min-h-screen flex flex-col relative">
+<body class="text-slate-900 min-h-screen flex flex-col relative">
 
     <!-- Background Decor -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
+        <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
         <div class="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[140px]"></div>
     </div>
 
     <!-- Header -->
-    <header class="relative z-10 w-full px-8 py-6 flex items-center justify-between border-b border-white/5 bg-background-dark/80 backdrop-blur-md sticky top-0">
+    <header class="relative z-10 w-full px-8 py-6 flex items-center justify-between border-b border-slate-200 bg-background-light/80 backdrop-blur-md sticky top-0">
         <div class="flex items-center gap-4">
-            <div class="bg-primary p-2.5 rounded-2xl shadow-lg shadow-white/10">
-                <span class="material-symbols-outlined text-black text-2xl">security</span>
+            <div class="bg-primary p-2.5 rounded-2xl shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined text-white text-2xl">security</span>
             </div>
             <div>
-                <h2 class="text-white text-2xl font-bold tracking-tight font-display">OwlOps</h2>
+                <h2 class="text-slate-900 text-2xl font-bold tracking-tight font-display">OwlOps</h2>
                 <div class="flex items-center gap-2">
                     <span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                     <p class="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Global Control Node</p>
@@ -165,18 +164,18 @@ $actionMeta = [
         </div>
 
         <div class="flex items-center gap-8">
-            <div class="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl px-5 py-2.5">
-                <div class="size-8 rounded-full bg-gradient-to-br from-primary to-slate-400 flex items-center justify-center text-black font-bold text-xs">
+            <div class="flex items-center gap-4 bg-slate-100 border border-slate-200 rounded-2xl px-5 py-2.5">
+                <div class="size-8 rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center text-white font-bold text-xs">
                     <?php echo strtoupper(substr($user['name'], 0, 1)); ?>
                 </div>
                 <div class="hidden md:block">
-                    <p class="text-sm font-bold text-white"><?php echo htmlspecialchars($user['name']); ?></p>
+                    <p class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars($user['name']); ?></p>
                     <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Root Authority</p>
                 </div>
-                <div class="h-6 w-px bg-white/10 mx-1"></div>
-                <a href="mfa-settings.php" title="MFA Settings" class="material-symbols-outlined text-slate-400 hover:text-primary transition-colors text-[20px]">phonelink_lock</a>
-                <div class="h-6 w-px bg-white/10 mx-1"></div>
-                <button onclick="logout()" class="material-symbols-outlined text-slate-400 hover:text-red-400 transition-colors text-[20px]">logout</button>
+                <div class="h-6 w-px bg-slate-200 mx-1"></div>
+                <a href="mfa-settings.php" title="MFA Settings" class="material-symbols-outlined text-slate-500 hover:text-primary transition-colors text-[20px]">phonelink_lock</a>
+                <div class="h-6 w-px bg-slate-200 mx-1"></div>
+                <button onclick="logout()" class="material-symbols-outlined text-slate-500 hover:text-red-500 transition-colors text-[20px]">logout</button>
             </div>
         </div>
     </header>

@@ -2,7 +2,7 @@
 session_start();
 ?>
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 
 <head>
     <meta charset="utf-8" />
@@ -14,14 +14,13 @@ session_start();
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script>
         tailwind.config = {
-            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#ffffff",
-                        "primary-hover": "#e2e8f0",
-                        "background-dark": "#000000",
-                        "slate-card": "#111111",
+                        "primary": "#2563eb",
+                        "primary-hover": "#1e40af",
+                        "background-light": "#ffffff",
+                        "card-light": "#f8fafc",
                     },
                     fontFamily: {
                         "display": ["Space Grotesk", "sans-serif"],
@@ -32,58 +31,58 @@ session_start();
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #000000; }
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
         h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Space Grotesk', sans-serif; }
         .bg-grid-pattern {
-            background-image: radial-gradient(#ffffff 0.1px, transparent 0.1px);
+            background-image: radial-gradient(#cbd5e1 0.1px, transparent 0.1px);
             background-size: 40px 40px;
         }
     </style>
 </head>
 
-<body class="text-slate-200 min-h-screen flex flex-col relative">
+<body class="text-slate-900 min-h-screen flex flex-col relative">
 
     <!-- Background Decor -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
+        <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
         <div class="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[140px]"></div>
     </div>
 
     <!-- Header -->
-    <header class="relative z-10 w-full px-8 py-6 flex items-center justify-between border-b border-white/5 bg-background-dark/80 backdrop-blur-md">
+    <header class="relative z-10 w-full px-8 py-6 flex items-center justify-between border-b border-slate-200 bg-background-light/80 backdrop-blur-md">
         <div class="flex items-center gap-4">
-            <div class="bg-primary p-2.5 rounded-2xl shadow-lg shadow-white/10">
-                <span class="material-symbols-outlined text-black text-2xl">policy</span>
+            <div class="bg-primary p-2.5 rounded-2xl shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined text-white text-2xl">policy</span>
             </div>
             <div>
-                <h2 class="text-white text-2xl font-bold tracking-tight font-display">OwlOps</h2>
+                <h2 class="text-slate-900 text-2xl font-bold tracking-tight font-display">OwlOps</h2>
                 <div class="flex items-center gap-2">
                     <span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                     <p class="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Global Control Node</p>
                 </div>
             </div>
         </div>
-        <a href="javascript:history.back()" class="text-sm text-slate-400 hover:text-primary transition-colors">← Back</a>
+        <a href="javascript:history.back()" class="text-sm text-slate-600 hover:text-primary transition-colors">← Back</a>
     </header>
 
     <!-- Content -->
     <main class="relative z-10 flex-1 max-w-4xl w-full mx-auto px-8 py-16">
 
-        <div class="bg-slate-card border border-white/5 rounded-[2.5rem] p-12 backdrop-blur-xl shadow-2xl">
+        <div class="bg-card-light border border-slate-200 rounded-[2.5rem] p-12 backdrop-blur-xl shadow-lg">
 
             <div class="text-center mb-12">
                 <h1 class="text-4xl font-bold mb-4 text-primary font-display">OwlOps Terms of Service</h1>
-                <p class="text-slate-400 text-sm">
+                <p class="text-slate-600 text-sm">
                     Effective Date: [Insert Date] <br>
                     Peanut Gallery Media Network — OwlOps System
                 </p>
             </div>
 
-            <div class="space-y-10 text-sm text-slate-300 leading-relaxed font-body">
+            <div class="space-y-10 text-sm text-slate-700 leading-relaxed font-body">
 
                 <!-- 1 -->
                 <section>
-                    <h2 class="text-white font-semibold mb-4 text-lg">1. Agreement to Terms</h2>
+                    <h2 class="text-slate-900 font-semibold mb-4 text-lg">1. Agreement to Terms</h2>
                     <p>
                         By accessing or using OwlOps, you agree to be bound by these Terms of Service.
                         If you do not agree, you must discontinue use of the system immediately.
@@ -221,7 +220,7 @@ session_start();
 
             </div>
 
-            <div class="mt-16 text-xs text-slate-500 border-t border-white/10 pt-6 text-center">
+            <div class="mt-16 text-xs text-slate-500 border-t border-slate-200 pt-6 text-center">
                 © OwlOps Systems — All Rights Reserved
             </div>
 

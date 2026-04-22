@@ -27,7 +27,7 @@ $user = $stmt->get_result()->fetch_assoc();
 $mfaEnabled = $user['is_mfa_enabled'] ?? false;
 ?>
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 
 <head>
     <meta charset="utf-8" />
@@ -39,81 +39,80 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script>
         tailwind.config = {
-            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#ffffff",
-                        "background-dark": "#000000",
-                        "slate-card": "#111111",
+                        "primary": "#2563eb",
+                        "background-light": "#ffffff",
+                        "slate-card": "#f8fafc",
                     },
                     fontFamily: {
                         "display": ["Space Grotesk", "sans-serif"]
                     },
                     boxShadow: {
-                        'glow': '0 0 15px -3px rgba(255, 255, 255, 0.3)',
+                        'glow': '0 0 15px -3px rgba(37, 99, 235, 0.2)',
                     }
                 },
             },
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #000000; }
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
         h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Space Grotesk', sans-serif; }
         .bg-grid-pattern {
-            background-image: radial-gradient(#ffffff 0.1px, transparent 0.1px);
+            background-image: radial-gradient(#cbd5e1 0.1px, transparent 0.1px);
             background-size: 30px 30px;
         }
     </style>
 </head>
 
-<body class="text-slate-200 min-h-screen flex">
+<body class="text-slate-900 min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside class="w-64 border-r border-white/5 bg-background-dark flex flex-col fixed inset-y-0 left-0 z-50">
+    <aside class="w-64 border-r border-slate-200 bg-background-light flex flex-col fixed inset-y-0 left-0 z-50">
         <div class="p-6 flex flex-col h-full gap-8">
             <div>
-                <h1 class="text-white text-base font-bold leading-tight font-display">OwlOps</h1>
+                <h1 class="text-slate-900 text-base font-bold leading-tight font-display">OwlOps</h1>
                 <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
             </div>
             <nav class="flex flex-col gap-2 flex-1">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Systems</p>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="dashboard.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:text-primary hover:bg-primary/5 transition-colors" href="dashboard.php">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
                     <p class="text-sm font-medium">Control Center</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="manage_admins.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:text-primary hover:bg-primary/5 transition-colors" href="manage_admins.php">
                     <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
                     <p class="text-sm font-medium">Manage Admins</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="backup.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:text-primary hover:bg-primary/5 transition-colors" href="backup.php">
                     <span class="material-symbols-outlined text-[20px]">backup</span>
                     <p class="text-sm font-medium">Backup &amp; Restore</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="audit-log.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:text-primary hover:bg-primary/5 transition-colors" href="audit-log.php">
                     <span class="material-symbols-outlined text-[20px]">manage_search</span>
                     <p class="text-sm font-medium">Audit Log</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="reports.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:text-primary hover:bg-primary/5 transition-colors" href="reports.php">
                     <span class="material-symbols-outlined text-[20px]">assessment</span>
                     <p class="text-sm font-medium">System Report</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-white border border-white/10" href="mfa-settings.php">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20" href="mfa-settings.php">
                     <span class="material-symbols-outlined text-[20px] text-primary">phonelink_lock</span>
                     <p class="text-sm font-medium">MFA Settings</p>
                 </a>
             </nav>
-            <div class="pt-6 border-t border-white/5">
+            <div class="pt-6 border-t border-slate-200">
                 <div class="flex items-center gap-3 px-3 py-2">
-                    <div class="size-8 rounded-full bg-primary flex items-center justify-center text-black font-bold text-xs">
+                    <div class="size-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs">
                         <?php echo strtoupper(substr($user['name'], 0, 1)); ?>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-white text-xs font-bold truncate"><?php echo htmlspecialchars($user['name']); ?></p>
+                        <p class="text-slate-900 text-xs font-bold truncate"><?php echo htmlspecialchars($user['name']); ?></p>
                         <p class="text-slate-500 text-[10px] truncate">Super Admin</p>
                     </div>
                 </div>
-                <button onclick="logout()" class="w-full mt-4 flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors">
+                <button onclick="logout()" class="w-full mt-4 flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
                     <span class="material-symbols-outlined text-[20px]">logout</span>
                     <p class="text-sm font-medium">Sign Out</p>
                 </button>

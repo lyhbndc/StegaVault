@@ -22,30 +22,29 @@ if (isset($_SESSION['user_id'])) {
 }
 ?>
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Super Admin Login - StegaVault</title>
+    <title>Super Admin Login - OwlOps</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <script>
         tailwind.config = {
-            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#ffffff",
-                        "background-dark": "#000000",
-                        "slate-card": "#111111",
+                        "primary": "#2563eb",
+                        "background-light": "#ffffff",
+                        "card-light": "#f8fafc",
                     },
                     fontFamily: {
                         "display": ["Space Grotesk", "sans-serif"]
                     },
                     boxShadow: {
-                        'glow': '0 0 15px -3px rgba(255, 255, 255, 0.3)',
+                        'glow': '0 0 15px -3px rgba(37, 99, 235, 0.2)',
                     }
                 },
             },
@@ -57,25 +56,25 @@ if (isset($_SESSION['user_id'])) {
         }
 
         .bg-grid-pattern {
-            background-image: radial-gradient(#ffffff 0.5px, transparent 0.5px);
+            background-image: radial-gradient(#cbd5e1 0.5px, transparent 0.5px);
             background-size: 24px 24px;
         }
     </style>
 </head>
 
-<body class="bg-background-dark min-h-screen flex flex-col font-display">
+<body class="bg-background-light min-h-screen flex flex-col font-display text-slate-900">
     <div class="fixed inset-0 pointer-events-none overflow-hidden">
-        <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
-        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]"></div>
+        <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/3 rounded-full blur-[120px]"></div>
     </div>
 
-    <header class="relative z-10 w-full px-6 py-6 lg:px-12 flex items-center justify-between border-b border-white/5 bg-background-dark/50 backdrop-blur-md">
+    <header class="relative z-10 w-full px-6 py-6 lg:px-12 flex items-center justify-between border-b border-slate-200 bg-background-light/50 backdrop-blur-md">
         <div class="flex items-center gap-3">
             <div class="bg-primary p-2 rounded-lg shadow-glow">
-                <span class="material-symbols-outlined text-black text-2xl">local_police</span>
+                <span class="material-symbols-outlined text-white text-2xl">local_police</span>
             </div>
-            <h2 class="text-white text-xl font-bold tracking-tight">OwlOps <span class="text-white/80 font-medium">Super Admin</span></h2>
+            <h2 class="text-slate-900 text-xl font-bold tracking-tight">OwlOps <span class="text-slate-600 font-medium">Super Admin</span></h2>
         </div>
         <div class="flex items-center gap-4">
             <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
@@ -92,10 +91,10 @@ if (isset($_SESSION['user_id'])) {
         <div class="w-full max-w-[440px]">
             <div class="mb-8 relative group">
                 <div class="absolute -inset-1 bg-gradient-to-r from-primary to-gray-400 rounded-xl blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
-                <div class="relative w-full h-32 rounded-xl overflow-hidden border border-white/10 bg-slate-card">
-                    <div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-gray-500/10"></div>
+                <div class="relative w-full h-32 rounded-xl overflow-hidden border border-slate-200 bg-card-light">
+                    <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/5"></div>
                     <div class="absolute inset-0 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-6xl text-primary/30">globe</span>
+                        <span class="material-symbols-outlined text-6xl text-primary/20">globe</span>
                     </div>
                     <div class="absolute bottom-4 left-4">
                         <span class="text-[10px] text-primary font-bold uppercase tracking-widest px-2 py-0.5 bg-primary/10 border border-primary/20 rounded">Super Admin</span>
@@ -104,39 +103,39 @@ if (isset($_SESSION['user_id'])) {
             </div>
 
             <?php if (($_GET['reason'] ?? '') === 'timeout'): ?>
-            <div class="mb-6 flex items-center gap-3 px-4 py-3 bg-orange-500/10 border border-orange-500/30 text-orange-300 rounded-xl text-sm">
-                <span class="material-symbols-outlined text-orange-400 text-base flex-shrink-0">timer_off</span>
+            <div class="mb-6 flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 text-orange-700 rounded-xl text-sm">
+                <span class="material-symbols-outlined text-orange-600 text-base flex-shrink-0">timer_off</span>
                 <span>Your session expired due to inactivity. Please sign in again.</span>
             </div>
             <?php endif; ?>
 
             <div class="text-center mb-10">
-                <h1 class="text-white text-3xl font-bold tracking-tight mb-2">Super Admin Access</h1>
-                <p class="text-slate-400 text-sm">System level administration only</p>
+                <h1 class="text-slate-900 text-3xl font-bold tracking-tight mb-2">Super Admin Access</h1>
+                <p class="text-slate-600 text-sm">System level administration only</p>
             </div>
 
-            <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl">
-                <div id="errorMsg" style="display: none;" class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm"></div>
+            <div class="bg-white backdrop-blur-xl border border-slate-200 p-8 rounded-2xl shadow-lg">
+                <div id="errorMsg" style="display: none;" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
 
                 <form id="authForm" class="space-y-6">
                     <div class="space-y-2">
-                        <label class="block text-white text-sm font-medium">Super Admin Email</label>
+                        <label class="block text-slate-900 text-sm font-medium">Super Admin Email</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">alternate_email</span>
-                            <input id="email" required class="w-full pl-12 pr-4 py-4 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="superadmin@stegavault.com" type="email" />
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl">alternate_email</span>
+                            <input id="email" required class="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="superadmin@owlops.com" type="email" />
                         </div>
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-white text-sm font-medium">Master Password</label>
+                        <label class="block text-slate-900 text-sm font-medium">Master Password</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">key</span>
-                            <input id="password" required class="w-full pl-12 pr-12 py-4 rounded-xl bg-[#1b1f27] border border-[#3b4354] text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="••••••••••••" type="password" />
-                            <button type="button" onclick="togglePassword(event)" class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors">visibility_off</button>
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl">key</span>
+                            <input id="password" required class="w-full pl-12 pr-12 py-4 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none" placeholder="••••••••••••" type="password" />
+                            <button type="button" onclick="togglePassword(event)" class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 transition-colors">visibility_off</button>
                         </div>
                     </div>
 
-                    <button id="submitBtn" class="w-full py-4 bg-primary hover:bg-white/90 text-black rounded-xl font-bold text-base transition-all shadow-glow flex items-center justify-center gap-2 group" type="submit">
+                    <button id="submitBtn" class="w-full py-4 bg-primary hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-all shadow-glow flex items-center justify-center gap-2 group" type="submit">
                         <span id="submitText">Access Global Dashboard</span>
                         <span class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">rocket_launch</span>
                     </button>
@@ -145,11 +144,11 @@ if (isset($_SESSION['user_id'])) {
         </div>
     </main>
 
-    <footer class="relative z-10 w-full px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-white/5 text-[12px] text-slate-500">
+    <footer class="relative z-10 w-full px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-slate-200 text-[12px] text-slate-600">
         <p>© <?php echo date('Y'); ?> OwlOps. Global Administration System.</p>
         <div class="flex items-center gap-6">
-            <a href="privacy-policy.php" target="_blank" class="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="terms-of-service.php" target="_blank" class="hover:text-white transition-colors">Terms of Service</a>
+            <a href="privacy-policy.php" target="_blank" class="hover:text-primary transition-colors">Privacy Policy</a>
+            <a href="terms-of-service.php" target="_blank" class="hover:text-primary transition-colors">Terms of Service</a>
         </div>
     </footer>
 
