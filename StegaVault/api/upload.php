@@ -256,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fileSize = filesize($encPath);
     $relativePath = 'uploads/encrypted/' . $encFilename;
 
-    $requireWatermark = 1;
+    $requireWatermark = (isset($_POST['require_watermark']) && $_POST['require_watermark'] === '1') ? 1 : 0;
 
     $stmt = $db->prepare("
         INSERT INTO files 
