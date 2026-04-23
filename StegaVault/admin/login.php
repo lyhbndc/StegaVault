@@ -62,6 +62,28 @@ if (isset($_SESSION['user_id'])) {
             background-image: radial-gradient(#667eea 0.5px, transparent 0.5px);
             background-size: 24px 24px;
         }
+
+        /* Light mode overrides */
+        html:not(.dark) body                          { background-color: #f1f5f9 !important; }
+        html:not(.dark) .bg-background-dark           { background-color: #f1f5f9 !important; }
+        html:not(.dark) header                        { background-color: rgba(255,255,255,0.85) !important; border-color: rgba(0,0,0,0.08) !important; }
+        html:not(.dark) footer                        { background-color: rgba(255,255,255,0.6) !important; border-color: rgba(0,0,0,0.08) !important; }
+        html:not(.dark) .bg-white\/5                  { background-color: #ffffff !important; border-color: rgba(0,0,0,0.1) !important; box-shadow: 0 4px 24px rgba(0,0,0,0.06) !important; }
+        html:not(.dark) .bg-white\/10                 { background-color: rgba(0,0,0,0.05) !important; }
+        html:not(.dark) .border-white\/5              { border-color: rgba(0,0,0,0.08) !important; }
+        html:not(.dark) .border-white\/10             { border-color: rgba(0,0,0,0.1) !important; }
+        html:not(.dark) .text-white                   { color: #1e293b !important; }
+        html:not(.dark) .text-slate-400               { color: #64748b !important; }
+        html:not(.dark) .text-slate-500               { color: #94a3b8 !important; }
+        html:not(.dark) .bg-slate-card                { background-color: #e2e8f0 !important; }
+        html:not(.dark) .bg-\[#1b1f27\]              { background-color: #f8fafc !important; }
+        html:not(.dark) .border-\[#3b4354\]           { border-color: #cbd5e1 !important; }
+        html:not(.dark) input                         { color: #1e293b !important; }
+        html:not(.dark) input::placeholder            { color: #94a3b8 !important; }
+        html:not(.dark) .bg-background-dark\/50       { background-color: rgba(241,245,249,0.85) !important; }
+
+        /* Theme toggle button */
+        #themeToggle { transition: background 0.2s, color 0.2s; }
     </style>
 </head>
 
@@ -83,7 +105,7 @@ if (isset($_SESSION['user_id'])) {
             <h2 class="text-white text-xl font-bold tracking-tight">Peanut Gallery Media <span
                     class="text-primary/80 font-medium">Inc.</span></h2>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
             <div
                 class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                 <span class="relative flex h-2 w-2">
@@ -93,6 +115,11 @@ if (isset($_SESSION['user_id'])) {
                 </span>
                 <span class="text-[10px] uppercase tracking-widest font-bold text-emerald-500">Systems Nominal</span>
             </div>
+            <!-- Light / Dark toggle -->
+            <button id="themeToggle" onclick="toggleTheme()"
+                class="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10">
+                <span id="themeIcon" class="material-symbols-outlined text-[18px]">light_mode</span>
+            </button>
         </div>
     </header>
 
@@ -445,6 +472,66 @@ if (isset($_SESSION['user_id'])) {
                 strengthColors[passed - 1 < 0 ? 0 : passed - 1];
             if (passed === 0) bar.className = 'h-full rounded-full transition-all duration-300 w-0 bg-red-500';
         }
+        // ─────────────────────────────────────────────────────────
+
+        // ── Light / Dark Mode ────────────────────────────────────
+        const html = document.documentElement;
+        const themeIcon = document.getElementById('themeIcon');
+
+        function applyTheme(dark) {
+            if (dark) {
+                html.classList.add('dark');
+                themeIcon.textContent = 'light_mode';
+            } else {
+                html.classList.remove('dark');
+                themeIcon.textContent = 'dark_mode';
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('sv_admin_theme', isDark ? 'light' : 'dark');
+            applyTheme(!isDark);
+        }
+
+        // Restore saved preference on load
+        (function () {
+            const saved = localStorage.getItem('sv_admin_theme');
+            applyTheme(saved !== 'light');
+        })();
+        // ─────────────────────────────────────────────────────────
+
+        // ── Anti-Inspect ─────────────────────────────────────────
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        document.addEventListener('keydown', e => {
+            // F12
+            if (e.key === 'F12') { e.preventDefault(); return; }
+            // Ctrl/Cmd + Shift + I / J / C
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && ['i','I','j','J','c','C'].includes(e.key)) {
+                e.preventDefault(); return;
+            }
+            // Ctrl/Cmd + U (view source)
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
+                e.preventDefault(); return;
+            }
+            // Ctrl/Cmd + S (save page)
+            if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+                e.preventDefault(); return;
+            }
+        });
+
+        // DevTools size-detection (fires a redirect when devtools panel is wide open)
+        (function detectDevTools() {
+            const threshold = 160;
+            setInterval(() => {
+                if (window.outerWidth - window.innerWidth > threshold ||
+                    window.outerHeight - window.innerHeight > threshold) {
+                    document.body.innerHTML = '';
+                    window.location.reload();
+                }
+            }, 1000);
+        })();
         // ─────────────────────────────────────────────────────────
     </script>
 </body>

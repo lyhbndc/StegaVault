@@ -46,6 +46,19 @@ session_start();
             background-image: radial-gradient(#667eea 0.5px, transparent 0.5px);
             background-size: 24px 24px;
         }
+
+        /* Light mode overrides */
+        html:not(.dark) body                    { background-color: #f1f5f9 !important; color: #1e293b !important; }
+        html:not(.dark) .bg-background-dark     { background-color: #f1f5f9 !important; }
+        html:not(.dark) header                  { background-color: rgba(255,255,255,0.85) !important; border-color: rgba(0,0,0,0.08) !important; }
+        html:not(.dark) .bg-white\/5            { background-color: #ffffff !important; border-color: rgba(0,0,0,0.1) !important; box-shadow: 0 4px 24px rgba(0,0,0,0.06) !important; }
+        html:not(.dark) .border-white\/10       { border-color: rgba(0,0,0,0.1) !important; }
+        html:not(.dark) .border-white\/5        { border-color: rgba(0,0,0,0.08) !important; }
+        html:not(.dark) .text-white             { color: #1e293b !important; }
+        html:not(.dark) .text-slate-300         { color: #475569 !important; }
+        html:not(.dark) .text-slate-400         { color: #64748b !important; }
+        html:not(.dark) .text-slate-500         { color: #94a3b8 !important; }
+        html:not(.dark) .bg-background-dark\/50 { background-color: rgba(241,245,249,0.85) !important; }
     </style>
 </head>
 
@@ -63,7 +76,13 @@ session_start();
             <span class="material-symbols-outlined text-primary">policy</span>
             Terms of Service
         </h2>
-        <a href="javascript:history.back()" class="text-sm text-slate-400 hover:text-primary">← Back</a>
+        <div class="flex items-center gap-3">
+            <button id="themeToggle" onclick="toggleTheme()"
+                class="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-primary transition-colors">
+                <span id="themeIcon" class="material-symbols-outlined text-[18px]">light_mode</span>
+            </button>
+            <a href="javascript:history.back()" class="text-sm text-slate-400 hover:text-primary">← Back</a>
+        </div>
     </header>
 
     <!-- Content -->
@@ -227,6 +246,61 @@ session_start();
 
     </main>
 
+    <script>
+        // ── Light / Dark Mode ────────────────────────────────────
+        const html = document.documentElement;
+        const themeIcon = document.getElementById('themeIcon');
+
+        function applyTheme(dark) {
+            if (dark) {
+                html.classList.add('dark');
+                themeIcon.textContent = 'light_mode';
+            } else {
+                html.classList.remove('dark');
+                themeIcon.textContent = 'dark_mode';
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('sv_theme', isDark ? 'light' : 'dark');
+            applyTheme(!isDark);
+        }
+
+        (function () {
+            const saved = localStorage.getItem('sv_theme');
+            applyTheme(saved !== 'light');
+        })();
+        // ─────────────────────────────────────────────────────────
+
+        // ── Anti-Inspect ─────────────────────────────────────────
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F12') { e.preventDefault(); return; }
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && ['i','I','j','J','c','C'].includes(e.key)) {
+                e.preventDefault(); return;
+            }
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
+                e.preventDefault(); return;
+            }
+            if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+                e.preventDefault(); return;
+            }
+        });
+
+        (function detectDevTools() {
+            const threshold = 160;
+            setInterval(() => {
+                if (window.outerWidth - window.innerWidth > threshold ||
+                    window.outerHeight - window.innerHeight > threshold) {
+                    document.body.innerHTML = '';
+                    window.location.reload();
+                }
+            }, 1000);
+        })();
+        // ─────────────────────────────────────────────────────────
+    </script>
 </body>
 
 </html>

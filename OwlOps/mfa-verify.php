@@ -84,7 +84,7 @@ if (!isset($_SESSION['pending_mfa_user_id']) || !isset($_SESSION['pending_mfa_po
                 <div class="inline-flex items-center justify-center size-16 bg-primary/10 rounded-full mb-4 ring-4 ring-primary/10">
                     <span class="material-symbols-outlined text-3xl text-primary">phonelink_lock</span>
                 </div>
-                <h1 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-2">Two-Factor Auth</h1>
+                <h1 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-2">Multi-Factor Auth</h1>
                 <p class="text-slate-600 dark:text-slate-400 text-sm">Enter the 6-digit code from your Authenticator app, or a recovery code.</p>
             </div>
 
