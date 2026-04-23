@@ -1274,6 +1274,13 @@ endif; ?>
 
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
+
+                    if (file.size > 100 * 1024 * 1024) {
+                        errEl.textContent = `"${file.name}" exceeds the maximum upload size of 100MB`;
+                        bar.style.width = `${((i + 1) / files.length) * 100}%`;
+                        continue;
+                    }
+
                     status.textContent = `Uploading ${file.name} (${i + 1}/${files.length})...`;
                     bar.style.width = `${(i / files.length) * 100}%`;
 
@@ -1300,11 +1307,17 @@ endif; ?>
                             credentials: 'include',
                             body: fd
                         });
-                        const data = await res.json();
-                        if (data.success) successCount++;
-                        else errEl.textContent = data.error || 'Upload failed';
+                        if (res.status === 413) {
+                            errEl.textContent = `"${file.name}" exceeds the maximum upload size of 100MB`;
+                        } else {
+                            const data = await res.json();
+                            if (data.success) successCount++;
+                            else errEl.textContent = data.error || 'Upload failed';
+                        }
                     } catch (e) {
-                        errEl.textContent = 'Network error';
+                        errEl.textContent = e.name === 'TypeError'
+                            ? `"${file.name}" exceeds the maximum upload size of 100MB`
+                            : 'Upload failed. Please try again.';
                     }
 
                     bar.style.width = `${((i + 1) / files.length) * 100}%`;
