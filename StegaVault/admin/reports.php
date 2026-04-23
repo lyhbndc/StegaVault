@@ -54,12 +54,11 @@ $totalDownloads = (int) $db->query("SELECT COALESCE(SUM(download_count), 0) FROM
 $totalFolders = $db->query("SELECT COUNT(*) FROM project_folders")->fetch_row()[0];
 $totalMembers = $db->query("SELECT COUNT(*) FROM project_members")->fetch_row()[0];
 
-// ── Period-filtered stats (files/projects scoped to the selected period) ──
+// ── Period-filtered stats (runs before any prepare/execute — connection is clean) ──
 if ($filterDays !== null) {
-    $pf = "AND upload_date >= DATE_SUB(NOW(), INTERVAL {$filterDays} DAY)";
-    $dispFiles       = (int) $db->query("SELECT COUNT(*) FROM files WHERE 1=1 {$pf}")->fetch_row()[0];
-    $dispFileSize    = (int) $db->query("SELECT COALESCE(SUM(file_size),0) FROM files WHERE 1=1 {$pf}")->fetch_row()[0];
-    $dispWatermarked = (int) $db->query("SELECT COUNT(*) FROM files WHERE watermarked IS TRUE {$pf}")->fetch_row()[0];
+    $dispFiles       = (int) $db->query("SELECT COUNT(*) FROM files WHERE upload_date >= DATE_SUB(NOW(), INTERVAL {$filterDays} DAY)")->fetch_row()[0];
+    $dispFileSize    = (int) $db->query("SELECT COALESCE(SUM(file_size),0) FROM files WHERE upload_date >= DATE_SUB(NOW(), INTERVAL {$filterDays} DAY)")->fetch_row()[0];
+    $dispWatermarked = (int) $db->query("SELECT COUNT(*) FROM files WHERE watermarked IS TRUE AND upload_date >= DATE_SUB(NOW(), INTERVAL {$filterDays} DAY)")->fetch_row()[0];
 } else {
     $dispFiles       = (int) $totalFiles;
     $dispFileSize    = (int) $totalFileSize;
@@ -131,15 +130,19 @@ $uploadTrendLabels = [];
 $uploadTrendCounts = [];
 
 if ($period === 'daily') {
-    // Hourly buckets for the last 24 hours
-    $hourRows = $db->query("
+    // Hourly buckets — use prepare() to stay consistent after prior prepare/execute cycles
+    $trendStmt = $db->prepare("
         SELECT HOUR(upload_date) AS h, COUNT(*) AS c
         FROM files
         WHERE upload_date >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
         GROUP BY HOUR(upload_date)
-    ")->fetch_all(MYSQLI_ASSOC);
+        ORDER BY h ASC
+    ");
+    $trendStmt->execute();
     $hourMap = [];
-    foreach ($hourRows as $row) { $hourMap[(int)$row['h']] = (int)$row['c']; }
+    foreach ($trendStmt->get_result()->fetch_all(MYSQLI_ASSOC) as $row) {
+        $hourMap[(int)$row['h']] = (int)$row['c'];
+    }
     $currentHour = (int)date('G');
     for ($i = 23; $i >= 0; $i--) {
         $h = ($currentHour - $i + 24) % 24;
@@ -1444,11 +1447,10 @@ $forensicPDF = array_map(fn($fl) => [
                 const lm = 14, rm = 14, cW = pW - lm - rm;
                 const SAFE_BOTTOM = pH - 10; // footer starts at pH-9
 
-                const PERIOD     = '<?php echo addslashes($periodLabel); ?>';
-                const GEN_AT     = '<?php echo $generatedAt; ?>';
-                const DOC_ID     = 'SV-REP-<?php echo date('Ymd-Hi'); ?>';
-                const TREND_D    = <?php echo $trendDays; ?>;
-                const TREND_LABEL= '<?php echo addslashes($trendLabel); ?>';
+                const PERIOD = '<?php echo addslashes($periodLabel); ?>';
+                const GEN_AT = '<?php echo $generatedAt; ?>';
+                const DOC_ID = 'SV-REP-<?php echo date('Ymd-Hi'); ?>';
+                const TREND_D = <?php echo $trendDays; ?>;
 
                 const C = {
                     primary:[102,126,234], dark:[15,23,42],    navy:[30,41,59],
@@ -1521,8 +1523,8 @@ $forensicPDF = array_map(fn($fl) => [
                 const gap=4, cardW=(cW-gap*3)/4, cardH=34;
                 [
                     {label:'Total Users',  v:'<?php echo $totalUsers; ?>',       sub:'Active',   sv:'<?php echo $activeUsers; ?>',    acc:C.primary},
-                    {label:'<?php echo $period!=="all"?"Files Uploaded":"Total Files"; ?>',  v:'<?php echo $dispFiles; ?>',       sub:'Storage',  sv:'<?php echo fmtSize($dispFileSize); ?>', acc:C.purple},
-                    {label:'Watermarked',  v:'<?php echo $dispWatermarked; ?>', sub:'Coverage', sv:'<?php echo $dispWatermarkPct; ?>%', acc:C.indigo},
+                    {label:'Total Files',  v:'<?php echo $totalFiles; ?>',       sub:'Storage',  sv:'<?php echo fmtSize($totalFileSize); ?>', acc:C.purple},
+                    {label:'Watermarked',  v:'<?php echo $watermarkedFiles; ?>', sub:'Coverage', sv:'<?php echo $totalFiles>0?round(($watermarkedFiles/$totalFiles)*100):0; ?>%', acc:C.indigo},
                     {label:'Projects',     v:'<?php echo $totalProjects; ?>',    sub:'Active',   sv:'<?php echo $activeProjects; ?>', acc:C.orange},
                 ].forEach((c,i) => drawKpiCard(lm+i*(cardW+gap), y, cardW, cardH, c.label, c.v, c.sub, c.sv, c.acc));
                 y += cardH + 6;
@@ -1548,7 +1550,7 @@ $forensicPDF = array_map(fn($fl) => [
                 doc.setDrawColor(...C.border); doc.rect(lm,y,cW,tH,'S');
                 doc.setFillColor(...C.primary); doc.rect(lm,y,cW,1.5,'F');
                 doc.setFontSize(7); doc.setFont(undefined,'bold'); doc.setTextColor(...C.navy);
-                doc.text('Upload Activity — '+TREND_LABEL, lm+4, y+8);
+                doc.text('Upload Activity ('+TREND_D+' Days)', lm+4, y+8);
                 const tCvs = document.getElementById('uploadTrendChart');
                 if (tCvs) doc.addImage(tCvs.toDataURL('image/png',1.0),'PNG',lm+3,y+10,cW-6,tH-13);
 
