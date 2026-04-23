@@ -1966,10 +1966,10 @@ $forensicPDF = array_map(fn($fl) => [
                 // KPI cards (4 across)
                 const gap=4, cardW=(cW-gap*3)/4, cardH=34;
                 [
-                    {label:'Total Users',  v:'<?php echo $totalUsers; ?>',       sub:'Active',   sv:'<?php echo $activeUsers; ?>',    acc:C.primary},
-                    {label:'Total Files',  v:'<?php echo $totalFiles; ?>',       sub:'Storage',  sv:'<?php echo fmtSize($totalFileSize); ?>', acc:C.purple},
-                    {label:'Watermarked',  v:'<?php echo $watermarkedFiles; ?>', sub:'Coverage', sv:'<?php echo $totalFiles>0?round(($watermarkedFiles/$totalFiles)*100):0; ?>%', acc:C.indigo},
-                    {label:'Projects',     v:'<?php echo $totalProjects; ?>',    sub:'Active',   sv:'<?php echo $activeProjects; ?>', acc:C.orange},
+                    {label:'Total Users',                                                    v:'<?php echo $totalUsers; ?>',    sub:'Active',   sv:'<?php echo $activeUsers; ?>',         acc:C.primary},
+                    {label:'<?php echo $period !== "all" ? "Files Uploaded" : "Total Files"; ?>', v:'<?php echo $dispFiles; ?>',     sub:'Storage',  sv:'<?php echo fmtSize($dispFileSize); ?>', acc:C.purple},
+                    {label:'Watermarked',                                                    v:'<?php echo $dispWatermarked; ?>', sub:'Coverage', sv:'<?php echo $dispWatermarkPct; ?>%', acc:C.indigo},
+                    {label:'Projects',                                                       v:'<?php echo $totalProjects; ?>',  sub:'Active',   sv:'<?php echo $activeProjects; ?>',     acc:C.orange},
                 ].forEach((c,i) => drawKpiCard(lm+i*(cardW+gap), y, cardW, cardH, c.label, c.v, c.sub, c.sv, c.acc));
                 y += cardH + 6;
 
