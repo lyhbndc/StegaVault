@@ -153,7 +153,7 @@ $userId = $user['id'];
                 <span class="size-2 rounded-full bg-emerald-500"></span>
                 System: Operational
             </div>
-            <a href="../downloads/StegaVault.exe" download class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors flex-shrink-0">
+            <a href="../download.php" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors flex-shrink-0">
                 <span class="material-symbols-outlined text-[14px]">download</span>
                 Download App
             </a>

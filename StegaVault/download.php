@@ -95,6 +95,9 @@ define('EXE_FILE', 'https://github.com/' . GITHUB_REPO . '/releases/download/v' 
     <!-- Header -->
     <header class="relative z-10 w-full px-6 py-6 lg:px-12 flex items-center justify-between border-b border-white/5 bg-background-dark/50 backdrop-blur-md">
         <div class="flex items-center gap-3">
+            <button onclick="history.back()" class="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors mr-2">
+                <span class="material-symbols-outlined text-xl">arrow_back</span>
+            </button>
             <div class="bg-primary p-2 rounded-lg shadow-glow">
                 <span class="material-symbols-outlined text-white text-2xl">shield</span>
             </div>

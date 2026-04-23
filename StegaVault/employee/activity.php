@@ -182,7 +182,7 @@ function formatActionText($action, $desc)
             <h2 class="text-slate-900 dark:text-white text-lg font-bold tracking-tight">Activity Log</h2>
             <?php include '../includes/search_bar.php'; ?>
             <div class="flex items-center gap-3 flex-shrink-0">
-                <a href="../downloads/StegaVault.exe" download class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors">
+                <a href="../download.php" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors">
                     <span class="material-symbols-outlined text-[14px]">download</span>
                     Download App
                 </a>
