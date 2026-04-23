@@ -1758,10 +1758,7 @@ $userId = $user['id'];
             }
 
             status.textContent = `Done! ${successCount}/${files.length} file(s) uploaded.`;
-            setTimeout(() => {
-                closeFolderUploadModal();
-                loadPane(_currentFolderId);
-            }, 800);
+            if (successCount > 0) loadPane(_currentFolderId);
         }
 
         document.addEventListener('DOMContentLoaded', wireFolderDrop);

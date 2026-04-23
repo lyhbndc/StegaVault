@@ -1324,10 +1324,7 @@ endif; ?>
                 }
 
                 status.textContent = `Done! ${successCount}/${files.length} file(s) uploaded.`;
-                setTimeout(() => {
-                    closeFolderUploadModal();
-                    loadPane(_adminCurrentFolderId);
-                }, 800);
+                if (successCount > 0) loadPane(_adminCurrentFolderId);
             }
 
             function togglePasswordVisibility(id, btn) {
