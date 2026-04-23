@@ -259,7 +259,89 @@ $isWatermarked = (int) ($file['watermarked'] ?? 0) === 1;
             </video>
 
         <?php elseif ($isPdf): ?>
-            <iframe src="../api/view.php?id=<?php echo $fileId; ?>" class="w-full h-full"></iframe>
+            <div class="w-full h-full flex flex-col overflow-hidden">
+                <!-- Custom toolbar — no download or print buttons -->
+                <div class="flex items-center gap-2 px-4 py-2 bg-[#3C4043] text-white text-sm select-none shrink-0">
+                    <button id="pdfPrev" disabled
+                        class="flex items-center justify-center size-7 rounded hover:bg-white/10 disabled:opacity-30 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                    </button>
+                    <input id="pdfPageNum" type="number" min="1" value="1"
+                        class="w-10 text-center bg-white/10 rounded px-1 py-0.5 text-sm border-0 outline-none focus:ring-1 focus:ring-white/30">
+                    <span class="text-white/60 text-xs">/ <span id="pdfTotalPages">—</span></span>
+                    <button id="pdfNext" disabled
+                        class="flex items-center justify-center size-7 rounded hover:bg-white/10 disabled:opacity-30 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                    </button>
+                    <div class="w-px h-4 bg-white/20 mx-1"></div>
+                    <button id="pdfZoomOut" class="flex items-center justify-center size-7 rounded hover:bg-white/10 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">remove</span>
+                    </button>
+                    <span id="pdfZoomLabel" class="text-xs w-10 text-center">100%</span>
+                    <button id="pdfZoomIn" class="flex items-center justify-center size-7 rounded hover:bg-white/10 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">add</span>
+                    </button>
+                </div>
+                <!-- Canvas area -->
+                <div class="flex-1 overflow-auto bg-[#525659] flex flex-col items-center py-4">
+                    <canvas id="pdfCanvas" class="shadow-2xl block"></canvas>
+                    <p id="pdfMsg" class="text-white/50 text-sm mt-4">Loading PDF…</p>
+                </div>
+            </div>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+            <script>
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            (function () {
+                let doc = null, page = 1, scale = 1.5, busy = false, queued = null;
+                const canvas = document.getElementById('pdfCanvas');
+                const ctx    = canvas.getContext('2d');
+                const prev   = document.getElementById('pdfPrev');
+                const next   = document.getElementById('pdfNext');
+                const numIn  = document.getElementById('pdfPageNum');
+                const total  = document.getElementById('pdfTotalPages');
+                const zIn    = document.getElementById('pdfZoomIn');
+                const zOut   = document.getElementById('pdfZoomOut');
+                const zLbl   = document.getElementById('pdfZoomLabel');
+                const msg    = document.getElementById('pdfMsg');
+
+                function updateUI() {
+                    prev.disabled = page <= 1;
+                    next.disabled = !doc || page >= doc.numPages;
+                    numIn.value = page;
+                    if (doc) total.textContent = doc.numPages;
+                    zLbl.textContent = Math.round(scale * 100) + '%';
+                }
+
+                function render(n) {
+                    if (busy) { queued = n; return; }
+                    busy = true;
+                    doc.getPage(n).then(pg => {
+                        const vp = pg.getViewport({ scale });
+                        canvas.width  = vp.width;
+                        canvas.height = vp.height;
+                        return pg.render({ canvasContext: ctx, viewport: vp }).promise;
+                    }).then(() => {
+                        busy = false;
+                        msg.style.display = 'none';
+                        if (queued !== null) { const q = queued; queued = null; render(q); }
+                    });
+                    updateUI();
+                }
+
+                pdfjsLib.getDocument('../api/view.php?id=<?php echo $fileId; ?>').promise
+                    .then(d => { doc = d; updateUI(); render(1); })
+                    .catch(() => { msg.textContent = 'Failed to load PDF.'; });
+
+                prev.onclick = () => { if (page > 1) render(--page); };
+                next.onclick = () => { if (doc && page < doc.numPages) render(++page); };
+                numIn.onchange = () => {
+                    const n = parseInt(numIn.value);
+                    if (doc && n >= 1 && n <= doc.numPages) render(page = n);
+                };
+                zIn.onclick  = () => { scale = Math.min(scale + 0.25, 3.0); render(page); };
+                zOut.onclick = () => { scale = Math.max(scale - 0.25, 0.5); render(page); };
+            })();
+            </script>
 
         <?php else: ?>
             <!-- Generic doc placeholder -->
