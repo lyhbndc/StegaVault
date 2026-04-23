@@ -231,7 +231,7 @@ if (!preg_match('/^#[0-9a-fA-F]{6}$/', $themeColor)) $themeColor = '#667eea';
                     <span class="size-2 rounded-full bg-emerald-500"></span>
                     System: Operational
                 </div>
-                <a href="../download.php" download class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors">
+                <a href="../download.php" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors">
                     <span class="material-symbols-outlined text-[14px]">download</span>
                     Download App
                 </a>
