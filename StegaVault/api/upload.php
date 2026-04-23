@@ -70,8 +70,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!isset($_FILES['file'])) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'No file uploaded']);
+        // When post_max_size is exceeded PHP empties $_FILES entirely
+        $contentLength = isset($_SERVER['CONTENT_LENGTH']) ? (int) $_SERVER['CONTENT_LENGTH'] : 0;
+        if ($contentLength > 100 * 1024 * 1024) {
+            http_response_code(413);
+            echo json_encode(['success' => false, 'error' => 'File exceeds the maximum upload size of 100MB']);
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'No file uploaded']);
+        }
         exit;
     }
 
@@ -85,15 +92,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ===================================================== */
 
     if ($file['error'] !== UPLOAD_ERR_OK) {
+        $phpErrors = [
+            UPLOAD_ERR_INI_SIZE  => 'File exceeds the maximum upload size of 100MB',
+            UPLOAD_ERR_FORM_SIZE => 'File exceeds the maximum upload size of 100MB',
+            UPLOAD_ERR_PARTIAL   => 'Upload was interrupted. Please try again.',
+        ];
+        $msg = $phpErrors[$file['error']] ?? 'Upload failed. Please try again.';
         http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Upload failed (PHP error)']);
+        echo json_encode(['success' => false, 'error' => $msg]);
         exit;
     }
 
-    $maxSize = 50 * 1024 * 1024;
+    $maxSize = 100 * 1024 * 1024;
     if ($file['size'] > $maxSize) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'File too large']);
+        echo json_encode(['success' => false, 'error' => 'File exceeds the maximum upload size of 100MB']);
         exit;
     }
 

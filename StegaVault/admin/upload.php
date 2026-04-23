@@ -251,7 +251,7 @@ $user = [
                             <span class="material-symbols-outlined text-4xl text-primary">upload_file</span>
                         </div>
                         <h3 class="text-slate-900 dark:text-white text-lg font-bold mb-1">Drag & Drop Files Here</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm mb-6">Supported: PNG, JPG, MP4, PDF, Office Docs (Word, Excel, PPT) &bull; Max 50MB</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm mb-6">Supported: PNG, MP4, PDF, Office Docs (Word, Excel, PPT) &bull; Max 100MB</p>
                         <input type="file" id="fileInput" class="hidden"
                             accept="image/png,image/jpeg,image/jpg,image/webp,video/mp4,video/quicktime,video/x-msvideo,video/mpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain"
                             multiple>
@@ -355,10 +355,10 @@ $user = [
             for (let i = 0; i < totalFiles; i++) {
                 const file = files[i];
                 
-                // Client-side size check (50MB)
-                const maxSizeBytes = 50 * 1024 * 1024;
+                // Client-side size check (100MB)
+                const maxSizeBytes = 100 * 1024 * 1024;
                 if (file.size > maxSizeBytes) {
-                    showMessage(`File too large: ${file.name} (Max 50MB)`, 'error');
+                    showMessage(`"${file.name}" exceeds the maximum upload size of 100MB`, 'error');
                     continue; // Skip this file and move to next
                 }
 
@@ -392,16 +392,24 @@ $user = [
                         body: formData
                     });
 
-                    const data = await response.json();
-
-                    if (data.success) {
-                        successCount++;
+                    if (response.status === 413) {
+                        showMessage(`"${file.name}" exceeds the maximum upload size of 100MB`, 'error');
                     } else {
-                        showMessage(`Error uploading ${file.name}: ${data.error}`, 'error');
+                        const data = await response.json();
+                        if (data.success) {
+                            successCount++;
+                        } else {
+                            showMessage(`Error uploading ${file.name}: ${data.error}`, 'error');
+                        }
                     }
                 } catch (error) {
                     console.error(error);
-                    showMessage(`Upload failed for ${file.name}`, 'error');
+                    // TypeError means the connection was cut — most likely the file was too large
+                    if (error.name === 'TypeError') {
+                        showMessage(`"${file.name}" exceeds the maximum upload size of 100MB`, 'error');
+                    } else {
+                        showMessage(`Upload failed for "${file.name}". Please try again.`, 'error');
+                    }
                 }
 
                 const percent = Math.round(((i + 1) / totalFiles) * 100);
