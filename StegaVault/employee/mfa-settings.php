@@ -62,6 +62,24 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
         body {
             font-family: 'Space Grotesk', sans-serif;
         }
+
+        /* Light mode overrides */
+        html:not(.dark) body                       { background-color: #f1f5f9 !important; color: #1e293b !important; }
+        html:not(.dark) .bg-background-dark        { background-color: #f1f5f9 !important; }
+        html:not(.dark) header                     { background-color: rgba(255,255,255,0.85) !important; border-color: rgba(0,0,0,0.08) !important; }
+        html:not(.dark) .bg-background-dark\/50    { background-color: rgba(241,245,249,0.85) !important; }
+        html:not(.dark) .border-white\/5           { border-color: rgba(0,0,0,0.08) !important; }
+        html:not(.dark) .text-white                { color: #1e293b !important; }
+        html:not(.dark) .text-slate-400            { color: #64748b !important; }
+        html:not(.dark) .text-slate-300            { color: #475569 !important; }
+        html:not(.dark) .text-slate-500            { color: #94a3b8 !important; }
+        html:not(.dark) .border-slate-700          { border-color: #e2e8f0 !important; }
+        html:not(.dark) .bg-slate-800\/30          { background-color: rgba(255,255,255,0.9) !important; }
+        html:not(.dark) .bg-slate-900              { background-color: #f8fafc !important; }
+        html:not(.dark) .bg-slate-700              { background-color: #e2e8f0 !important; }
+        html:not(.dark) .bg-slate-700\/50          { background-color: rgba(226,232,240,0.7) !important; }
+        html:not(.dark) .hover\:bg-slate-600:hover { background-color: #cbd5e1 !important; }
+        html:not(.dark) input                      { color: #1e293b !important; background-color: #f8fafc !important; border-color: #e2e8f0 !important; }
     </style>
 </head>
 <body class="bg-background-dark text-white min-h-screen font-display">
@@ -83,6 +101,10 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
                 </div>
             </div>
             <div class="flex items-center gap-3">
+                <button id="themeToggle" onclick="toggleTheme()"
+                    class="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                    <span id="themeIcon" class="material-symbols-outlined text-[18px]">light_mode</span>
+                </button>
                 <div class="text-right">
                     <p class="text-sm font-semibold"><?php echo htmlspecialchars($user['name']); ?></p>
                     <p class="text-xs text-slate-400"><?php echo htmlspecialchars($user['email']); ?></p>

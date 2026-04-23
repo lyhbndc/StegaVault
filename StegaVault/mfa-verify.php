@@ -54,9 +54,27 @@ if ($portal === 'admin') {
     </script>
     <style>
         body { font-family: 'Space Grotesk', sans-serif; }
+
+        /* Light mode overrides */
+        html:not(.dark) body                { background-color: #f1f5f9 !important; }
+        html:not(.dark) .bg-background-dark { background-color: #f1f5f9 !important; }
+        html:not(.dark) .bg-white\/5        { background-color: #ffffff !important; border-color: rgba(0,0,0,0.1) !important; box-shadow: 0 4px 24px rgba(0,0,0,0.06) !important; }
+        html:not(.dark) .border-white\/10   { border-color: rgba(0,0,0,0.1) !important; }
+        html:not(.dark) .text-white         { color: #1e293b !important; }
+        html:not(.dark) .text-slate-400     { color: #64748b !important; }
+        html:not(.dark) .text-slate-500     { color: #94a3b8 !important; }
+        html:not(.dark) .bg-\[#1b1f27\]    { background-color: #f8fafc !important; }
+        html:not(.dark) .border-\[#3b4354\] { border-color: #cbd5e1 !important; }
+        html:not(.dark) input               { color: #1e293b !important; }
+        html:not(.dark) input::placeholder  { color: #94a3b8 !important; }
     </style>
 </head>
 <body class="bg-background-dark min-h-screen flex flex-col items-center justify-center font-display px-4">
+    <!-- Theme toggle (fixed top-right) -->
+    <button id="themeToggle" onclick="toggleTheme()"
+        class="fixed top-5 right-5 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+        <span id="themeIcon" class="material-symbols-outlined text-[18px]">light_mode</span>
+    </button>
     <div class="w-full max-w-[400px]">
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center size-16 bg-primary/20 rounded-full mb-4 ring-4 ring-primary/10">
@@ -243,5 +261,32 @@ if ($portal === 'admin') {
         });
     </script>
     <script src="js/security-shield.js"></script>
+    <script>
+        // ── Light / Dark Mode ────────────────────────────────────
+        const html = document.documentElement;
+        const themeIcon = document.getElementById('themeIcon');
+
+        function applyTheme(dark) {
+            if (dark) {
+                html.classList.add('dark');
+                themeIcon.textContent = 'light_mode';
+            } else {
+                html.classList.remove('dark');
+                themeIcon.textContent = 'dark_mode';
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('sv_theme', isDark ? 'light' : 'dark');
+            applyTheme(!isDark);
+        }
+
+        (function () {
+            const saved = localStorage.getItem('sv_theme');
+            applyTheme(saved !== 'light');
+        })();
+        // ─────────────────────────────────────────────────────────
+    </script>
 </body>
 </html>
