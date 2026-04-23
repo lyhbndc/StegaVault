@@ -307,9 +307,12 @@ $falStmt = $db->prepare("
     SELECT fal.file_name, fal.file_size, fal.integrity_status, fal.watermark_found,
            fal.extracted_user_name, fal.extracted_user_role, fal.extracted_ip,
            fal.crypto_verified, fal.analysis_time_ms, fal.analyzed_at,
-           u.name AS analyst_name
+           u.name AS analyst_name,
+           uploader.name AS uploader_name
     FROM forensic_analysis_log fal
     LEFT JOIN users u ON fal.analyzed_by = u.id
+    LEFT JOIN (SELECT DISTINCT ON (original_name) original_name, user_id FROM files) f ON f.original_name = fal.file_name
+    LEFT JOIN users uploader ON f.user_id = uploader.id
     WHERE 1=1 {$falDateSQL}
     ORDER BY fal.analyzed_at DESC
     LIMIT 50
@@ -411,6 +414,7 @@ $forensicPDF = array_map(fn($fl) => [
         'NO_WATERMARK' => 'No Watermark',
         default        => $fl['integrity_status'],
     },
+    $fl['uploader_name'] ?? '—',
     $fl['analyst_name'] ?? '—',
     $fl['extracted_user_name'] ?? '—',
     $fl['extracted_ip'] ?? '—',
@@ -1581,25 +1585,55 @@ $forensicPDF = array_map(fn($fl) => [
                         </div>
                     </div>
 
-                    <!-- Forensic Status Filter -->
-                    <div class="flex items-center gap-2 mb-4 flex-wrap">
-                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mr-1">Filter by result:</span>
-                        <button id="ffilter-all" onclick="filterForensic('all')"
-                            class="ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-primary text-white border-primary shadow-sm">
-                            All
-                        </button>
-                        <button id="ffilter-VALID" onclick="filterForensic('VALID')"
-                            class="ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
-                            Valid
-                        </button>
-                        <button id="ffilter-TAMPERED" onclick="filterForensic('TAMPERED')"
-                            class="ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 border-rose-500/20 hover:bg-rose-50 dark:hover:bg-rose-900/20">
-                            Tampered
-                        </button>
-                        <button id="ffilter-NO_WATERMARK" onclick="filterForensic('NO_WATERMARK')"
-                            class="ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-50 dark:hover:bg-amber-900/20">
-                            No Watermark
-                        </button>
+                    <!-- Forensic Filters Panel -->
+                    <div class="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 flex flex-wrap items-end gap-5">
+                        <!-- Result filter -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Result</label>
+                            <div class="flex items-center gap-1.5">
+                                <button id="ffilter-all" onclick="filterForensic('all')"
+                                    class="ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-primary text-white border-primary shadow-sm">All</button>
+                                <button id="ffilter-VALID" onclick="filterForensic('VALID')"
+                                    class="ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">Valid</button>
+                                <button id="ffilter-TAMPERED" onclick="filterForensic('TAMPERED')"
+                                    class="ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 border-rose-500/20 hover:bg-rose-50 dark:hover:bg-rose-900/20">Tampered</button>
+                                <button id="ffilter-NO_WATERMARK" onclick="filterForensic('NO_WATERMARK')"
+                                    class="ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-50 dark:hover:bg-amber-900/20">No Watermark</button>
+                            </div>
+                        </div>
+                        <!-- Uploader filter -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Uploader</label>
+                            <select id="ffilter-uploader" onchange="filterForensic()"
+                                class="px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                <option value="">All Uploaders</option>
+                                <?php foreach (array_unique(array_filter(array_column($forensicLogs, 'uploader_name'))) as $un): ?>
+                                <option value="<?php echo htmlspecialchars($un); ?>"><?php echo htmlspecialchars($un); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <!-- Analyst filter -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Analyst</label>
+                            <select id="ffilter-analyst" onchange="filterForensic()"
+                                class="px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                <option value="">All Analysts</option>
+                                <?php foreach (array_unique(array_filter(array_column($forensicLogs, 'analyst_name'))) as $an): ?>
+                                <option value="<?php echo htmlspecialchars($an); ?>"><?php echo htmlspecialchars($an); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <!-- Downloaded By filter -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Downloaded By</label>
+                            <select id="ffilter-downloader" onchange="filterForensic()"
+                                class="px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                <option value="">All</option>
+                                <?php foreach (array_unique(array_filter(array_column($forensicLogs, 'extracted_user_name'))) as $dn): ?>
+                                <option value="<?php echo htmlspecialchars($dn); ?>"><?php echo htmlspecialchars($dn); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="section-table-wrap">
@@ -1608,9 +1642,10 @@ $forensicPDF = array_map(fn($fl) => [
                                 <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                                     <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">File Analyzed</th>
                                     <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Result</th>
+                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Uploader</th>
                                     <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Analyst</th>
-                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Leaked To</th>
-                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Leak IP</th>
+                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Downloaded By</th>
+                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Downloader IP</th>
                                     <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Crypto</th>
                                     <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Analyzed At</th>
                                 </tr>
@@ -1618,7 +1653,7 @@ $forensicPDF = array_map(fn($fl) => [
                             <tbody id="forensic-tbody" class="divide-y divide-slate-100 dark:divide-slate-800">
                                 <?php if (empty($forensicLogs)): ?>
                                 <tr>
-                                    <td colspan="7" class="px-5 py-8 text-center text-slate-400 dark:text-slate-500">No forensic analyses have been run yet</td>
+                                    <td colspan="8" class="px-5 py-8 text-center text-slate-400 dark:text-slate-500">No forensic analyses have been run yet</td>
                                 </tr>
                                 <?php endif; ?>
                                 <?php foreach ($forensicLogs as $fl): ?>
@@ -1644,23 +1679,28 @@ $forensicPDF = array_map(fn($fl) => [
                                     } else {
                                         $cryptoLabel = 'Invalid'; $cryptoClass = 'text-rose-500';
                                     }
-                                    $leakedTo = $fl['extracted_user_name']
+                                    $downloadedBy = $fl['extracted_user_name']
                                         ? htmlspecialchars($fl['extracted_user_name']) . ($fl['extracted_user_role'] ? ' <span class="text-slate-400">(' . htmlspecialchars($fl['extracted_user_role']) . ')</span>' : '')
                                         : '<span class="text-slate-400">—</span>';
-                                    $leakIp = $fl['extracted_ip'] ?? null;
-                                    $leakIpDisplay = $leakIp ? htmlspecialchars($leakIp) : '—';
+                                    $downloaderIp = htmlspecialchars($fl['extracted_ip'] ?? '—') ?: '—';
+                                    $uploaderName = htmlspecialchars($fl['uploader_name'] ?? '—');
                                 ?>
-                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors" data-status="<?php echo $rs; ?>">
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                                    data-status="<?php echo $rs; ?>"
+                                    data-analyst="<?php echo htmlspecialchars($fl['analyst_name'] ?? ''); ?>"
+                                    data-downloader="<?php echo htmlspecialchars($fl['extracted_user_name'] ?? ''); ?>"
+                                    data-uploader="<?php echo htmlspecialchars($fl['uploader_name'] ?? ''); ?>">
                                     <td class="px-5 py-3">
-                                        <p class="font-medium text-slate-900 dark:text-white truncate max-w-[180px]"><?php echo htmlspecialchars($fl['file_name']); ?></p>
+                                        <p class="font-medium text-slate-900 dark:text-white truncate max-w-[160px]"><?php echo htmlspecialchars($fl['file_name']); ?></p>
                                         <p class="text-xs text-slate-400"><?php echo fmtSize((int)$fl['file_size']); ?></p>
                                     </td>
                                     <td class="px-5 py-3 text-center">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border <?php echo $rsClass; ?>"><?php echo $rsLabel; ?></span>
                                     </td>
+                                    <td class="px-5 py-3 text-slate-500 dark:text-slate-400"><?php echo $uploaderName; ?></td>
                                     <td class="px-5 py-3 text-slate-500 dark:text-slate-400"><?php echo htmlspecialchars($fl['analyst_name'] ?? '—'); ?></td>
-                                    <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400"><?php echo $leakedTo; ?></td>
-                                    <td class="px-5 py-3 font-mono text-xs text-slate-500 dark:text-slate-400"><?php echo $leakIpDisplay; ?></td>
+                                    <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400"><?php echo $downloadedBy; ?></td>
+                                    <td class="px-5 py-3 font-mono text-xs text-slate-500 dark:text-slate-400"><?php echo $downloaderIp; ?></td>
                                     <td class="px-5 py-3 text-center text-xs font-semibold <?php echo $cryptoClass; ?>"><?php echo $cryptoLabel; ?></td>
                                     <td class="px-5 py-3 text-right text-xs text-slate-400"><?php echo date('M d, Y H:i', strtotime($fl['analyzed_at'])); ?></td>
                                 </tr>
@@ -1826,14 +1866,25 @@ $forensicPDF = array_map(fn($fl) => [
         }
 
         // ── Forensic table filter ─────────────────────────────────────
+        let fActiveResult = 'all';
         function filterForensic(status) {
-            document.querySelectorAll('.ffilter-btn').forEach(btn => {
-                btn.className = 'ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700';
-            });
-            const active = document.getElementById('ffilter-' + status);
-            if (active) active.className = 'ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-primary text-white border-primary shadow-sm';
+            if (status !== undefined) {
+                fActiveResult = status;
+                document.querySelectorAll('.ffilter-btn').forEach(btn => {
+                    btn.className = 'ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700';
+                });
+                const active = document.getElementById('ffilter-' + status);
+                if (active) active.className = 'ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-primary text-white border-primary shadow-sm';
+            }
+            const analystFilter    = document.getElementById('ffilter-analyst')?.value    ?? '';
+            const downloaderFilter = document.getElementById('ffilter-downloader')?.value ?? '';
+            const uploaderFilter   = document.getElementById('ffilter-uploader')?.value   ?? '';
             document.querySelectorAll('#forensic-tbody tr[data-status]').forEach(row => {
-                if (status === 'all' || row.dataset.status === status) {
+                const matchResult     = fActiveResult === 'all'   || row.dataset.status     === fActiveResult;
+                const matchAnalyst    = !analystFilter             || row.dataset.analyst    === analystFilter;
+                const matchDownloader = !downloaderFilter          || row.dataset.downloader === downloaderFilter;
+                const matchUploader   = !uploaderFilter            || row.dataset.uploader   === uploaderFilter;
+                if (matchResult && matchAnalyst && matchDownloader && matchUploader) {
                     row.removeAttribute('data-filtered-out');
                 } else {
                     row.setAttribute('data-filtered-out', '');
@@ -2074,15 +2125,15 @@ $forensicPDF = array_map(fn($fl) => [
 
                 y = drawSection('V.  Forensic File Analysis History', y);
                 doc.autoTable({
-                    head:[['File','Size','Result','Analyst','Leaked To','Leak IP','Crypto','Analyzed At']],
-                    body: forensicPDF.length ? forensicPDF : [['No forensic analyses have been run yet','','','','','','','']],
+                    head:[['File','Size','Result','Uploader','Analyst','Downloaded By','Downloader IP','Crypto','Analyzed At']],
+                    body: forensicPDF.length ? forensicPDF : [['No forensic analyses have been run yet','','','','','','','','']],
                     startY:y, ...tbl,
-                    columnStyles: {2:{cellWidth:22}},
+                    columnStyles: {2:{cellWidth:22}, 6:{font:'courier',fontSize:6.5}},
                     didParseCell: (data) => {
                         if (data.section==='body' && data.column.index===2) {
                             const v = data.cell.raw;
-                            if (v==='Valid')          data.cell.styles.textColor=C.emerald;
-                            else if (v==='Tampered')  data.cell.styles.textColor=C.rose;
+                            if (v==='Valid')             data.cell.styles.textColor=C.emerald;
+                            else if (v==='Tampered')     data.cell.styles.textColor=C.rose;
                             else if (v==='No Watermark') data.cell.styles.textColor=C.amber;
                         }
                     }
