@@ -22,16 +22,31 @@ $user = [
 
 $userId = $user['id'];
 
-// Get activity logs for this user
-$stmt = $db->prepare("
-    SELECT action, description, created_at 
-        FROM activity_log_collaborator 
+$perPage = 20;
+$page    = max(1, (int)($_GET['page'] ?? 1));
+$offset  = ($page - 1) * $perPage;
+
+$countStmt = $db->prepare("
+    SELECT COUNT(*) FROM activity_log_collaborator
     WHERE user_id = ?
       AND action IN ('login_success', 'file_downloaded', 'file_viewed', 'file_renamed')
-    ORDER BY created_at DESC 
-    LIMIT 100
 ");
-$stmt->bind_param('i', $userId);
+$countStmt->bind_param('i', $userId);
+$countStmt->execute();
+$totalRows  = $countStmt->get_result()->fetch_row()[0];
+$totalPages = max(1, (int)ceil($totalRows / $perPage));
+$page       = min($page, $totalPages);
+$offset     = ($page - 1) * $perPage;
+
+$stmt = $db->prepare("
+    SELECT action, description, created_at
+        FROM activity_log_collaborator
+    WHERE user_id = ?
+      AND action IN ('login_success', 'file_downloaded', 'file_viewed', 'file_renamed')
+    ORDER BY created_at DESC
+    LIMIT ? OFFSET ?
+");
+$stmt->bind_param('iii', $userId, $perPage, $offset);
 $stmt->execute();
 $activities = $stmt->get_result();
 
@@ -171,9 +186,14 @@ function formatActionText($action, $desc)
 
         <div class="p-8 w-full">
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
-                <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800">
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Recent Activity</h3>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">A timeline of your login, file view, and download activity.</p>
+                <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Recent Activity</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">A timeline of your login, file view, and download activity.</p>
+                    </div>
+                    <?php if ($totalRows > 0): ?>
+                    <span class="text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap"><?php echo number_format($totalRows); ?> total</span>
+                    <?php endif; ?>
                 </div>
                 <div class="p-6">
                     <div class="relative border-l-2 border-slate-100 dark:border-slate-800/60 ml-3 md:ml-4 space-y-8 pb-4">
@@ -201,6 +221,52 @@ function formatActionText($action, $desc)
                             <div class="pl-8 py-8 text-center text-slate-400 text-sm">No recent activity.</div>
                         <?php endif; ?>
                     </div>
+
+                    <?php if ($totalPages > 1): ?>
+                    <div class="flex items-center justify-between pt-4 mt-2 border-t border-slate-100 dark:border-slate-800">
+                        <p class="text-xs text-slate-400 dark:text-slate-500">
+                            Page <?php echo $page; ?> of <?php echo $totalPages; ?>
+                        </p>
+                        <div class="flex items-center gap-1">
+                            <?php
+                            $prevPage = $page - 1;
+                            $nextPage = $page + 1;
+                            $window   = 2;
+                            $start    = max(1, $page - $window);
+                            $end      = min($totalPages, $page + $window);
+                            ?>
+                            <a href="?page=<?php echo $prevPage; ?>"
+                               class="flex items-center justify-center size-8 rounded-lg text-sm font-medium transition-colors
+                                      <?php echo $page <= 1 ? 'pointer-events-none text-slate-300 dark:text-slate-600' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'; ?>">
+                                <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                            </a>
+
+                            <?php if ($start > 1): ?>
+                                <a href="?page=1" class="flex items-center justify-center size-8 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">1</a>
+                                <?php if ($start > 2): ?><span class="px-1 text-slate-400 text-sm">…</span><?php endif; ?>
+                            <?php endif; ?>
+
+                            <?php for ($p = $start; $p <= $end; $p++): ?>
+                                <a href="?page=<?php echo $p; ?>"
+                                   class="flex items-center justify-center size-8 rounded-lg text-sm font-medium transition-colors
+                                          <?php echo $p === $page ? 'bg-primary text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'; ?>">
+                                    <?php echo $p; ?>
+                                </a>
+                            <?php endfor; ?>
+
+                            <?php if ($end < $totalPages): ?>
+                                <?php if ($end < $totalPages - 1): ?><span class="px-1 text-slate-400 text-sm">…</span><?php endif; ?>
+                                <a href="?page=<?php echo $totalPages; ?>" class="flex items-center justify-center size-8 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><?php echo $totalPages; ?></a>
+                            <?php endif; ?>
+
+                            <a href="?page=<?php echo $nextPage; ?>"
+                               class="flex items-center justify-center size-8 rounded-lg text-sm font-medium transition-colors
+                                      <?php echo $page >= $totalPages ? 'pointer-events-none text-slate-300 dark:text-slate-600' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'; ?>">
+                                <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                            </a>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
