@@ -200,6 +200,65 @@ $tamperedCount        = (int)($db->query("SELECT COUNT(*) FROM forensic_analysis
 $noWatermarkCount     = (int)($db->query("SELECT COUNT(*) FROM forensic_analysis_log WHERE integrity_status='NO_WATERMARK'")->fetch_row()[0] ?? 0);
 
 $generatedAt = date('F j, Y \a\t g:i A');
+
+// ── PDF data arrays (plain text, no HTML) ─────────────────────
+$projectsPDF = array_map(fn($p) => [
+    $p['name'],
+    ucfirst($p['status']),
+    $p['creator_name'] ?? '—',
+    (string) $p['member_count'],
+    (string) $p['file_count'],
+    fmtSize((int) $p['total_size']),
+    date('M d, Y', strtotime($p['created_at'])),
+], $projects);
+
+$usersPDF = array_map(fn($u) => [
+    'name'     => $u['name'],
+    'email'    => $u['email'],
+    'role'     => $u['role'] ?? 'employee',
+    'status'   => match ($u['status'] ?? 'active') {
+        'active'              => 'Active',
+        'pending_activation'  => 'Pending',
+        'disabled'            => 'Locked',
+        'expired'             => 'Expired',
+        default               => ucfirst($u['status'] ?? 'Active'),
+    },
+    'projects' => (int) $u['project_count'],
+    'files'    => (int) $u['file_count'],
+    'joined'   => date('M d, Y', strtotime($u['created_at'])),
+], $userRows);
+
+$filesPDF = array_map(fn($f) => [
+    $f['original_name'],
+    $f['mime_type'] ?: '—',
+    fmtSize((int) $f['file_size']),
+    $f['uploader'] ?? '—',
+    $f['project_name'] ?? '—',
+    date('M d, Y', strtotime($f['upload_date'])),
+], $recentFiles);
+
+$activityPDF = array_map(fn($a) => [
+    $a['action'],
+    $a['description'],
+    $a['actor'] ?? 'System',
+    date('M d, Y H:i', strtotime($a['created_at'])),
+], $activityLog);
+
+$forensicPDF = array_map(fn($fl) => [
+    $fl['file_name'],
+    fmtSize((int) $fl['file_size']),
+    match ($fl['integrity_status']) {
+        'VALID'        => 'Valid',
+        'TAMPERED'     => 'Tampered',
+        'NO_WATERMARK' => 'No Watermark',
+        default        => $fl['integrity_status'],
+    },
+    $fl['analyst_name'] ?? '—',
+    $fl['extracted_user_name'] ?? '—',
+    $fl['extracted_ip'] ?? '—',
+    $fl['crypto_verified'] === null ? '—' : ($fl['crypto_verified'] ? 'Valid' : 'Invalid'),
+    date('M d, Y H:i', strtotime($fl['analyzed_at'])),
+], $forensicLogs);
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="en">
@@ -477,7 +536,7 @@ $generatedAt = date('F j, Y \a\t g:i A');
 
         .chart-canvas-wrap {
             position: relative;
-            min-height: 240px;
+            height: 240px;
         }
 
         /* Hide elements during PDF generation */
@@ -778,7 +837,7 @@ $generatedAt = date('F j, Y \a\t g:i A');
                                     <span class="material-symbols-outlined text-[18px]">manage_accounts</span>
                                     User Status Distribution
                                 </p>
-                                <div class="chart-canvas-wrap" style="height: 280px;">
+                                <div class="chart-canvas-wrap" style="height: 220px;">
                                     <canvas id="userStatusChart"></canvas>
                                 </div>
                             </div>
@@ -790,7 +849,7 @@ $generatedAt = date('F j, Y \a\t g:i A');
                                     <span class="material-symbols-outlined text-[18px]">people</span>
                                     Role Breakdown
                                 </p>
-                                <div class="chart-canvas-wrap" style="height: 280px;">
+                                <div class="chart-canvas-wrap" style="height: 220px;">
                                     <canvas id="roleDistributionChart"></canvas>
                                 </div>
                             </div>
@@ -802,7 +861,7 @@ $generatedAt = date('F j, Y \a\t g:i A');
                                     <span class="material-symbols-outlined text-[18px]">water_damage</span>
                                     Watermark Coverage
                                 </p>
-                                <div class="chart-canvas-wrap" style="height: 280px;">
+                                <div class="chart-canvas-wrap" style="height: 220px;">
                                     <canvas id="watermarkCoverageChart"></canvas>
                                 </div>
                             </div>
@@ -815,7 +874,7 @@ $generatedAt = date('F j, Y \a\t g:i A');
                                 <span class="material-symbols-outlined text-[18px]">trending_up</span>
                                 Upload Activity (<?php echo $trendDays; ?> Days)
                             </p>
-                            <div class="chart-canvas-wrap" style="height: 240px;">
+                            <div class="chart-canvas-wrap" style="height: 200px;">
                                 <canvas id="uploadTrendChart"></canvas>
                             </div>
                         </div>
@@ -1145,6 +1204,27 @@ $generatedAt = date('F j, Y \a\t g:i A');
                         </div>
                     </div>
 
+                    <!-- Forensic Status Filter -->
+                    <div class="flex items-center gap-2 mb-4 flex-wrap">
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mr-1">Filter by result:</span>
+                        <button id="ffilter-all" onclick="filterForensic('all')"
+                            class="ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-primary text-white border-primary shadow-sm">
+                            All
+                        </button>
+                        <button id="ffilter-VALID" onclick="filterForensic('VALID')"
+                            class="ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
+                            Valid
+                        </button>
+                        <button id="ffilter-TAMPERED" onclick="filterForensic('TAMPERED')"
+                            class="ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 border-rose-500/20 hover:bg-rose-50 dark:hover:bg-rose-900/20">
+                            Tampered
+                        </button>
+                        <button id="ffilter-NO_WATERMARK" onclick="filterForensic('NO_WATERMARK')"
+                            class="ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-50 dark:hover:bg-amber-900/20">
+                            No Watermark
+                        </button>
+                    </div>
+
                     <div class="section-table-wrap">
                         <table class="table-doc">
                             <thead>
@@ -1158,7 +1238,7 @@ $generatedAt = date('F j, Y \a\t g:i A');
                                     <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Analyzed At</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            <tbody id="forensic-tbody" class="divide-y divide-slate-100 dark:divide-slate-800">
                                 <?php if (empty($forensicLogs)): ?>
                                 <tr>
                                     <td colspan="7" class="px-5 py-8 text-center text-slate-400 dark:text-slate-500">No forensic analyses have been run yet</td>
@@ -1193,7 +1273,7 @@ $generatedAt = date('F j, Y \a\t g:i A');
                                     $leakIp = $fl['extracted_ip'] ?? null;
                                     $leakIpDisplay = $leakIp ? htmlspecialchars($leakIp) : '—';
                                 ?>
-                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors" data-status="<?php echo $rs; ?>">
                                     <td class="px-5 py-3">
                                         <p class="font-medium text-slate-900 dark:text-white truncate max-w-[180px]"><?php echo htmlspecialchars($fl['file_name']); ?></p>
                                         <p class="text-xs text-slate-400"><?php echo fmtSize((int)$fl['file_size']); ?></p>
@@ -1229,162 +1309,87 @@ $generatedAt = date('F j, Y \a\t g:i A');
     </div>
 
     <script>
-        const statusChartData = <?= json_encode($statusChart); ?>;
-        const roleChartData = <?= json_encode($roleChart); ?>;
-        const watermarkChartData = <?= json_encode($watermarkChart); ?>;
+        // ── Chart data ───────────────────────────────────────────────
+        const statusChartData   = <?= json_encode($statusChart); ?>;
+        const roleChartData     = <?= json_encode($roleChart); ?>;
+        const watermarkChartData= <?= json_encode($watermarkChart); ?>;
         const uploadTrendLabels = <?= json_encode($uploadTrendLabels); ?>;
         const uploadTrendCounts = <?= json_encode($uploadTrendCounts); ?>;
 
+        // ── PDF data arrays (plain text, no HTML tags) ───────────────
+        const projectsPDF  = <?= json_encode($projectsPDF); ?>;
+        const usersPDF     = <?= json_encode($usersPDF); ?>;
+        const filesPDF     = <?= json_encode($filesPDF); ?>;
+        const activityPDF  = <?= json_encode($activityPDF); ?>;
+        const forensicPDF  = <?= json_encode($forensicPDF); ?>;
+
         function initReportCharts() {
-            const isDark = document.documentElement.classList.contains('dark');
+            const isDark    = document.documentElement.classList.contains('dark');
             const axisColor = isDark ? '#94a3b8' : '#64748b';
             const gridColor = isDark ? 'rgba(100,116,139,0.2)' : 'rgba(148,163,184,0.25)';
+            const legendCfg = { position: 'bottom', labels: { color: axisColor, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' } };
 
+            // User Status — doughnut (was bar, which looked stretched in narrow column)
             new Chart(document.getElementById('userStatusChart'), {
-                type: 'bar',
+                type: 'doughnut',
                 data: {
                     labels: statusChartData.labels,
-                    datasets: [{
-                        label: 'Users',
-                        data: statusChartData.values,
-                        backgroundColor: ['#10b981', '#f59e0b', '#f43f5e', '#ef4444'],
-                        borderRadius: 6,
-                    }]
+                    datasets: [{ data: statusChartData.values, backgroundColor: ['#10b981','#f59e0b','#f43f5e','#ef4444'], borderWidth: 0 }]
                 },
-                options: {
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: {
-                                color: axisColor
-                            },
-                            grid: {
-                                color: gridColor
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                color: axisColor,
-                                precision: 0
-                            },
-                            grid: {
-                                color: gridColor
-                            }
-                        }
-                    }
-                }
+                options: { maintainAspectRatio: false, cutout: '68%', plugins: { legend: legendCfg } }
             });
 
+            // Role Breakdown
             new Chart(document.getElementById('roleDistributionChart'), {
                 type: 'doughnut',
                 data: {
                     labels: roleChartData.labels,
-                    datasets: [{
-                        data: roleChartData.values,
-                        backgroundColor: ['#8b5cf6', '#3b82f6', '#f97316'],
-                        borderWidth: 0
-                    }]
+                    datasets: [{ data: roleChartData.values, backgroundColor: ['#8b5cf6','#3b82f6','#f97316'], borderWidth: 0 }]
                 },
-                options: {
-                    maintainAspectRatio: false,
-                    cutout: '68%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: axisColor,
-                                boxWidth: 10,
-                                usePointStyle: true,
-                                pointStyle: 'circle'
-                            }
-                        }
-                    }
-                }
+                options: { maintainAspectRatio: false, cutout: '68%', plugins: { legend: legendCfg } }
             });
 
+            // Watermark Coverage
             new Chart(document.getElementById('watermarkCoverageChart'), {
                 type: 'doughnut',
                 data: {
                     labels: watermarkChartData.labels,
-                    datasets: [{
-                        data: watermarkChartData.values,
-                        backgroundColor: ['#6366f1', '#94a3b8'],
-                        borderWidth: 0
-                    }]
+                    datasets: [{ data: watermarkChartData.values, backgroundColor: ['#6366f1','#94a3b8'], borderWidth: 0 }]
                 },
-                options: {
-                    maintainAspectRatio: false,
-                    cutout: '68%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: axisColor,
-                                boxWidth: 10,
-                                usePointStyle: true,
-                                pointStyle: 'circle'
-                            }
-                        }
-                    }
-                }
+                options: { maintainAspectRatio: false, cutout: '68%', plugins: { legend: legendCfg } }
             });
 
+            // Upload Trend
             new Chart(document.getElementById('uploadTrendChart'), {
                 type: 'line',
                 data: {
                     labels: uploadTrendLabels,
-                    datasets: [{
-                        label: 'Uploads',
-                        data: uploadTrendCounts,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.15)',
-                        fill: true,
-                        tension: 0.35,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#667eea'
-                    }]
+                    datasets: [{ label: 'Uploads', data: uploadTrendCounts, borderColor: '#667eea', backgroundColor: 'rgba(102,126,234,0.15)', fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: '#667eea' }]
                 },
                 options: {
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        x: {
-                            ticks: {
-                                color: axisColor
-                            },
-                            grid: {
-                                color: gridColor
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                color: axisColor,
-                                precision: 0
-                            },
-                            grid: {
-                                color: gridColor
-                            }
-                        }
+                        x: { ticks: { color: axisColor }, grid: { color: gridColor } },
+                        y: { beginAtZero: true, ticks: { color: axisColor, precision: 0 }, grid: { color: gridColor } }
                     }
                 }
             });
         }
 
         function scrollTo(id) {
-            document.getElementById(id)?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
+            document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ── Forensic table filter ─────────────────────────────────────
+        function filterForensic(status) {
+            document.querySelectorAll('.ffilter-btn').forEach(btn => {
+                btn.className = 'ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700';
+            });
+            const active = document.getElementById('ffilter-' + status);
+            if (active) active.className = 'ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-primary text-white border-primary shadow-sm';
+            document.querySelectorAll('#forensic-tbody tr[data-status]').forEach(row => {
+                row.style.display = (status === 'all' || row.dataset.status === status) ? '' : 'none';
             });
         }
 
@@ -1397,255 +1402,211 @@ $generatedAt = date('F j, Y \a\t g:i A');
             btn.disabled = true;
 
             try {
-                await new Promise(r => setTimeout(r, 300));
+                await new Promise(r => setTimeout(r, 400));
 
                 const { jsPDF } = window.jspdf;
-                // Landscape A4
                 const doc = new jsPDF('l', 'mm', 'a4');
-                const pW  = doc.internal.pageSize.getWidth();  // 297
-                const pH  = doc.internal.pageSize.getHeight(); // 210
-                const lm  = 14;
-                const rm  = 14;
-                const cW  = pW - lm - rm;
+                const pW = doc.internal.pageSize.getWidth();   // 297
+                const pH = doc.internal.pageSize.getHeight();  // 210
+                const lm = 14, rm = 14, cW = pW - lm - rm;
+                const SAFE_BOTTOM = pH - 10; // footer starts at pH-9
 
-                const PERIOD_LABEL = '<?php echo addslashes($periodLabel); ?>';
-                const GEN_AT       = '<?php echo $generatedAt; ?>';
-                const DOC_ID       = 'SV-REP-<?php echo date('Ymd-Hi'); ?>';
-                const TREND_DAYS   = <?php echo $trendDays; ?>;
+                const PERIOD = '<?php echo addslashes($periodLabel); ?>';
+                const GEN_AT = '<?php echo $generatedAt; ?>';
+                const DOC_ID = 'SV-REP-<?php echo date('Ymd-Hi'); ?>';
+                const TREND_D = <?php echo $trendDays; ?>;
 
-                // ── Palette ──────────────────────────────────────
                 const C = {
-                    primary:  [102, 126, 234],
-                    dark:     [15,  23,  42 ],
-                    navy:     [30,  41,  59 ],
-                    slate:    [71,  85,  105],
-                    muted:    [148, 163, 184],
-                    border:   [226, 232, 240],
-                    bg:       [248, 250, 252],
-                    bg2:      [241, 245, 249],
-                    white:    [255, 255, 255],
-                    emerald:  [16,  185, 129],
-                    purple:   [139, 92,  246],
-                    orange:   [249, 115, 22 ],
-                    indigo:   [99,  102, 241],
+                    primary:[102,126,234], dark:[15,23,42],    navy:[30,41,59],
+                    slate:[71,85,105],     muted:[148,163,184], border:[226,232,240],
+                    bg:[248,250,252],      white:[255,255,255],
+                    purple:[139,92,246],   orange:[249,115,22], indigo:[99,102,241],
+                    rose:[244,63,94],      amber:[245,158,11],  emerald:[16,185,129],
                 };
 
-                // ── Draw branded page header ──────────────────────
-                function drawPageHeader(subtitle) {
-                    // Dark bar
-                    doc.setFillColor(...C.dark);
-                    doc.rect(0, 0, pW, 20, 'F');
-                    // Primary accent stripe
-                    doc.setFillColor(...C.primary);
-                    doc.rect(0, 20, pW, 1.8, 'F');
-
-                    // Brand
-                    doc.setFontSize(12);
-                    doc.setFont(undefined, 'bold');
-                    doc.setTextColor(...C.white);
+                const drawHeader = (title) => {
+                    doc.setFillColor(...C.dark);   doc.rect(0, 0, pW, 20, 'F');
+                    doc.setFillColor(...C.primary); doc.rect(0, 20, pW, 1.8, 'F');
+                    doc.setFontSize(12); doc.setFont(undefined,'bold'); doc.setTextColor(...C.white);
                     doc.text('StegaVault', lm, 10);
-                    doc.setFontSize(6.5);
-                    doc.setFont(undefined, 'normal');
-                    doc.setTextColor(...C.muted);
+                    doc.setFontSize(6.5); doc.setFont(undefined,'normal'); doc.setTextColor(...C.muted);
                     doc.text('SECURE ASSET MANAGEMENT SYSTEM', lm, 16);
-
-                    // Divider
-                    doc.setDrawColor(50, 65, 90);
-                    doc.line(lm + 58, 4, lm + 58, 18);
-
-                    // Page title (center)
-                    doc.setFontSize(10);
-                    doc.setFont(undefined, 'bold');
-                    doc.setTextColor(220, 228, 255);
-                    doc.text(subtitle, pW / 2, 10, { align: 'center' });
-
-                    // Period badge
-                    doc.setFontSize(7);
-                    doc.setFont(undefined, 'normal');
-                    doc.setTextColor(160, 178, 240);
-                    doc.text(PERIOD_LABEL, pW / 2, 16.5, { align: 'center' });
-
-                    // Right meta
-                    doc.setFontSize(6.5);
-                    doc.setTextColor(...C.muted);
-                    doc.text(DOC_ID, pW - rm, 9, { align: 'right' });
-                    doc.text(GEN_AT, pW - rm, 15.5, { align: 'right' });
-                }
-
-                // ── Draw page footer (called after all pages done) ──
-                function drawPageFooter(num, total) {
-                    doc.setFillColor(...C.bg);
-                    doc.rect(0, pH - 9, pW, 9, 'F');
-                    doc.setDrawColor(...C.border);
-                    doc.line(lm, pH - 9, pW - rm, pH - 9);
-                    doc.setFontSize(6.5);
-                    doc.setFont(undefined, 'normal');
-                    doc.setTextColor(...C.muted);
-                    doc.text('StegaVault Security Suite  ·  ' + DOC_ID + '  ·  CONFIDENTIAL — ADMIN ONLY', lm, pH - 3.5);
-                    doc.text('Page ' + num + ' of ' + total, pW - rm, pH - 3.5, { align: 'right' });
-                }
-
-                // ── Section title bar ──────────────────────────────
-                function drawSection(label, y) {
-                    doc.setFillColor(237, 241, 255);
-                    doc.rect(lm, y, cW, 7.5, 'F');
-                    doc.setFillColor(...C.primary);
-                    doc.rect(lm, y, 3.5, 7.5, 'F');
-                    doc.setFontSize(7.5);
-                    doc.setFont(undefined, 'bold');
-                    doc.setTextColor(...C.navy);
-                    doc.text(label.toUpperCase(), lm + 7, y + 5.2);
-                    return y + 12;
-                }
-
-                // ── Metric card ───────────────────────────────────
-                function drawCard(x, y, w, h, label, value, subLabel, subVal, accent) {
-                    doc.setFillColor(...C.white);
-                    doc.rect(x, y, w, h, 'F');
-                    doc.setDrawColor(...C.border);
-                    doc.rect(x, y, w, h, 'S');
-                    // Accent top bar
-                    doc.setFillColor(...accent);
-                    doc.rect(x, y, w, 2.5, 'F');
-                    // Label
-                    doc.setFontSize(6.5);
-                    doc.setFont(undefined, 'bold');
-                    doc.setTextColor(...C.muted);
-                    doc.text(label.toUpperCase(), x + 4, y + 8.5);
-                    // Big value
-                    doc.setFontSize(20);
-                    doc.setFont(undefined, 'bold');
-                    doc.setTextColor(...C.dark);
-                    doc.text(String(value), x + 4, y + 21);
-                    // Sub
-                    doc.setFontSize(7);
-                    doc.setFont(undefined, 'normal');
-                    doc.setTextColor(...C.slate);
-                    const subW = doc.getTextWidth(subLabel + ': ');
-                    doc.text(subLabel + ': ', x + 4, y + h - 4);
-                    doc.setFont(undefined, 'bold');
-                    doc.setTextColor(...accent);
-                    doc.text(String(subVal), x + 4 + subW, y + h - 4);
-                }
-
-                // ── autoTable shared styles ───────────────────────
-                const tblStyles = {
-                    margin: { left: lm, right: rm },
-                    theme: 'grid',
-                    styles: { fontSize: 7.5, cellPadding: 2.8, textColor: C.slate, lineColor: C.border, lineWidth: 0.15 },
-                    headStyles: { fillColor: C.primary, textColor: C.white, fontStyle: 'bold', fontSize: 7.5, cellPadding: 3 },
-                    alternateRowStyles: { fillColor: C.bg },
+                    doc.setDrawColor(50,65,90); doc.line(lm+58, 4, lm+58, 18);
+                    doc.setFontSize(10); doc.setFont(undefined,'bold'); doc.setTextColor(220,228,255);
+                    doc.text(title, pW/2, 10, {align:'center'});
+                    doc.setFontSize(7); doc.setFont(undefined,'normal'); doc.setTextColor(160,178,240);
+                    doc.text(PERIOD, pW/2, 16.5, {align:'center'});
+                    doc.setFontSize(6.5); doc.setTextColor(...C.muted);
+                    doc.text(DOC_ID, pW-rm, 9, {align:'right'});
+                    doc.text(GEN_AT, pW-rm, 15.5, {align:'right'});
                 };
 
-                // ════════════════════════════════════════════════════
-                //  PAGE 1 — Executive Summary + Charts
-                // ════════════════════════════════════════════════════
-                drawPageHeader('System Status & Forensic Audit Report');
+                const drawFooter = (n, tot) => {
+                    doc.setFillColor(...C.bg); doc.rect(0, pH-9, pW, 9, 'F');
+                    doc.setDrawColor(...C.border); doc.line(lm, pH-9, pW-rm, pH-9);
+                    doc.setFontSize(6.5); doc.setFont(undefined,'normal'); doc.setTextColor(...C.muted);
+                    doc.text('StegaVault Security Suite  ·  '+DOC_ID+'  ·  CONFIDENTIAL — ADMIN ONLY', lm, pH-3.5);
+                    doc.text('Page '+n+' of '+tot, pW-rm, pH-3.5, {align:'right'});
+                };
+
+                const drawSection = (label, y) => {
+                    doc.setFillColor(237,241,255); doc.rect(lm, y, cW, 7.5, 'F');
+                    doc.setFillColor(...C.primary); doc.rect(lm, y, 3.5, 7.5, 'F');
+                    doc.setFontSize(7.5); doc.setFont(undefined,'bold'); doc.setTextColor(...C.navy);
+                    doc.text(label.toUpperCase(), lm+7, y+5.2);
+                    return y + 12;
+                };
+
+                const drawKpiCard = (x, y, w, h, label, value, sub, sv, accent) => {
+                    doc.setFillColor(...C.white); doc.rect(x, y, w, h, 'F');
+                    doc.setDrawColor(...C.border); doc.rect(x, y, w, h, 'S');
+                    doc.setFillColor(...accent); doc.rect(x, y, w, 2.5, 'F');
+                    doc.setFontSize(6.5); doc.setFont(undefined,'bold'); doc.setTextColor(...C.muted);
+                    doc.text(label.toUpperCase(), x+4, y+8.5);
+                    doc.setFontSize(20); doc.setFont(undefined,'bold'); doc.setTextColor(...C.dark);
+                    doc.text(String(value), x+4, y+21);
+                    doc.setFontSize(7); doc.setFont(undefined,'normal'); doc.setTextColor(...C.slate);
+                    const sw = doc.getTextWidth(sub+': ');
+                    doc.text(sub+': ', x+4, y+h-4);
+                    doc.setFont(undefined,'bold'); doc.setTextColor(...accent);
+                    doc.text(String(sv), x+4+sw, y+h-4);
+                };
+
+                const tbl = {
+                    margin: {left:lm, right:rm}, theme:'grid',
+                    styles: {fontSize:7.5, cellPadding:2.8, textColor:C.slate, lineColor:C.border, lineWidth:0.15},
+                    headStyles: {fillColor:C.primary, textColor:C.white, fontStyle:'bold', fontSize:7.5, cellPadding:3},
+                    alternateRowStyles: {fillColor:C.bg},
+                };
+
+                // ── PAGE 1: Executive Summary + Charts ───────────────
+                drawHeader('System Status & Forensic Audit Report');
                 let y = 26;
 
-                // KPI cards — 4 across
-                const cGap  = 4;
-                const cardW = (cW - cGap * 3) / 4;
-                const cardH = 34;
+                // KPI cards (4 across)
+                const gap=4, cardW=(cW-gap*3)/4, cardH=34;
                 [
-                    { label: 'Total Users',  value: '<?php echo $totalUsers; ?>',       subLabel: 'Active',   subVal: '<?php echo $activeUsers; ?>',                                                           accent: C.primary },
-                    { label: 'Total Files',  value: '<?php echo $totalFiles; ?>',       subLabel: 'Storage',  subVal: '<?php echo fmtSize($totalFileSize); ?>',                                                accent: C.purple  },
-                    { label: 'Watermarked',  value: '<?php echo $watermarkedFiles; ?>', subLabel: 'Coverage', subVal: '<?php echo $totalFiles > 0 ? round(($watermarkedFiles/$totalFiles)*100) : 0; ?>%',      accent: C.indigo  },
-                    { label: 'Projects',     value: '<?php echo $totalProjects; ?>',    subLabel: 'Active',   subVal: '<?php echo $activeProjects; ?>',                                                         accent: C.orange  },
-                ].forEach((card, i) => {
-                    drawCard(lm + i * (cardW + cGap), y, cardW, cardH, card.label, card.value, card.subLabel, card.subVal, card.accent);
+                    {label:'Total Users',  v:'<?php echo $totalUsers; ?>',       sub:'Active',   sv:'<?php echo $activeUsers; ?>',    acc:C.primary},
+                    {label:'Total Files',  v:'<?php echo $totalFiles; ?>',       sub:'Storage',  sv:'<?php echo fmtSize($totalFileSize); ?>', acc:C.purple},
+                    {label:'Watermarked',  v:'<?php echo $watermarkedFiles; ?>', sub:'Coverage', sv:'<?php echo $totalFiles>0?round(($watermarkedFiles/$totalFiles)*100):0; ?>%', acc:C.indigo},
+                    {label:'Projects',     v:'<?php echo $totalProjects; ?>',    sub:'Active',   sv:'<?php echo $activeProjects; ?>', acc:C.orange},
+                ].forEach((c,i) => drawKpiCard(lm+i*(cardW+gap), y, cardW, cardH, c.label, c.v, c.sub, c.sv, c.acc));
+                y += cardH + 6;
+
+                // 3 doughnut charts side-by-side (matches HTML layout)
+                const sm3W=(cW-gap*2)/3, sm3H=60;
+                [{id:'userStatusChart',title:'User Status'},{id:'roleDistributionChart',title:'Role Breakdown'},{id:'watermarkCoverageChart',title:'Watermark Coverage'}]
+                .forEach((ch,i) => {
+                    const cx=lm+i*(sm3W+gap), cy=y;
+                    doc.setFillColor(...C.white); doc.rect(cx,cy,sm3W,sm3H,'F');
+                    doc.setDrawColor(...C.border); doc.rect(cx,cy,sm3W,sm3H,'S');
+                    doc.setFillColor(...C.primary); doc.rect(cx,cy,sm3W,1.5,'F');
+                    doc.setFontSize(7); doc.setFont(undefined,'bold'); doc.setTextColor(...C.navy);
+                    doc.text(ch.title, cx+4, cy+8);
+                    const cvs = document.getElementById(ch.id);
+                    if (cvs) doc.addImage(cvs.toDataURL('image/png',1.0),'PNG',cx+3,cy+10,sm3W-6,sm3H-13);
                 });
-                y += cardH + 7;
+                y += sm3H + 4;
 
-                // Charts — 2×2 grid
-                const chartGap = 5;
-                const chartW   = (cW - chartGap) / 2;
-                const chartH   = 66;
-                const chartDefs = [
-                    { id: 'userStatusChart',        title: 'User Status Distribution'                  },
-                    { id: 'roleDistributionChart',  title: 'Role Breakdown'                             },
-                    { id: 'watermarkCoverageChart', title: 'Watermark Coverage'                         },
-                    { id: 'uploadTrendChart',        title: 'Upload Activity (' + TREND_DAYS + ' Days)' },
-                ];
-                chartDefs.forEach((ch, i) => {
-                    const col = i % 2;
-                    const row = Math.floor(i / 2);
-                    const cx  = lm + col * (chartW + chartGap);
-                    const cy  = y + row * (chartH + 4);
+                // Upload trend full-width (y=130, height=44 → bottom=174 < 201 ✓)
+                const tH=44;
+                doc.setFillColor(...C.white); doc.rect(lm,y,cW,tH,'F');
+                doc.setDrawColor(...C.border); doc.rect(lm,y,cW,tH,'S');
+                doc.setFillColor(...C.primary); doc.rect(lm,y,cW,1.5,'F');
+                doc.setFontSize(7); doc.setFont(undefined,'bold'); doc.setTextColor(...C.navy);
+                doc.text('Upload Activity ('+TREND_D+' Days)', lm+4, y+8);
+                const tCvs = document.getElementById('uploadTrendChart');
+                if (tCvs) doc.addImage(tCvs.toDataURL('image/png',1.0),'PNG',lm+3,y+10,cW-6,tH-13);
 
-                    // Panel
-                    doc.setFillColor(...C.white);
-                    doc.rect(cx, cy, chartW, chartH, 'F');
-                    doc.setDrawColor(...C.border);
-                    doc.rect(cx, cy, chartW, chartH, 'S');
-                    // Panel accent bar
-                    doc.setFillColor(...C.primary);
-                    doc.rect(cx, cy, chartW, 1.5, 'F');
-                    // Title
-                    doc.setFontSize(7.5);
-                    doc.setFont(undefined, 'bold');
-                    doc.setTextColor(...C.navy);
-                    doc.text(ch.title, cx + 4, cy + 8);
-
-                    const canvas = document.getElementById(ch.id);
-                    if (canvas) {
-                        doc.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', cx + 3, cy + 11, chartW - 6, chartH - 14);
-                    }
-                });
-
-                // ════════════════════════════════════════════════════
-                //  PAGE 2 — Project Inventory + Personnel Registry
-                // ════════════════════════════════════════════════════
-                doc.addPage();
-                drawPageHeader('Project Inventory & Personnel Registry');
-                y = 26;
+                // ── PAGE 2: Project Inventory + Personnel Registry ───
+                doc.addPage(); drawHeader('Project Inventory & Personnel Registry'); y=26;
 
                 y = drawSection('I.  Project Inventory', y);
-                doc.autoTable({ html: '#sec-projects table', startY: y, ...tblStyles,
-                    columnStyles: { 0: { fontStyle: 'bold', textColor: C.dark } } });
+                doc.autoTable({
+                    head:[['Project','Status','Creator','Members','Files','Storage','Created']],
+                    body: projectsPDF.length ? projectsPDF : [['No projects found in this period','','','','','','']],
+                    startY:y, ...tbl, columnStyles:{0:{fontStyle:'bold',textColor:C.dark}}
+                });
                 y = doc.lastAutoTable.finalY + 10;
 
-                if (y > pH - 50) { doc.addPage(); drawPageHeader('Personnel Registry'); y = 26; }
+                if (y > SAFE_BOTTOM-50) { doc.addPage(); drawHeader('Personnel Registry'); y=26; }
                 y = drawSection('II.  Personnel Registry', y);
 
-                for (const table of document.querySelectorAll('#sec-users table')) {
-                    const prev = table.closest('.section-table-wrap').previousElementSibling;
-                    const roleTitle = prev ? prev.innerText.trim() : '';
-                    if (y > pH - 40) { doc.addPage(); drawPageHeader('Personnel Registry (cont.)'); y = 26; }
-                    if (roleTitle) {
-                        doc.setFontSize(8);
-                        doc.setFont(undefined, 'bold');
-                        doc.setTextColor(...C.slate);
-                        doc.text(roleTitle, lm, y);
-                        y += 5;
-                    }
-                    doc.autoTable({ html: table, startY: y, ...tblStyles });
+                ['admin','employee','collaborator'].forEach(role => {
+                    const members = usersPDF.filter(u => u.role === role);
+                    if (!members.length) return;
+                    if (y > SAFE_BOTTOM-40) { doc.addPage(); drawHeader('Personnel Registry (cont.)'); y=26; }
+                    doc.setFontSize(8); doc.setFont(undefined,'bold'); doc.setTextColor(...C.slate);
+                    doc.text(role.charAt(0).toUpperCase()+role.slice(1)+' Accounts', lm, y); y+=5;
+                    doc.autoTable({
+                        head:[['Name','Email','Status','Projects','Files','Joined']],
+                        body: members.map(u=>[u.name,u.email,u.status,String(u.projects),String(u.files),u.joined]),
+                        startY:y, ...tbl, columnStyles:{0:{fontStyle:'bold',textColor:C.dark}}
+                    });
                     y = doc.lastAutoTable.finalY + 8;
-                }
+                });
 
-                // ════════════════════════════════════════════════════
-                //  PAGE 3 — Recent Uploads + Forensic Audit Trail
-                // ════════════════════════════════════════════════════
-                doc.addPage();
-                drawPageHeader('Data Uploads & Forensic Audit Trail');
-                y = 26;
+                // ── PAGE 3: Recent Uploads + Activity Log ────────────
+                doc.addPage(); drawHeader('Data Uploads & Forensic Audit Trail'); y=26;
 
                 y = drawSection('III.  Recent Data Uploads', y);
-                doc.autoTable({ html: '#sec-files table', startY: y, ...tblStyles });
+                doc.autoTable({
+                    head:[['File','Type','Size','Uploaded By','Project','Date']],
+                    body: filesPDF.length ? filesPDF : [['No files uploaded in this period','','','','','']],
+                    startY:y, ...tbl
+                });
                 y = doc.lastAutoTable.finalY + 10;
 
-                if (y > pH - 50) { doc.addPage(); drawPageHeader('Forensic Audit Trail'); y = 26; }
-                y = drawSection('IV.  Forensic Audit Trail', y);
-                doc.autoTable({ html: '#sec-activity table', startY: y, ...tblStyles });
+                if (y > SAFE_BOTTOM-50) { doc.addPage(); drawHeader('Forensic Audit Trail'); y=26; }
+                y = drawSection('IV.  Forensic Audit Trail (Recent Activity)', y);
+                doc.autoTable({
+                    head:[['Action','Description','Actor','Timestamp']],
+                    body: activityPDF.length ? activityPDF : [['No activity recorded in this period','','','']],
+                    startY:y, ...tbl
+                });
 
-                // ── Footers on every page ─────────────────────────
+                // ── PAGE 4: Forensic File Analysis History ───────────
+                doc.addPage(); drawHeader('Forensic File Analysis History'); y=26;
+
+                // Forensic KPI strip
+                const fkW=(cW-gap*2)/3, fkH=22;
+                [
+                    {label:'Total Scans',    v:'<?php echo $totalForensicScans; ?>', color:C.primary},
+                    {label:'Tampered Files', v:'<?php echo $tamperedCount; ?>',      color:C.rose},
+                    {label:'No Watermark',   v:'<?php echo $noWatermarkCount; ?>',   color:C.amber},
+                ].forEach((k,i) => {
+                    const kx=lm+i*(fkW+gap);
+                    doc.setFillColor(...C.white); doc.rect(kx,y,fkW,fkH,'F');
+                    doc.setDrawColor(...C.border); doc.rect(kx,y,fkW,fkH,'S');
+                    doc.setFillColor(...k.color); doc.rect(kx,y,fkW,2,'F');
+                    doc.setFontSize(16); doc.setFont(undefined,'bold'); doc.setTextColor(...k.color);
+                    doc.text(k.v, kx+fkW/2, y+13, {align:'center'});
+                    doc.setFontSize(6.5); doc.setFont(undefined,'normal'); doc.setTextColor(...C.muted);
+                    doc.text(k.label.toUpperCase(), kx+fkW/2, y+19, {align:'center'});
+                });
+                y += fkH + 8;
+
+                y = drawSection('V.  Forensic File Analysis History', y);
+                doc.autoTable({
+                    head:[['File','Size','Result','Analyst','Leaked To','Leak IP','Crypto','Analyzed At']],
+                    body: forensicPDF.length ? forensicPDF : [['No forensic analyses have been run yet','','','','','','','']],
+                    startY:y, ...tbl,
+                    columnStyles: {2:{cellWidth:22}},
+                    didParseCell: (data) => {
+                        if (data.section==='body' && data.column.index===2) {
+                            const v = data.cell.raw;
+                            if (v==='Valid')          data.cell.styles.textColor=C.emerald;
+                            else if (v==='Tampered')  data.cell.styles.textColor=C.rose;
+                            else if (v==='No Watermark') data.cell.styles.textColor=C.amber;
+                        }
+                    }
+                });
+
+                // ── Footers on all pages ─────────────────────────────
                 const totalPages = doc.internal.getNumberOfPages();
-                for (let p = 1; p <= totalPages; p++) {
-                    doc.setPage(p);
-                    drawPageFooter(p, totalPages);
-                }
+                for (let p=1; p<=totalPages; p++) { doc.setPage(p); drawFooter(p, totalPages); }
 
-                doc.save('StegaVault_' + DOC_ID + '.pdf');
+                doc.save('StegaVault_'+DOC_ID+'.pdf');
 
             } catch (err) {
                 console.error('PDF Error:', err);
