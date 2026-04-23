@@ -13,17 +13,83 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
-$period = in_array($_GET['period'] ?? '', ['daily', 'weekly', 'monthly']) ? $_GET['period'] : 'all';
-$periodLabel = match($period) {
-    'daily'   => 'Daily Report (Last 24 Hours)',
-    'weekly'  => 'Weekly Report (Last 7 Days)',
-    'monthly' => 'Monthly Report (Last 30 Days)',
-    default   => 'All-Time Report'
-};
-$filterDays  = match($period) { 'daily' => 1, 'weekly' => 7, 'monthly' => 30, default => null };
-$trendDays   = match($period) { 'monthly' => 30, default => 7 };
-$fileDateSQL = $filterDays !== null ? "AND f.upload_date >= NOW() - INTERVAL '{$filterDays} days'" : '';
-$actDateSQL  = $filterDays !== null ? "AND al.created_at >= NOW() - INTERVAL '{$filterDays} days'" : '';
+$period = in_array($_GET['period'] ?? '', ['daily', 'weekly', 'monthly', 'custom']) ? $_GET['period'] : 'all';
+
+// ── Date range from parameters ─────────────────────────────────
+$dateStart = $dateEnd = null;
+$coverageLabel = 'All Time';
+$selectedDate = $weekMode = $weekStart = $weekEnd = null;
+$selMonth = $selYear = $daysInMon = null;
+$customStart = $customEnd = null;
+
+switch ($period) {
+    case 'daily':
+        $selectedDate = trim($_GET['date'] ?? date('Y-m-d'));
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $selectedDate)) $selectedDate = date('Y-m-d');
+        $dateStart     = $selectedDate . ' 00:00:00';
+        $dateEnd       = $selectedDate . ' 23:59:59';
+        $periodLabel   = 'Daily Report';
+        $coverageLabel = date('F j, Y', strtotime($selectedDate));
+        break;
+
+    case 'weekly':
+        $weekMode = in_array($_GET['week_mode'] ?? '', ['current','previous','custom']) ? $_GET['week_mode'] : 'current';
+        $d = new DateTime();
+        if ($weekMode === 'previous') {
+            $d->setISODate((int)date('o'), max(1, (int)date('W') - 1));
+            $weekStart = $d->format('Y-m-d'); $d->modify('+6 days'); $weekEnd = $d->format('Y-m-d');
+        } elseif ($weekMode === 'custom') {
+            $weekStart = trim($_GET['week_start'] ?? ''); $weekEnd = trim($_GET['week_end'] ?? '');
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $weekStart) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $weekEnd)) {
+                $d->setISODate((int)date('o'), (int)date('W')); $weekStart = $d->format('Y-m-d');
+                $d->modify('+6 days'); $weekEnd = $d->format('Y-m-d');
+            }
+        } else {
+            $d->setISODate((int)date('o'), (int)date('W')); $weekStart = $d->format('Y-m-d');
+            $d->modify('+6 days'); $weekEnd = $d->format('Y-m-d');
+        }
+        $dateStart     = $weekStart . ' 00:00:00';
+        $dateEnd       = $weekEnd   . ' 23:59:59';
+        $periodLabel   = 'Weekly Report';
+        $coverageLabel = date('M j', strtotime($weekStart)) . ' – ' . date('M j, Y', strtotime($weekEnd));
+        break;
+
+    case 'monthly':
+        $selMonth  = min(12, max(1, (int)($_GET['month'] ?? date('n'))));
+        $selYear   = min(2030, max(2020, (int)($_GET['year'] ?? date('Y'))));
+        $daysInMon = cal_days_in_month(CAL_GREGORIAN, $selMonth, $selYear);
+        $dateStart = sprintf('%04d-%02d-01 00:00:00', $selYear, $selMonth);
+        $dateEnd   = sprintf('%04d-%02d-%02d 23:59:59', $selYear, $selMonth, $daysInMon);
+        $mName     = date('F', mktime(0, 0, 0, $selMonth, 1, $selYear));
+        $periodLabel   = 'Monthly Report';
+        $coverageLabel = "{$mName} 1–{$daysInMon}, {$selYear}";
+        break;
+
+    case 'custom':
+        $customStart = trim($_GET['start'] ?? date('Y-m-d', strtotime('-30 days')));
+        $customEnd   = trim($_GET['end']   ?? date('Y-m-d'));
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $customStart)) $customStart = date('Y-m-d', strtotime('-30 days'));
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $customEnd))   $customEnd   = date('Y-m-d');
+        $dateStart     = $customStart . ' 00:00:00';
+        $dateEnd       = $customEnd   . ' 23:59:59';
+        $periodLabel   = 'Custom Report';
+        $coverageLabel = date('M j, Y', strtotime($customStart)) . ' – ' . date('M j, Y', strtotime($customEnd));
+        break;
+
+    default:
+        $periodLabel   = 'All-Time Report';
+        $coverageLabel = 'All Time';
+}
+
+$fileDateSQL = $dateStart !== null ? "AND f.upload_date >= '{$dateStart}' AND f.upload_date <= '{$dateEnd}'" : '';
+$actDateSQL  = $dateStart !== null ? "AND al.created_at >= '{$dateStart}' AND al.created_at <= '{$dateEnd}'" : '';
+
+// ── Secondary filters ─────────────────────────────────────────
+$filterAction = preg_replace('/[^a-zA-Z0-9_\- ]/', '', trim($_GET['filter_action'] ?? ''));
+$filterMime   = trim($_GET['filter_mime'] ?? '');
+if (!in_array($filterMime, ['image/', 'video/', 'text/', 'application/pdf', 'application/'], true)) $filterMime = '';
+$actActionSQL = $filterAction !== '' ? " AND al.action = '" . $db->escape($filterAction) . "'" : '';
+$fileMimeSQL  = $filterMime   !== '' ? " AND f.mime_type LIKE '" . $db->escape($filterMime) . "%'" : '';
 
 $user = [
     'id' => $_SESSION['user_id'],
@@ -54,11 +120,11 @@ $totalDownloads = (int) $db->query("SELECT COALESCE(SUM(download_count), 0) FROM
 $totalFolders = $db->query("SELECT COUNT(*) FROM project_folders")->fetch_row()[0];
 $totalMembers = $db->query("SELECT COUNT(*) FROM project_members")->fetch_row()[0];
 
-// ── Period-filtered stats (runs before any prepare/execute — connection is clean) ──
-if ($filterDays !== null) {
-    $dispFiles       = (int) ($r = $db->query("SELECT COUNT(*) FROM files WHERE upload_date >= NOW() - INTERVAL '{$filterDays} days'")) ? (int)$r->fetch_row()[0] : 0;
-    $dispFileSize    = (int) ($r = $db->query("SELECT COALESCE(SUM(file_size),0) FROM files WHERE upload_date >= NOW() - INTERVAL '{$filterDays} days'")) ? (int)$r->fetch_row()[0] : 0;
-    $dispWatermarked = (int) ($r = $db->query("SELECT COUNT(*) FROM files WHERE watermarked IS TRUE AND upload_date >= NOW() - INTERVAL '{$filterDays} days'")) ? (int)$r->fetch_row()[0] : 0;
+// ── Period-filtered stats ─────────────────────────────────────
+if ($dateStart !== null) {
+    $dispFiles       = (int)(($r = $db->query("SELECT COUNT(*) FROM files WHERE upload_date >= '{$dateStart}' AND upload_date <= '{$dateEnd}'")) ? $r->fetch_row()[0] : 0);
+    $dispFileSize    = (int)(($r = $db->query("SELECT COALESCE(SUM(file_size),0) FROM files WHERE upload_date >= '{$dateStart}' AND upload_date <= '{$dateEnd}'")) ? $r->fetch_row()[0] : 0);
+    $dispWatermarked = (int)(($r = $db->query("SELECT COUNT(*) FROM files WHERE watermarked IS TRUE AND upload_date >= '{$dateStart}' AND upload_date <= '{$dateEnd}'")) ? $r->fetch_row()[0] : 0);
 } else {
     $dispFiles       = (int) $totalFiles;
     $dispFileSize    = (int) $totalFileSize;
@@ -106,7 +172,7 @@ $stmt = $db->prepare("
     FROM files f
     LEFT JOIN users u    ON f.user_id    = u.id
     LEFT JOIN projects p ON f.project_id = p.id
-    WHERE 1=1 {$fileDateSQL}
+    WHERE 1=1 {$fileDateSQL} {$fileMimeSQL}
     ORDER BY f.upload_date DESC
     LIMIT 50
 ");
@@ -115,10 +181,13 @@ $recentFiles = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // ── Activity Log ───────────────────────────────────────────────
 $stmt = $db->prepare("
-    SELECT al.action, al.description, al.created_at, u.name AS actor
-        FROM (SELECT * FROM activity_log_admin UNION ALL SELECT * FROM activity_log_employee UNION ALL SELECT * FROM activity_log_collaborator) al
+    SELECT al.action, al.description, al.created_at,
+           u.name AS actor, COALESCE(al.ip_address, '—') AS ip_address
+    FROM (SELECT user_id, action, description, created_at, ip_address FROM activity_log_admin
+          UNION ALL SELECT user_id, action, description, created_at, ip_address FROM activity_log_employee
+          UNION ALL SELECT user_id, action, description, created_at, ip_address FROM activity_log_collaborator) al
     LEFT JOIN users u ON al.user_id = u.id
-    WHERE 1=1 {$actDateSQL}
+    WHERE 1=1 {$actDateSQL} {$actActionSQL}
     ORDER BY al.created_at DESC
     LIMIT 50
 ");
@@ -129,47 +198,59 @@ $activityLog = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $uploadTrendLabels = [];
 $uploadTrendCounts = [];
 
-if ($period === 'daily') {
+if ($period === 'daily' && $dateStart !== null) {
+    // Hourly breakdown for specific date
     $hourMap = [];
     $trendStmt = $db->prepare("
         SELECT EXTRACT(HOUR FROM upload_date)::int AS h, COUNT(*) AS c
-        FROM files
-        WHERE upload_date >= NOW() - INTERVAL '24 hours'
-        GROUP BY EXTRACT(HOUR FROM upload_date)
-        ORDER BY h ASC
+        FROM files WHERE upload_date >= '{$dateStart}' AND upload_date <= '{$dateEnd}'
+        GROUP BY h ORDER BY h ASC
     ");
     if ($trendStmt && $trendStmt->execute()) {
-        foreach ($trendStmt->get_result()->fetch_all(MYSQLI_ASSOC) as $row) {
+        foreach ($trendStmt->get_result()->fetch_all(MYSQLI_ASSOC) as $row)
             $hourMap[(int)$row['h']] = (int)$row['c'];
-        }
     }
-    $currentHour = (int)date('G');
-    for ($i = 23; $i >= 0; $i--) {
-        $h = ($currentHour - $i + 24) % 24;
+    for ($h = 0; $h < 24; $h++) {
         $uploadTrendLabels[] = sprintf('%02d:00', $h);
         $uploadTrendCounts[] = $hourMap[$h] ?? 0;
     }
-    $trendLabel = 'Last 24 Hours (Hourly)';
+    $trendLabel = 'Hourly — ' . date('M j, Y', strtotime($dateStart));
 } else {
+    // Daily breakdown for range or all-time (last 30 days)
     $uploadTrendMap = [];
-    $trendStmt = $db->prepare("
-        SELECT upload_date::date AS d, COUNT(*) AS c
-        FROM files
-        WHERE upload_date >= NOW() - INTERVAL '{$trendDays} days'
-        GROUP BY upload_date::date
-        ORDER BY d ASC
-    ");
+    if ($dateStart !== null) {
+        $trendStmt = $db->prepare("
+            SELECT upload_date::date AS d, COUNT(*) AS c
+            FROM files WHERE upload_date >= '{$dateStart}' AND upload_date <= '{$dateEnd}'
+            GROUP BY d ORDER BY d ASC
+        ");
+    } else {
+        $trendStmt = $db->prepare("
+            SELECT upload_date::date AS d, COUNT(*) AS c
+            FROM files WHERE upload_date >= NOW() - INTERVAL '30 days'
+            GROUP BY d ORDER BY d ASC
+        ");
+    }
     if ($trendStmt && $trendStmt->execute()) {
-        foreach ($trendStmt->get_result()->fetch_all(MYSQLI_ASSOC) as $row) {
+        foreach ($trendStmt->get_result()->fetch_all(MYSQLI_ASSOC) as $row)
             $uploadTrendMap[$row['d']] = (int)$row['c'];
+    }
+    if ($dateStart !== null) {
+        $cur = new DateTime($dateStart); $end = new DateTime($dateEnd);
+        while ($cur <= $end) {
+            $key = $cur->format('Y-m-d');
+            $uploadTrendLabels[] = $cur->format('M d');
+            $uploadTrendCounts[] = $uploadTrendMap[$key] ?? 0;
+            $cur->modify('+1 day');
+        }
+    } else {
+        for ($i = 29; $i >= 0; $i--) {
+            $dk = date('Y-m-d', strtotime("-{$i} days"));
+            $uploadTrendLabels[] = date('M d', strtotime($dk));
+            $uploadTrendCounts[] = $uploadTrendMap[$dk] ?? 0;
         }
     }
-    for ($i = $trendDays - 1; $i >= 0; $i--) {
-        $dateKey = date('Y-m-d', strtotime("-$i days"));
-        $uploadTrendLabels[] = date('M d', strtotime($dateKey));
-        $uploadTrendCounts[] = $uploadTrendMap[$dateKey] ?? 0;
-    }
-    $trendLabel = match($period) { 'weekly' => '7 Days', 'monthly' => '30 Days', default => '30 Days' };
+    $trendLabel = $dateStart !== null ? $coverageLabel : 'Last 30 Days';
 }
 
 $statusChart = [
@@ -216,7 +297,7 @@ $forensicLogs = [];
     analysis_time_ms DOUBLE PRECISION DEFAULT NULL,
     analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
-$falDateSQL = $filterDays !== null ? "AND fal.analyzed_at >= NOW() - INTERVAL '{$filterDays} days'" : '';
+$falDateSQL = $dateStart !== null ? "AND fal.analyzed_at >= '{$dateStart}' AND fal.analyzed_at <= '{$dateEnd}'" : '';
 $falStmt = $db->prepare("
     SELECT fal.file_name, fal.file_size, fal.integrity_status, fal.watermark_found,
            fal.extracted_user_name, fal.extracted_user_role, fal.extracted_ip,
@@ -237,6 +318,40 @@ $tamperedCount        = (int)($db->query("SELECT COUNT(*) FROM forensic_analysis
 $noWatermarkCount     = (int)($db->query("SELECT COUNT(*) FROM forensic_analysis_log WHERE integrity_status='NO_WATERMARK'")->fetch_row()[0] ?? 0);
 
 $generatedAt = date('F j, Y \a\t g:i A');
+
+// ── Audit Analytics ───────────────────────────────────────────
+$auditDateSQL = $dateStart !== null ? "AND al.created_at >= '{$dateStart}' AND al.created_at <= '{$dateEnd}'" : '';
+
+$topUsersResult = $db->query("
+    SELECT COALESCE(u.name, 'System') AS name, COUNT(*) AS cnt
+    FROM (SELECT user_id, created_at FROM activity_log_admin
+          UNION ALL SELECT user_id, created_at FROM activity_log_employee
+          UNION ALL SELECT user_id, created_at FROM activity_log_collaborator) al
+    LEFT JOIN users u ON al.user_id = u.id
+    WHERE 1=1 {$auditDateSQL}
+    GROUP BY al.user_id, u.name ORDER BY cnt DESC LIMIT 5
+");
+$topUsers = $topUsersResult ? $topUsersResult->fetch_all(MYSQLI_ASSOC) : [];
+
+$topActionsResult = $db->query("
+    SELECT action, COUNT(*) AS cnt
+    FROM (SELECT action, created_at FROM activity_log_admin
+          UNION ALL SELECT action, created_at FROM activity_log_employee
+          UNION ALL SELECT action, created_at FROM activity_log_collaborator) al
+    WHERE 1=1 {$auditDateSQL}
+    GROUP BY action ORDER BY cnt DESC LIMIT 5
+");
+$topActions = $topActionsResult ? $topActionsResult->fetch_all(MYSQLI_ASSOC) : [];
+
+$peakDatesResult = $db->query("
+    SELECT DATE(al.created_at) AS day, COUNT(*) AS cnt
+    FROM (SELECT created_at FROM activity_log_admin
+          UNION ALL SELECT created_at FROM activity_log_employee
+          UNION ALL SELECT created_at FROM activity_log_collaborator) al
+    WHERE 1=1 {$auditDateSQL}
+    GROUP BY day ORDER BY cnt DESC LIMIT 5
+");
+$peakDates = $peakDatesResult ? $peakDatesResult->fetch_all(MYSQLI_ASSOC) : [];
 
 // ── PDF data arrays (plain text, no HTML) ─────────────────────
 $projectsPDF = array_map(fn($p) => [
@@ -278,6 +393,7 @@ $activityPDF = array_map(fn($a) => [
     $a['action'],
     $a['description'],
     $a['actor'] ?? 'System',
+    $a['ip_address'] ?? '—',
     date('M d, Y H:i', strtotime($a['created_at'])),
 ], $activityLog);
 
@@ -670,38 +786,169 @@ $forensicPDF = array_map(fn($fl) => [
             <h2 class="text-slate-900 dark:text-white text-lg font-bold tracking-tight flex-shrink-0">Generate Report
             </h2>
             <?php include '../includes/search_bar.php'; ?>
-            <div id="reportFilters" class="flex items-center gap-1.5 flex-shrink-0">
-                <?php foreach (['all' => 'All Time', 'daily' => 'Daily', 'weekly' => 'Weekly', 'monthly' => 'Monthly'] as $val => $label): ?>
-                <a href="?period=<?php echo $val; ?>"
-                    class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border
-                    <?php echo $period === $val
-                        ? 'bg-primary text-white border-primary shadow-sm'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'; ?>">
-                    <?php echo $label; ?>
-                </a>
-                <?php endforeach; ?>
-            </div>
-
-            <div class="flex items-center gap-3 flex-shrink-0">
-                <div
-                    class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-semibold">
+            <div class="flex items-center gap-3 flex-shrink-0 ml-auto">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-semibold">
+                    <span class="material-symbols-outlined text-[14px]">calendar_month</span>
+                    <?php echo htmlspecialchars($coverageLabel); ?>
+                </div>
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-semibold">
                     <span class="size-2 rounded-full bg-emerald-500"></span>
                     System: Operational
                 </div>
-                <!-- <button id="downloadPdfBtn" onclick="generateProfessionalPDF()"
+                <button id="downloadPdfBtn" onclick="generateProfessionalPDF()"
                     class="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-lg transition-all shadow-sm">
                     <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
-                    Generate PDF Report
-                </button> -->
-                <button id="downloadPdfBtn" onclick="generateProfessionalPDF()"
-                    class="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700">
-                    <span class="material-symbols-outlined text-[18px]">print</span>
-                    Generate <?php echo $period !== 'all' ? ucfirst($period).' ' : ''; ?>Report
+                    Download PDF
                 </button>
             </div>
         </header>
 
         <div class="p-8 space-y-8 max-w-[1400px] mx-auto w-full">
+
+            <!-- ─ Report Configuration Card ──────────────────────── -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="bg-primary/10 rounded-lg p-2">
+                        <span class="material-symbols-outlined text-primary text-[20px]">tune</span>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Report Configuration</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Select period and filters, then click Generate</p>
+                    </div>
+                </div>
+                <form method="GET" id="reportForm">
+                    <div class="flex flex-wrap gap-4 items-end mb-5">
+                        <!-- Period type tabs -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Report Period</label>
+                            <div class="flex items-center gap-1.5">
+                                <input type="hidden" name="period" id="periodInput" value="<?php echo htmlspecialchars($period); ?>">
+                                <?php foreach (['all' => 'All Time', 'daily' => 'Daily', 'weekly' => 'Weekly', 'monthly' => 'Monthly', 'custom' => 'Custom'] as $v => $lbl): ?>
+                                <button type="button" id="ptab-<?php echo $v; ?>" onclick="selectPeriod('<?php echo $v; ?>')"
+                                    class="ptab px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border
+                                    <?php echo $period === $v ? 'bg-primary text-white border-primary shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'; ?>">
+                                    <?php echo $lbl; ?>
+                                </button>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <!-- Daily: specific date picker -->
+                        <div id="ctrl-daily" class="<?php echo $period !== 'daily' ? 'hidden' : ''; ?>">
+                            <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Date</label>
+                            <input type="date" name="date" max="<?php echo date('Y-m-d'); ?>"
+                                value="<?php echo htmlspecialchars($selectedDate ?? date('Y-m-d')); ?>"
+                                class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                        </div>
+
+                        <!-- Weekly: mode + optional custom range -->
+                        <div id="ctrl-weekly" class="flex items-end gap-2 <?php echo $period !== 'weekly' ? 'hidden' : ''; ?>">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Week</label>
+                                <select name="week_mode" id="weekModeSelect" onchange="toggleWeekCustom()"
+                                    class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                    <option value="current" <?php echo ($weekMode ?? 'current') === 'current' ? 'selected' : ''; ?>>Current Week</option>
+                                    <option value="previous" <?php echo ($weekMode ?? '') === 'previous' ? 'selected' : ''; ?>>Previous Week</option>
+                                    <option value="custom" <?php echo ($weekMode ?? '') === 'custom' ? 'selected' : ''; ?>>Custom Range</option>
+                                </select>
+                            </div>
+                            <div id="weekCustomDates" class="flex items-end gap-2 <?php echo ($weekMode ?? '') !== 'custom' ? 'hidden' : ''; ?>">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">From</label>
+                                    <input type="date" name="week_start" value="<?php echo htmlspecialchars($weekStart ?? ''); ?>"
+                                        class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">To</label>
+                                    <input type="date" name="week_end" value="<?php echo htmlspecialchars($weekEnd ?? ''); ?>"
+                                        class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Monthly: month + year dropdowns -->
+                        <div id="ctrl-monthly" class="flex items-end gap-2 <?php echo $period !== 'monthly' ? 'hidden' : ''; ?>">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Month</label>
+                                <select name="month" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                    <?php for ($m = 1; $m <= 12; $m++): ?>
+                                    <option value="<?php echo $m; ?>" <?php echo ($selMonth ?? (int)date('n')) === $m ? 'selected' : ''; ?>><?php echo date('F', mktime(0,0,0,$m,1)); ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Year</label>
+                                <select name="year" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                    <?php for ($y = 2024; $y <= 2027; $y++): ?>
+                                    <option value="<?php echo $y; ?>" <?php echo ($selYear ?? (int)date('Y')) === $y ? 'selected' : ''; ?>><?php echo $y; ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Custom: start + end date -->
+                        <div id="ctrl-custom" class="flex items-end gap-2 <?php echo $period !== 'custom' ? 'hidden' : ''; ?>">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Start Date</label>
+                                <input type="date" name="start" value="<?php echo htmlspecialchars($customStart ?? date('Y-m-d', strtotime('-30 days'))); ?>"
+                                    class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">End Date</label>
+                                <input type="date" name="end" value="<?php echo htmlspecialchars($customEnd ?? date('Y-m-d')); ?>"
+                                    class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                            </div>
+                        </div>
+
+                        <button type="submit"
+                            class="flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-lg transition-all shadow-sm ml-auto">
+                            <span class="material-symbols-outlined text-[18px]">bar_chart</span>
+                            Generate Report
+                        </button>
+                    </div>
+
+                    <!-- Secondary filters -->
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-5">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-[16px]">filter_alt</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Filters</span>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Activity Type</label>
+                            <select name="filter_action" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                <option value="">All Actions</option>
+                                <?php
+                                $actionTypesRes = $db->query("SELECT DISTINCT action FROM (SELECT action FROM activity_log_admin UNION SELECT action FROM activity_log_employee UNION SELECT action FROM activity_log_collaborator) a ORDER BY action");
+                                if ($actionTypesRes) {
+                                    while ($aRow = $actionTypesRes->fetch_row()) {
+                                        $sel = $filterAction === $aRow[0] ? 'selected' : '';
+                                        echo '<option value="' . htmlspecialchars($aRow[0]) . '" ' . $sel . '>' . htmlspecialchars($aRow[0]) . '</option>';
+                                    }
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">File Type</label>
+                            <select name="filter_mime" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                <option value="">All Types</option>
+                                <option value="image/" <?php echo $filterMime === 'image/' ? 'selected' : ''; ?>>Images</option>
+                                <option value="application/pdf" <?php echo $filterMime === 'application/pdf' ? 'selected' : ''; ?>>PDF Documents</option>
+                                <option value="video/" <?php echo $filterMime === 'video/' ? 'selected' : ''; ?>>Video</option>
+                                <option value="text/" <?php echo $filterMime === 'text/' ? 'selected' : ''; ?>>Text Documents</option>
+                                <option value="application/" <?php echo $filterMime === 'application/' ? 'selected' : ''; ?>>Other Files</option>
+                            </select>
+                        </div>
+                        <?php if ($filterAction !== '' || $filterMime !== ''): ?>
+                        <a href="?period=<?php echo htmlspecialchars($period); ?><?php echo $dateStart !== null ? '&date=' . htmlspecialchars($selectedDate ?? '') : ''; ?>"
+                            class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 rounded-lg text-xs font-semibold hover:bg-rose-500/20 transition-colors">
+                            <span class="material-symbols-outlined text-[14px]">filter_alt_off</span>
+                            Clear Filters
+                        </a>
+                        <?php endif; ?>
+                    </div>
+                </form>
+            </div>
 
             <!-- Report Header -->
             <div id="printableReport"
@@ -729,6 +976,18 @@ $forensicPDF = array_map(fn($fl) => [
                             &nbsp;&mdash;&nbsp;
                             <span class="font-semibold text-primary"><?php echo htmlspecialchars($periodLabel); ?></span>
                         </p>
+                        <div class="mt-3 flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold">
+                                <span class="material-symbols-outlined text-[13px]">calendar_month</span>
+                                Coverage: <?php echo htmlspecialchars($coverageLabel); ?>
+                            </span>
+                            <?php if ($filterAction !== '' || $filterMime !== ''): ?>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-full text-xs font-bold">
+                                <span class="material-symbols-outlined text-[13px]">filter_alt</span>
+                                Filtered
+                            </span>
+                            <?php endif; ?>
+                        </div>
                     </div>
                     <div class="text-right">
                         <div class="mb-4">
@@ -1192,27 +1451,34 @@ $forensicPDF = array_map(fn($fl) => [
                     <div class="section-table-wrap">
                         <table class="table-doc">
                             <thead>
-                                <tr>
-                                    <th>Action</th>
-                                    <th>Actor</th>
-                                    <th>Timestamp</th>
+                                <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Action</th>
+                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actor</th>
+                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">IP Address</th>
+                                    <th class="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Timestamp</th>
                                 </tr>
                             </thead>
                             <tbody id="activity-tbody">
+                                <?php if (empty($activityLog)): ?>
+                                <tr><td colspan="4" class="px-5 py-8 text-center text-slate-400 dark:text-slate-500">No activity recorded for this period</td></tr>
+                                <?php endif; ?>
                                 <?php foreach ($activityLog as $log): ?>
-                                <tr>
-                                    <td>
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                    <td class="px-5 py-3">
                                         <p class="font-bold text-slate-900 dark:text-white">
                                             <?php echo htmlspecialchars($log['action']); ?>
                                         </p>
-                                        <p class="text-xs text-slate-500">
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                                             <?php echo htmlspecialchars($log['description']); ?>
                                         </p>
                                     </td>
-                                    <td>
+                                    <td class="px-5 py-3 text-slate-500 dark:text-slate-400">
                                         <?php echo htmlspecialchars($log['actor'] ?? 'System'); ?>
                                     </td>
-                                    <td class="text-right text-xs">
+                                    <td class="px-5 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">
+                                        <?php echo htmlspecialchars($log['ip_address'] ?? '—'); ?>
+                                    </td>
+                                    <td class="px-5 py-3 text-right text-xs text-slate-400">
                                         <?php echo date('M d, Y H:i', strtotime($log['created_at'])); ?>
                                     </td>
                                 </tr>
@@ -1223,9 +1489,76 @@ $forensicPDF = array_map(fn($fl) => [
                     <div id="pgn-activity"></div>
                 </div>
 
-                <!-- ─ SECTION 6: Forensic Analysis History ───────────── -->
+                <!-- ─ SECTION 6: System Audit & Analytics ──────────── -->
+                <div id="sec-audit" class="mb-12">
+                    <div class="report-section-title mb-6">VI. System Audit &amp; Analytics</div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Most Active Users -->
+                        <div class="section-table-wrap p-5">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-[16px]">person</span>
+                                Most Active Users
+                            </h4>
+                            <?php if (empty($topUsers)): ?>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 py-4 text-center">No activity data for this period</p>
+                            <?php else: ?>
+                            <div class="space-y-2">
+                                <?php foreach ($topUsers as $i => $u): ?>
+                                <div class="flex items-center gap-3 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                                    <span class="size-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold flex-shrink-0"><?php echo $i + 1; ?></span>
+                                    <span class="text-sm font-medium text-slate-900 dark:text-white flex-1 truncate"><?php echo htmlspecialchars($u['name']); ?></span>
+                                    <span class="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full"><?php echo (int)$u['cnt']; ?></span>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        <!-- Most Frequent Actions -->
+                        <div class="section-table-wrap p-5">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-purple-500 text-[16px]">bolt</span>
+                                Most Frequent Actions
+                            </h4>
+                            <?php if (empty($topActions)): ?>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 py-4 text-center">No activity data for this period</p>
+                            <?php else: ?>
+                            <div class="space-y-2">
+                                <?php foreach ($topActions as $i => $a): ?>
+                                <div class="flex items-center gap-3 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                                    <span class="size-5 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center text-[10px] font-bold flex-shrink-0"><?php echo $i + 1; ?></span>
+                                    <span class="text-sm font-medium text-slate-900 dark:text-white flex-1 truncate"><?php echo htmlspecialchars($a['action']); ?></span>
+                                    <span class="text-xs font-bold text-purple-500 bg-purple-500/10 px-2 py-0.5 rounded-full"><?php echo (int)$a['cnt']; ?></span>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        <!-- Peak Activity Dates -->
+                        <div class="section-table-wrap p-5">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-orange-500 text-[16px]">trending_up</span>
+                                Peak Activity Dates
+                            </h4>
+                            <?php if (empty($peakDates)): ?>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 py-4 text-center">No activity data for this period</p>
+                            <?php else: ?>
+                            <div class="space-y-2">
+                                <?php foreach ($peakDates as $i => $pd): ?>
+                                <div class="flex items-center gap-3 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                                    <span class="size-5 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center text-[10px] font-bold flex-shrink-0"><?php echo $i + 1; ?></span>
+                                    <span class="text-sm font-medium text-slate-900 dark:text-white flex-1"><?php echo date('M j, Y', strtotime($pd['day'])); ?></span>
+                                    <span class="text-xs font-bold text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded-full"><?php echo (int)$pd['cnt']; ?></span>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─ SECTION 7: Forensic Analysis History ───────────── -->
                 <div id="sec-forensic" class="mb-12">
-                    <div class="report-section-title mb-6">VI. Forensic File Analysis History</div>
+                    <div class="report-section-title mb-6">VII. Forensic File Analysis History</div>
 
                     <!-- KPI strip -->
                     <div class="grid grid-cols-3 gap-4 mb-6">
@@ -1511,6 +1844,36 @@ $forensicPDF = array_map(fn($fl) => [
             paginators['forensic-tbody'] = initPagination('forensic-tbody', 'pgn-forensic', 10);
         });
 
+        // ── Report Configuration Controls ─────────────────────────
+        function selectPeriod(p) {
+            document.getElementById('periodInput').value = p;
+            ['all','daily','weekly','monthly','custom'].forEach(v => {
+                const tab  = document.getElementById('ptab-' + v);
+                const ctrl = document.getElementById('ctrl-' + v);
+                if (tab) {
+                    const isActive = v === p;
+                    tab.className = 'ptab px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ' +
+                        (isActive
+                            ? 'bg-primary text-white border-primary shadow-sm'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700');
+                }
+                if (ctrl) ctrl.classList.toggle('hidden', v !== p);
+            });
+            // 'all' has no ctrl div — ensure all ctrl divs are hidden
+            if (p === 'all') {
+                ['daily','weekly','monthly','custom'].forEach(v => {
+                    const ctrl = document.getElementById('ctrl-' + v);
+                    if (ctrl) ctrl.classList.add('hidden');
+                });
+            }
+        }
+
+        function toggleWeekCustom() {
+            const mode = document.getElementById('weekModeSelect')?.value;
+            const div  = document.getElementById('weekCustomDates');
+            if (div) div.classList.toggle('hidden', mode !== 'custom');
+        }
+
         async function generateProfessionalPDF() {
             const btn = document.getElementById('downloadPdfBtn');
             const originalText = btn.innerHTML;
@@ -1527,10 +1890,11 @@ $forensicPDF = array_map(fn($fl) => [
                 const lm = 14, rm = 14, cW = pW - lm - rm;
                 const SAFE_BOTTOM = pH - 10; // footer starts at pH-9
 
-                const PERIOD = '<?php echo addslashes($periodLabel); ?>';
-                const GEN_AT = '<?php echo $generatedAt; ?>';
-                const DOC_ID = 'SV-REP-<?php echo date('Ymd-Hi'); ?>';
-                const TREND_D = <?php echo $trendDays; ?>;
+                const PERIOD     = '<?php echo addslashes($periodLabel); ?>';
+                const COVERAGE   = '<?php echo addslashes($coverageLabel); ?>';
+                const GEN_AT     = '<?php echo $generatedAt; ?>';
+                const DOC_ID     = 'SV-REP-<?php echo date('Ymd-Hi'); ?>';
+                const TREND_LABEL = <?php echo json_encode($trendLabel); ?>;
 
                 const C = {
                     primary:[102,126,234], dark:[15,23,42],    navy:[30,41,59],
@@ -1551,7 +1915,7 @@ $forensicPDF = array_map(fn($fl) => [
                     doc.setFontSize(10); doc.setFont(undefined,'bold'); doc.setTextColor(220,228,255);
                     doc.text(title, pW/2, 10, {align:'center'});
                     doc.setFontSize(7); doc.setFont(undefined,'normal'); doc.setTextColor(160,178,240);
-                    doc.text(PERIOD, pW/2, 16.5, {align:'center'});
+                    doc.text(PERIOD + '  ·  Coverage: ' + COVERAGE, pW/2, 16.5, {align:'center'});
                     doc.setFontSize(6.5); doc.setTextColor(...C.muted);
                     doc.text(DOC_ID, pW-rm, 9, {align:'right'});
                     doc.text(GEN_AT, pW-rm, 15.5, {align:'right'});
@@ -1630,7 +1994,7 @@ $forensicPDF = array_map(fn($fl) => [
                 doc.setDrawColor(...C.border); doc.rect(lm,y,cW,tH,'S');
                 doc.setFillColor(...C.primary); doc.rect(lm,y,cW,1.5,'F');
                 doc.setFontSize(7); doc.setFont(undefined,'bold'); doc.setTextColor(...C.navy);
-                doc.text('Upload Activity ('+TREND_D+' Days)', lm+4, y+8);
+                doc.text('Upload Activity — ' + TREND_LABEL, lm+4, y+8);
                 const tCvs = document.getElementById('uploadTrendChart');
                 if (tCvs) doc.addImage(tCvs.toDataURL('image/png',1.0),'PNG',lm+3,y+10,cW-6,tH-13);
 
@@ -1676,9 +2040,10 @@ $forensicPDF = array_map(fn($fl) => [
                 if (y > SAFE_BOTTOM-50) { doc.addPage(); drawHeader('Forensic Audit Trail'); y=26; }
                 y = drawSection('IV.  Forensic Audit Trail (Recent Activity)', y);
                 doc.autoTable({
-                    head:[['Action','Description','Actor','Timestamp']],
-                    body: activityPDF.length ? activityPDF : [['No activity recorded in this period','','','']],
-                    startY:y, ...tbl
+                    head:[['Action','Description','Actor','IP Address','Timestamp']],
+                    body: activityPDF.length ? activityPDF : [['No activity recorded in this period','','','','']],
+                    startY:y, ...tbl,
+                    columnStyles:{3:{font:'courier',fontSize:6.5}}
                 });
 
                 // ── PAGE 4: Forensic File Analysis History ───────────
