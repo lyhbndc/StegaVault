@@ -22,8 +22,8 @@ $periodLabel = match($period) {
 };
 $filterDays  = match($period) { 'daily' => 1, 'weekly' => 7, 'monthly' => 30, default => null };
 $trendDays   = match($period) { 'monthly' => 30, default => 7 };
-$fileDateSQL = $filterDays !== null ? "AND f.upload_date >= DATE_SUB(NOW(), INTERVAL {$filterDays} DAY)" : '';
-$actDateSQL  = $filterDays !== null ? "AND al.created_at >= DATE_SUB(NOW(), INTERVAL {$filterDays} DAY)" : '';
+$fileDateSQL = $filterDays !== null ? "AND f.upload_date >= NOW() - INTERVAL '{$filterDays} days'" : '';
+$actDateSQL  = $filterDays !== null ? "AND al.created_at >= NOW() - INTERVAL '{$filterDays} days'" : '';
 
 $user = [
     'id' => $_SESSION['user_id'],
@@ -56,9 +56,9 @@ $totalMembers = $db->query("SELECT COUNT(*) FROM project_members")->fetch_row()[
 
 // ── Period-filtered stats (runs before any prepare/execute — connection is clean) ──
 if ($filterDays !== null) {
-    $dispFiles       = (int) $db->query("SELECT COUNT(*) FROM files WHERE upload_date >= DATE_SUB(NOW(), INTERVAL {$filterDays} DAY)")->fetch_row()[0];
-    $dispFileSize    = (int) $db->query("SELECT COALESCE(SUM(file_size),0) FROM files WHERE upload_date >= DATE_SUB(NOW(), INTERVAL {$filterDays} DAY)")->fetch_row()[0];
-    $dispWatermarked = (int) $db->query("SELECT COUNT(*) FROM files WHERE watermarked IS TRUE AND upload_date >= DATE_SUB(NOW(), INTERVAL {$filterDays} DAY)")->fetch_row()[0];
+    $dispFiles       = (int) ($r = $db->query("SELECT COUNT(*) FROM files WHERE upload_date >= NOW() - INTERVAL '{$filterDays} days'")) ? (int)$r->fetch_row()[0] : 0;
+    $dispFileSize    = (int) ($r = $db->query("SELECT COALESCE(SUM(file_size),0) FROM files WHERE upload_date >= NOW() - INTERVAL '{$filterDays} days'")) ? (int)$r->fetch_row()[0] : 0;
+    $dispWatermarked = (int) ($r = $db->query("SELECT COUNT(*) FROM files WHERE watermarked IS TRUE AND upload_date >= NOW() - INTERVAL '{$filterDays} days'")) ? (int)$r->fetch_row()[0] : 0;
 } else {
     $dispFiles       = (int) $totalFiles;
     $dispFileSize    = (int) $totalFileSize;
@@ -130,18 +130,18 @@ $uploadTrendLabels = [];
 $uploadTrendCounts = [];
 
 if ($period === 'daily') {
-    // Hourly buckets — use prepare() to stay consistent after prior prepare/execute cycles
+    $hourMap = [];
     $trendStmt = $db->prepare("
-        SELECT HOUR(upload_date) AS h, COUNT(*) AS c
+        SELECT EXTRACT(HOUR FROM upload_date)::int AS h, COUNT(*) AS c
         FROM files
-        WHERE upload_date >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
-        GROUP BY HOUR(upload_date)
+        WHERE upload_date >= NOW() - INTERVAL '24 hours'
+        GROUP BY EXTRACT(HOUR FROM upload_date)
         ORDER BY h ASC
     ");
-    $trendStmt->execute();
-    $hourMap = [];
-    foreach ($trendStmt->get_result()->fetch_all(MYSQLI_ASSOC) as $row) {
-        $hourMap[(int)$row['h']] = (int)$row['c'];
+    if ($trendStmt && $trendStmt->execute()) {
+        foreach ($trendStmt->get_result()->fetch_all(MYSQLI_ASSOC) as $row) {
+            $hourMap[(int)$row['h']] = (int)$row['c'];
+        }
     }
     $currentHour = (int)date('G');
     for ($i = 23; $i >= 0; $i--) {
@@ -151,17 +151,18 @@ if ($period === 'daily') {
     }
     $trendLabel = 'Last 24 Hours (Hourly)';
 } else {
+    $uploadTrendMap = [];
     $trendStmt = $db->prepare("
-        SELECT DATE(upload_date) AS d, COUNT(*) AS c
+        SELECT upload_date::date AS d, COUNT(*) AS c
         FROM files
-        WHERE upload_date >= DATE_SUB(NOW(), INTERVAL {$trendDays} DAY)
-        GROUP BY DATE(upload_date)
+        WHERE upload_date >= NOW() - INTERVAL '{$trendDays} days'
+        GROUP BY upload_date::date
         ORDER BY d ASC
     ");
-    $trendStmt->execute();
-    $uploadTrendMap = [];
-    foreach ($trendStmt->get_result()->fetch_all(MYSQLI_ASSOC) as $row) {
-        $uploadTrendMap[$row['d']] = (int)$row['c'];
+    if ($trendStmt && $trendStmt->execute()) {
+        foreach ($trendStmt->get_result()->fetch_all(MYSQLI_ASSOC) as $row) {
+            $uploadTrendMap[$row['d']] = (int)$row['c'];
+        }
     }
     for ($i = $trendDays - 1; $i >= 0; $i--) {
         $dateKey = date('Y-m-d', strtotime("-$i days"));
@@ -215,7 +216,7 @@ $forensicLogs = [];
     analysis_time_ms DOUBLE PRECISION DEFAULT NULL,
     analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
-$falDateSQL = $filterDays !== null ? "AND fal.analyzed_at >= DATE_SUB(NOW(), INTERVAL {$filterDays} DAY)" : '';
+$falDateSQL = $filterDays !== null ? "AND fal.analyzed_at >= NOW() - INTERVAL '{$filterDays} days'" : '';
 $falStmt = $db->prepare("
     SELECT fal.file_name, fal.file_size, fal.integrity_status, fal.watermark_found,
            fal.extracted_user_name, fal.extracted_user_role, fal.extracted_ip,
@@ -695,7 +696,7 @@ $forensicPDF = array_map(fn($fl) => [
                 <button id="downloadPdfBtn" onclick="generateProfessionalPDF()"
                     class="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700">
                     <span class="material-symbols-outlined text-[18px]">print</span>
-                    Generate Report
+                    Generate <?php echo $period !== 'all' ? ucfirst($period).' ' : ''; ?>Report
                 </button>
             </div>
         </header>
