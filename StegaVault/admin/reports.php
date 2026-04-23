@@ -1126,7 +1126,7 @@ $forensicPDF = array_map(fn($fl) => [
                                         Date</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            <tbody id="files-tbody" class="divide-y divide-slate-100 dark:divide-slate-800">
                                 <?php if (count($recentFiles) === 0): ?>
                                 <tr>
                                     <td colspan="6" class="px-5 py-8 text-center text-slate-400 dark:text-slate-500">No
@@ -1183,6 +1183,7 @@ $forensicPDF = array_map(fn($fl) => [
                             </tbody>
                         </table>
                     </div>
+                    <div id="pgn-files"></div>
                 </div>
 
                 <!-- ─ SECTION 5: Forensic Audit Trail ────────────────── -->
@@ -1197,7 +1198,7 @@ $forensicPDF = array_map(fn($fl) => [
                                     <th>Timestamp</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="activity-tbody">
                                 <?php foreach ($activityLog as $log): ?>
                                 <tr>
                                     <td>
@@ -1219,6 +1220,7 @@ $forensicPDF = array_map(fn($fl) => [
                             </tbody>
                         </table>
                     </div>
+                    <div id="pgn-activity"></div>
                 </div>
 
                 <!-- ─ SECTION 6: Forensic Analysis History ───────────── -->
@@ -1328,6 +1330,7 @@ $forensicPDF = array_map(fn($fl) => [
                             </tbody>
                         </table>
                     </div>
+                    <div id="pgn-forensic"></div>
                 </div>
 
                 <!-- Report Footer -->
@@ -1418,6 +1421,72 @@ $forensicPDF = array_map(fn($fl) => [
             document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
+        // ── Table pagination ──────────────────────────────────────────
+        const paginators = {};
+
+        function initPagination(tbodyId, containerId, pageSize = 10) {
+            const tbody = document.getElementById(tbodyId);
+            const container = document.getElementById(containerId);
+            if (!tbody || !container) return null;
+
+            function allRows() {
+                return Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('td[colspan]'));
+            }
+            function visibleRows() {
+                return allRows().filter(r => !r.hasAttribute('data-filtered-out'));
+            }
+            function pageRange(cur, tot) {
+                if (tot <= 7) return Array.from({length: tot}, (_, i) => i + 1);
+                const p = [1];
+                if (cur > 3) p.push('…');
+                for (let i = Math.max(2, cur - 1); i <= Math.min(tot - 1, cur + 1); i++) p.push(i);
+                if (cur < tot - 2) p.push('…');
+                p.push(tot);
+                return p;
+            }
+            function go(page) {
+                const rows = visibleRows();
+                const total = rows.length;
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+                page = Math.max(1, Math.min(page, totalPages));
+
+                allRows().forEach(r => r.style.display = 'none');
+                const start = (page - 1) * pageSize;
+                rows.slice(start, start + pageSize).forEach(r => r.style.display = '');
+
+                if (total === 0 || totalPages <= 1) { container.innerHTML = ''; return page; }
+
+                const end = Math.min(page * pageSize, total);
+                const b = 'px-2.5 py-1 text-xs rounded-lg border transition-colors';
+                const bActive = `${b} bg-primary border-primary text-white font-semibold`;
+                const bNorm   = `${b} border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700`;
+                const bDis    = `${b} border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-300 dark:text-slate-600 cursor-not-allowed`;
+
+                const pageButtons = pageRange(page, totalPages).map(p =>
+                    p === '…'
+                        ? `<span class="px-1 text-xs text-slate-400 select-none">…</span>`
+                        : `<button onclick="paginators['${tbodyId}'].go(${p})" class="${p === page ? bActive : bNorm}">${p}</button>`
+                ).join('');
+
+                container.innerHTML = `
+                    <div class="flex items-center justify-between px-1 mt-4">
+                        <span class="text-xs text-slate-400 dark:text-slate-500">
+                            Showing <span class="font-semibold text-slate-600 dark:text-slate-300">${start + 1}–${end}</span>
+                            of <span class="font-semibold text-slate-600 dark:text-slate-300">${total}</span> entries
+                        </span>
+                        <div class="flex items-center gap-1">
+                            <button onclick="paginators['${tbodyId}'].go(${page - 1})" ${page <= 1 ? 'disabled' : ''} class="${page <= 1 ? bDis : bNorm}">‹ Prev</button>
+                            ${pageButtons}
+                            <button onclick="paginators['${tbodyId}'].go(${page + 1})" ${page >= totalPages ? 'disabled' : ''} class="${page >= totalPages ? bDis : bNorm}">Next ›</button>
+                        </div>
+                    </div>`;
+                return page;
+            }
+
+            go(1);
+            return { go, reset: () => go(1) };
+        }
+
         // ── Forensic table filter ─────────────────────────────────────
         function filterForensic(status) {
             document.querySelectorAll('.ffilter-btn').forEach(btn => {
@@ -1426,11 +1495,21 @@ $forensicPDF = array_map(fn($fl) => [
             const active = document.getElementById('ffilter-' + status);
             if (active) active.className = 'ffilter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-primary text-white border-primary shadow-sm';
             document.querySelectorAll('#forensic-tbody tr[data-status]').forEach(row => {
-                row.style.display = (status === 'all' || row.dataset.status === status) ? '' : 'none';
+                if (status === 'all' || row.dataset.status === status) {
+                    row.removeAttribute('data-filtered-out');
+                } else {
+                    row.setAttribute('data-filtered-out', '');
+                }
             });
+            if (paginators['forensic-tbody']) paginators['forensic-tbody'].reset();
         }
 
-        document.addEventListener('DOMContentLoaded', initReportCharts);
+        document.addEventListener('DOMContentLoaded', function() {
+            initReportCharts();
+            paginators['files-tbody']    = initPagination('files-tbody',    'pgn-files',    10);
+            paginators['activity-tbody'] = initPagination('activity-tbody', 'pgn-activity', 10);
+            paginators['forensic-tbody'] = initPagination('forensic-tbody', 'pgn-forensic', 10);
+        });
 
         async function generateProfessionalPDF() {
             const btn = document.getElementById('downloadPdfBtn');
