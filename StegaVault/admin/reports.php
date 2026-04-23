@@ -303,16 +303,15 @@ $forensicLogs = [];
     analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 $falDateSQL = $dateStart !== null ? "AND fal.analyzed_at >= '{$dateStart}' AND fal.analyzed_at <= '{$dateEnd}'" : '';
+@$db->query("ALTER TABLE forensic_analysis_log ADD COLUMN IF NOT EXISTS uploader_name VARCHAR(255) DEFAULT NULL");
 $falStmt = $db->prepare("
     SELECT fal.file_name, fal.file_size, fal.integrity_status, fal.watermark_found,
            fal.extracted_user_name, fal.extracted_user_role, fal.extracted_ip,
            fal.crypto_verified, fal.analysis_time_ms, fal.analyzed_at,
-           u.name AS analyst_name,
-           uploader.name AS uploader_name
+           fal.uploader_name,
+           u.name AS analyst_name
     FROM forensic_analysis_log fal
     LEFT JOIN users u ON fal.analyzed_by = u.id
-    LEFT JOIN (SELECT DISTINCT ON (original_name) original_name, user_id FROM files) f ON f.original_name = fal.file_name
-    LEFT JOIN users uploader ON f.user_id = uploader.id
     WHERE 1=1 {$falDateSQL}
     ORDER BY fal.analyzed_at DESC
     LIMIT 50
@@ -916,46 +915,6 @@ $forensicPDF = array_map(fn($fl) => [
                         </button>
                     </div>
 
-                    <!-- Secondary filters -->
-                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-5">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary text-[16px]">filter_alt</span>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Filters</span>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Activity Type</label>
-                            <select name="filter_action" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
-                                <option value="">All Actions</option>
-                                <?php
-                                $actionTypesRes = $db->query("SELECT DISTINCT action FROM (SELECT action FROM activity_log_admin UNION SELECT action FROM activity_log_employee UNION SELECT action FROM activity_log_collaborator) a ORDER BY action");
-                                if ($actionTypesRes) {
-                                    while ($aRow = $actionTypesRes->fetch_row()) {
-                                        $sel = $filterAction === $aRow[0] ? 'selected' : '';
-                                        echo '<option value="' . htmlspecialchars($aRow[0]) . '" ' . $sel . '>' . htmlspecialchars($aRow[0]) . '</option>';
-                                    }
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">File Type</label>
-                            <select name="filter_mime" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
-                                <option value="">All Types</option>
-                                <option value="image/" <?php echo $filterMime === 'image/' ? 'selected' : ''; ?>>Images</option>
-                                <option value="application/pdf" <?php echo $filterMime === 'application/pdf' ? 'selected' : ''; ?>>PDF Documents</option>
-                                <option value="video/" <?php echo $filterMime === 'video/' ? 'selected' : ''; ?>>Video</option>
-                                <option value="text/" <?php echo $filterMime === 'text/' ? 'selected' : ''; ?>>Text Documents</option>
-                                <option value="application/" <?php echo $filterMime === 'application/' ? 'selected' : ''; ?>>Other Files</option>
-                            </select>
-                        </div>
-                        <?php if ($filterAction !== '' || $filterMime !== ''): ?>
-                        <a href="?period=<?php echo htmlspecialchars($period); ?><?php echo $dateStart !== null ? '&date=' . htmlspecialchars($selectedDate ?? '') : ''; ?>"
-                            class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 rounded-lg text-xs font-semibold hover:bg-rose-500/20 transition-colors">
-                            <span class="material-symbols-outlined text-[14px]">filter_alt_off</span>
-                            Clear Filters
-                        </a>
-                        <?php endif; ?>
-                    </div>
                 </form>
             </div>
 
@@ -1373,6 +1332,29 @@ $forensicPDF = array_map(fn($fl) => [
                 <!-- ─ SECTION 4: Recent Data Uploads ──────────────────── -->
                 <div id="sec-files" class="mb-12">
                     <div class="report-section-title mb-6">IV. Recent Data Uploads</div>
+
+                    <!-- File Type Filter -->
+                    <div class="mb-4 flex flex-wrap items-center gap-2">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-1">File Type:</span>
+                        <?php
+                        $fileTypeFilters = [
+                            'all'   => ['label' => 'All',    'prefix' => ''],
+                            'image' => ['label' => 'Images', 'prefix' => 'image/'],
+                            'pdf'   => ['label' => 'PDF',    'prefix' => 'application/pdf'],
+                            'video' => ['label' => 'Video',  'prefix' => 'video/'],
+                            'text'  => ['label' => 'Text',   'prefix' => 'text/'],
+                            'other' => ['label' => 'Other',  'prefix' => 'other'],
+                        ];
+                        foreach ($fileTypeFilters as $key => $ft):
+                        ?>
+                        <button onclick="filterFiles('<?php echo $key; ?>')" id="ftab-<?php echo $key; ?>"
+                            class="ftab px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border
+                            <?php echo $key === 'all' ? 'bg-primary text-white border-primary shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'; ?>">
+                            <?php echo $ft['label']; ?>
+                        </button>
+                        <?php endforeach; ?>
+                    </div>
+
                     <div class="section-table-wrap">
                         <table class="table-doc">
                             <thead>
@@ -1409,7 +1391,16 @@ $forensicPDF = array_map(fn($fl) => [
                                     $icon = $isImg ? 'image' : ($isVid ? 'movie' : 'description');
                                     $ic = $isImg ? 'text-purple-500 bg-purple-500/10' : ($isVid ? 'text-red-500 bg-red-500/10' : 'text-blue-500 bg-blue-500/10');
                                     ?>
-                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                <?php
+                                    $mimePrefix = '';
+                                    if (str_starts_with($mime, 'image/'))           $mimePrefix = 'image';
+                                    elseif ($mime === 'application/pdf')            $mimePrefix = 'pdf';
+                                    elseif (str_starts_with($mime, 'video/'))       $mimePrefix = 'video';
+                                    elseif (str_starts_with($mime, 'text/'))        $mimePrefix = 'text';
+                                    elseif ($mime !== '')                           $mimePrefix = 'other';
+                                    else                                            $mimePrefix = 'other';
+                                ?>
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors" data-mime="<?php echo $mimePrefix; ?>">
                                     <td class="px-5 py-3">
                                         <div class="flex items-center gap-2">
                                             <div
@@ -1457,6 +1448,24 @@ $forensicPDF = array_map(fn($fl) => [
                 <!-- ─ SECTION 5: Forensic Audit Trail ────────────────── -->
                 <div id="sec-activity" class="mb-12">
                     <div class="report-section-title mb-6">V. Forensic Audit Trail (Recent Activity)</div>
+
+                    <!-- Activity Type Filter -->
+                    <div class="mb-4 flex flex-wrap items-center gap-2">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-1">Activity Type:</span>
+                        <select id="activity-type-filter" onchange="filterActivity()"
+                            class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                            <option value="">All Actions</option>
+                            <?php
+                            $actionTypesRes = $db->query("SELECT DISTINCT action FROM (SELECT action FROM activity_log_admin UNION SELECT action FROM activity_log_employee UNION SELECT action FROM activity_log_collaborator) a ORDER BY action");
+                            if ($actionTypesRes) {
+                                while ($aRow = $actionTypesRes->fetch_row()) {
+                                    echo '<option value="' . htmlspecialchars($aRow[0]) . '">' . htmlspecialchars($aRow[0]) . '</option>';
+                                }
+                            }
+                            ?>
+                        </select>
+                    </div>
+
                     <div class="section-table-wrap">
                         <table class="table-doc">
                             <thead>
@@ -1472,7 +1481,7 @@ $forensicPDF = array_map(fn($fl) => [
                                 <tr><td colspan="4" class="px-5 py-8 text-center text-slate-400 dark:text-slate-500">No activity recorded for this period</td></tr>
                                 <?php endif; ?>
                                 <?php foreach ($activityLog as $log): ?>
-                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors" data-action="<?php echo htmlspecialchars($log['action']); ?>">
                                     <td class="px-5 py-3">
                                         <p class="font-bold text-slate-900 dark:text-white">
                                             <?php echo htmlspecialchars($log['action']); ?>
@@ -1863,6 +1872,33 @@ $forensicPDF = array_map(fn($fl) => [
 
             go(1);
             return { go, reset: () => go(1) };
+        }
+
+        // ── Files table filter ────────────────────────────────────────
+        function filterFiles(type) {
+            document.querySelectorAll('.ftab').forEach(btn => {
+                btn.className = 'ftab px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700';
+            });
+            const active = document.getElementById('ftab-' + type);
+            if (active) active.className = 'ftab px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-primary text-white border-primary shadow-sm';
+
+            document.querySelectorAll('#files-tbody tr[data-mime]').forEach(row => {
+                const match = type === 'all' || row.dataset.mime === type;
+                if (match) row.removeAttribute('data-filtered-out');
+                else row.setAttribute('data-filtered-out', '');
+            });
+            if (paginators['files-tbody']) paginators['files-tbody'].reset();
+        }
+
+        // ── Activity table filter ─────────────────────────────────────
+        function filterActivity() {
+            const val = document.getElementById('activity-type-filter')?.value ?? '';
+            document.querySelectorAll('#activity-tbody tr[data-action]').forEach(row => {
+                const match = !val || row.dataset.action === val;
+                if (match) row.removeAttribute('data-filtered-out');
+                else row.setAttribute('data-filtered-out', '');
+            });
+            if (paginators['activity-tbody']) paginators['activity-tbody'].reset();
         }
 
         // ── Forensic table filter ─────────────────────────────────────

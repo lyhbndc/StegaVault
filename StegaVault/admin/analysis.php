@@ -96,11 +96,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['suspect_file'])) {
         $wFound    = ($extractedData !== false) ? 1 : 0;
         $logMime   = $file['type'] ?? null;
         $logHash   = $extractedData['content_hash'] ?? null;
-        $logUid    = isset($extractedData['u_id']) ? (string)(int)$extractedData['u_id']
+        $logUid         = isset($extractedData['u_id']) ? (string)(int)$extractedData['u_id']
             : (isset($extractedData['user_id']) ? (string)(int)$extractedData['user_id'] : null);
-        $logUname  = $extractedData['u_name'] ?? $extractedData['user_name'] ?? null;
-        $logUrole  = $extractedData['u_role'] ?? null;
-        $logIp     = $extractedData['ip'] ?? null;
+        $logUname       = $extractedData['u_name'] ?? $extractedData['user_name'] ?? null;
+        $logUrole       = $extractedData['u_role'] ?? null;
+        $logIp          = $extractedData['ip'] ?? null;
+        $logUploaderName = $extractedData['f_owner_name'] ?? null;
         $logCrypto = $hasCrypto
             ? ($cryptoVerification && ($cryptoVerification['valid'] ?? false) ? '1' : '0')
             : null;
@@ -122,17 +123,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['suspect_file'])) {
             analysis_time_ms DOUBLE PRECISION DEFAULT NULL,
             analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )");
+        @$db->query("ALTER TABLE forensic_analysis_log ADD COLUMN IF NOT EXISTS uploader_name VARCHAR(255) DEFAULT NULL");
 
         $insStmt = $db->prepare("INSERT INTO forensic_analysis_log
             (analyzed_by, file_name, file_size, mime_type, integrity_status, watermark_found,
              content_hash, extracted_user_id, extracted_user_name, extracted_user_role,
-             extracted_ip, crypto_verified, analysis_time_ms)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+             extracted_ip, crypto_verified, analysis_time_ms, uploader_name)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         if ($insStmt) {
-            $insStmt->bind_param('issssissssssd',
+            $insStmt->bind_param('issssissssssds',
                 $user['id'], $fileName, $fileSize, $logMime, $logStatus,
                 $wFound, $logHash, $logUid, $logUname, $logUrole,
-                $logIp, $logCrypto, $extractionTime
+                $logIp, $logCrypto, $extractionTime, $logUploaderName
             );
             $insStmt->execute();
         }
