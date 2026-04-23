@@ -465,5 +465,32 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
         });
     </script>
     <script src="../js/security-shield.js"></script>
+    <script>
+        // ── Light / Dark Mode ────────────────────────────────────
+        const html = document.documentElement;
+        const themeIcon = document.getElementById('themeIcon');
+
+        function applyTheme(dark) {
+            if (dark) {
+                html.classList.add('dark');
+                themeIcon.textContent = 'light_mode';
+            } else {
+                html.classList.remove('dark');
+                themeIcon.textContent = 'dark_mode';
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('sv_theme', isDark ? 'light' : 'dark');
+            applyTheme(!isDark);
+        }
+
+        (function () {
+            const saved = localStorage.getItem('sv_theme');
+            applyTheme(saved !== 'light');
+        })();
+        // ─────────────────────────────────────────────────────────
+    </script>
 </body>
 </html>
