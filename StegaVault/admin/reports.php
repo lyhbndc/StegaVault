@@ -90,6 +90,9 @@ $filterMime   = trim($_GET['filter_mime'] ?? '');
 if (!in_array($filterMime, ['image/', 'video/', 'text/', 'application/pdf', 'application/'], true)) $filterMime = '';
 $actActionSQL = $filterAction !== '' ? " AND al.action = '" . $db->escape($filterAction) . "'" : '';
 $fileMimeSQL  = $filterMime   !== '' ? " AND f.mime_type LIKE '" . $db->escape($filterMime) . "%'" : '';
+$projDateSQL  = $dateStart !== null ? "AND p.created_at >= '{$dateStart}' AND p.created_at <= '{$dateEnd}'" : '';
+$userDateSQL  = $dateStart !== null ? "AND u.created_at >= '{$dateStart}' AND u.created_at <= '{$dateEnd}'" : '';
+$falKpiSQL    = $dateStart !== null ? "AND analyzed_at >= '{$dateStart}' AND analyzed_at <= '{$dateEnd}'" : '';
 
 $user = [
     'id' => $_SESSION['user_id'],
@@ -144,6 +147,7 @@ $stmt = $db->prepare("
     LEFT JOIN users u            ON p.created_by = u.id
     LEFT JOIN project_members pm ON pm.project_id = p.id
     LEFT JOIN files f            ON f.project_id  = p.id
+    WHERE 1=1 {$projDateSQL}
     GROUP BY p.id, u.name
     ORDER BY p.created_at DESC
 ");
@@ -159,6 +163,7 @@ $stmt = $db->prepare("
     FROM users u
     LEFT JOIN files f           ON f.user_id = u.id
     LEFT JOIN project_members pm ON pm.user_id = u.id
+    WHERE 1=1 {$userDateSQL}
     GROUP BY u.id, u.name, u.email, u.role, u.status, u.created_at
     ORDER BY u.created_at ASC
 ");
@@ -313,9 +318,9 @@ if ($falStmt) {
     $falStmt->execute();
     $forensicLogs = $falStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
-$totalForensicScans   = (int)($db->query("SELECT COUNT(*) FROM forensic_analysis_log")->fetch_row()[0] ?? 0);
-$tamperedCount        = (int)($db->query("SELECT COUNT(*) FROM forensic_analysis_log WHERE integrity_status='TAMPERED'")->fetch_row()[0] ?? 0);
-$noWatermarkCount     = (int)($db->query("SELECT COUNT(*) FROM forensic_analysis_log WHERE integrity_status='NO_WATERMARK'")->fetch_row()[0] ?? 0);
+$totalForensicScans   = (int)($db->query("SELECT COUNT(*) FROM forensic_analysis_log WHERE 1=1 {$falKpiSQL}")->fetch_row()[0] ?? 0);
+$tamperedCount        = (int)($db->query("SELECT COUNT(*) FROM forensic_analysis_log WHERE integrity_status='TAMPERED' {$falKpiSQL}")->fetch_row()[0] ?? 0);
+$noWatermarkCount     = (int)($db->query("SELECT COUNT(*) FROM forensic_analysis_log WHERE integrity_status='NO_WATERMARK' {$falKpiSQL}")->fetch_row()[0] ?? 0);
 
 $generatedAt = date('F j, Y \a\t g:i A');
 
