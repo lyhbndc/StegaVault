@@ -234,7 +234,7 @@ $user = [
                         <ul class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
                             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> Encrypted uploads + watermarked</li>
                             <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> All file types (PNG, PDF, MP4, XLSX)</li>
-                            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> Downloads as .zip archive</li>
+                            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-sm">check_circle</span> Downloads as .tar.gz archive</li>
                         </ul>
                         <div class="pb-4 border-b border-slate-200 dark:border-white/5">
                             <p id="uploadsSize" class="text-xs text-slate-500">Calculating folder size...</p>

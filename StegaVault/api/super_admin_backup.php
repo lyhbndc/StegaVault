@@ -235,61 +235,62 @@ if (!empty($newDirs)) {
 
 
 // ─────────────────────────────────────────────
-// CREATE FILES BACKUP (uploads folder → .zip)
+// CREATE FILES BACKUP (via EC2 /opt/files_backup.sh)
 // ─────────────────────────────────────────────
 if ($method === 'POST' && $action === 'create_files') {
     try {
-        if (!class_exists('ZipArchive')) {
-            sendResponse(false, null, 'ZipArchive PHP extension is not enabled on this server.', 500);
+        $script = '/opt/files_backup.sh';
+
+        if (!file_exists($script)) {
+            sendResponse(false, null, 'Files backup script not found at /opt/files_backup.sh', 500);
         }
 
-        if (!is_dir(UPLOADS_DIR)) {
-            sendResponse(false, null, 'Uploads directory not found at: ' . UPLOADS_DIR, 500);
+        if (!is_executable($script)) {
+            sendResponse(false, null, 'Files backup script is not executable', 500);
         }
 
         set_time_limit(300);
 
-        $timestamp   = date('Ymd_His');
-        $backupId    = 'SV-FILES-' . date('Ymd-Hi') . '-' . strtolower(substr(bin2hex(random_bytes(2)), 0, 4));
-        $zipFilename = 'files_' . $timestamp . '.zip';
-        $zipFilepath = BACKUP_DIR . $zipFilename;
+        $before = glob(BACKUP_DIR . '*', GLOB_ONLYDIR) ?: [];
 
+        $output = shell_exec('bash /opt/files_backup.sh 2>&1');
+
+        if ($output === null) {
+            sendResponse(false, null, 'Files backup command failed to execute', 500);
+        }
+
+        $after   = glob(BACKUP_DIR . '*', GLOB_ONLYDIR) ?: [];
+        $newDirs = array_values(array_diff($after, $before));
+
+        if (!empty($newDirs)) {
+            rsort($newDirs);
+            $latestDir = $newDirs[0];
+        } else {
+            sendResponse(false, null, 'Files backup script did not create a new backup folder. Output: ' . trim($output), 500);
+        }
+
+        $filesFile = $latestDir . '/files.tar.gz';
+
+        if (!file_exists($filesFile)) {
+            sendResponse(false, null, 'files.tar.gz was not found in backup folder. Output: ' . trim($output), 500);
+        }
+
+        $folderName = basename($latestDir);
+        $backupId   = 'SV-FILES-' . date('Ymd-Hi') . '-' . strtolower(substr(bin2hex(random_bytes(2)), 0, 4));
+        $filesize   = filesize($filesFile);
+
+        // Count files inside the tar without extracting
         $fileCount = 0;
-        $zip = new ZipArchive();
-
-        if ($zip->open($zipFilepath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            sendResponse(false, null, 'Could not create ZIP file at: ' . $zipFilepath, 500);
+        exec('tar -tzf ' . escapeshellarg($filesFile) . ' 2>/dev/null | grep -v "/$" | wc -l', $wcOut);
+        if (!empty($wcOut[0])) {
+            $fileCount = (int) trim($wcOut[0]);
         }
 
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(UPLOADS_DIR, RecursiveDirectoryIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::LEAVES_ONLY
-        );
-
-        foreach ($iterator as $file) {
-            if (!$file->isFile() || !$file->isReadable()) {
-                continue;
-            }
-
-            $realPath     = $file->getRealPath();
-            $relativePath = 'uploads/' . ltrim(substr($realPath, strlen(UPLOADS_DIR)), '/\\');
-
-            $zip->addFile($realPath, $relativePath);
-            $fileCount++;
-        }
-
-        $zip->close();
-
-        if (!file_exists($zipFilepath)) {
-            sendResponse(false, null, 'ZIP file was not created. Check server permissions.', 500);
-        }
-
-        $filesize = filesize($zipFilepath);
         $meta = loadMeta();
 
         array_unshift($meta, [
             'id'         => $backupId,
-            'filename'   => $zipFilename,
+            'filename'   => $folderName . '/files.tar.gz',
             'type'       => 'files',
             'size'       => $filesize,
             'size_label' => formatBytes($filesize),
@@ -304,7 +305,7 @@ if ($method === 'POST' && $action === 'create_files') {
         if (class_exists('SuperAdminLogger')) {
             SuperAdminLogger::log('backup_files_created', 'backup', [
                 'backup_id' => $backupId,
-                'filename'  => $zipFilename,
+                'filename'  => $folderName . '/files.tar.gz',
                 'files'     => $fileCount,
                 'size'      => formatBytes($filesize),
             ]);
@@ -312,7 +313,7 @@ if ($method === 'POST' && $action === 'create_files') {
 
         sendResponse(true, [
             'backup_id' => $backupId,
-            'filename'  => $zipFilename,
+            'filename'  => $folderName . '/files.tar.gz',
             'size'      => formatBytes($filesize),
             'files'     => $fileCount,
             'message'   => 'Files backup created successfully',
@@ -477,7 +478,7 @@ END \$\$;");
     }
 }
 // ─────────────────────────────────────────────
-// RESTORE FILES BACKUP (.zip → uploads/)
+// RESTORE FILES BACKUP (.tar.gz → uploads/)
 // ─────────────────────────────────────────────
 if ($method === 'POST' && $action === 'restore_files') {
     $input = json_decode(file_get_contents('php://input'), true) ?? [];
@@ -494,23 +495,18 @@ if ($method === 'POST' && $action === 'restore_files') {
         sendResponse(false, null, 'Backup file not found', 404);
     }
 
-    if (!str_ends_with(strtolower($filepath), '.zip')) {
-        sendResponse(false, null, 'Not a valid files backup', 400);
+    if (!str_ends_with(strtolower($filepath), '.tar.gz')) {
+        sendResponse(false, null, 'Not a valid files backup (.tar.gz required)', 400);
     }
 
-    if (!class_exists('ZipArchive')) {
-        sendResponse(false, null, 'ZipArchive PHP extension is not enabled on this server.', 500);
+    // Extract the tar.gz — strip the leading path components so files land in uploads/
+    $uploadsParent = dirname(UPLOADS_DIR);
+    $cmd    = 'tar -xzf ' . escapeshellarg($filepath) . ' -C ' . escapeshellarg($uploadsParent) . ' 2>&1';
+    $output = shell_exec($cmd);
+
+    if ($output === null) {
+        sendResponse(false, null, 'tar command failed to execute', 500);
     }
-
-    $extractTo = dirname(UPLOADS_DIR);
-    $zip = new ZipArchive();
-
-    if ($zip->open($filepath) !== true) {
-        sendResponse(false, null, 'Cannot open ZIP archive', 500);
-    }
-
-    $zip->extractTo($extractTo);
-    $zip->close();
 
     if (class_exists('SuperAdminLogger')) {
         SuperAdminLogger::log('backup_files_restored', 'backup', ['filename' => $filename]);
