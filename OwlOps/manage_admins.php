@@ -116,6 +116,10 @@ if ($appsResult) {
                     <span class="material-symbols-outlined text-[20px]">assessment</span>
                     <p class="text-sm font-medium">System Report</p>
                 </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="mfa-settings.php">
+                    <span class="material-symbols-outlined text-[20px]">phonelink_lock</span>
+                    <p class="text-sm font-medium">MFA Settings</p>
+                </a>
             </nav>
 
             <div class="pt-6 border-t border-slate-200 dark:border-white/5">

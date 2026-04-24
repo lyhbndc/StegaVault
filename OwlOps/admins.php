@@ -24,6 +24,11 @@ if (!isset($_SESSION['manage_web_app_id'])) {
 $webAppId = $_SESSION['manage_web_app_id'];
 $webAppName = $_SESSION['manage_web_app_name'];
 
+$user = [
+    'id'   => $_SESSION['user_id'],
+    'name' => $_SESSION['name'],
+];
+
 // Get app admins
 $admins = [];
 $stmt = $db->prepare("SELECT id, name, email, created_at FROM users WHERE role = 'admin' AND web_app_id = ? ORDER BY created_at DESC");
@@ -78,14 +83,12 @@ while ($row = $result->fetch_assoc()) {
     <!-- Sidebar -->
     <aside class="w-64 border-r border-slate-200 dark:border-white/5 bg-white dark:bg-black flex flex-col fixed inset-y-0 left-0 z-50">
         <div class="p-6 flex flex-col h-full gap-8">
-            <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2">
+                <img src="OwlOps.png" alt="OwlOps Logo" class="h-8 w-auto">
                 <div>
                     <h1 class="text-slate-900 dark:text-white text-base font-bold leading-tight font-display">OwlOps</h1>
                     <p class="text-primary text-[10px] font-bold uppercase tracking-widest mt-1">Super Admin Mode</p>
                 </div>
-                <button onclick="toggleTheme()" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors" title="Toggle theme">
-                    <span class="material-symbols-outlined text-[18px]" id="themeIcon">dark_mode</span>
-                </button>
             </div>
 
             <!-- Context Banner -->
@@ -113,6 +116,10 @@ while ($row = $result->fetch_assoc()) {
                     <span class="material-symbols-outlined text-[20px]">backup</span>
                     <p class="text-sm font-medium">Backup &amp; Restore</p>
                 </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-400 hover:text-primary dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" href="mfa-settings.php">
+                    <span class="material-symbols-outlined text-[20px]">phonelink_lock</span>
+                    <p class="text-sm font-medium">MFA Settings</p>
+                </a>
 
                 <div class="mt-8">
                     <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Environment</p>
@@ -126,6 +133,25 @@ while ($row = $result->fetch_assoc()) {
                     </a>
                 </div>
             </nav>
+            <div class="pt-6 border-t border-slate-200 dark:border-white/5 space-y-1">
+                <div class="flex items-center gap-3 px-3 py-2">
+                    <div class="size-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs">
+                        <?php echo strtoupper(substr($user['name'], 0, 1)); ?>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-slate-900 dark:text-white text-xs font-bold truncate"><?php echo htmlspecialchars($user['name']); ?></p>
+                        <p class="text-slate-500 text-[10px] truncate">Super Admin</p>
+                    </div>
+                </div>
+                <button onclick="toggleTheme()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]" id="themeIcon">dark_mode</span>
+                    <p class="text-sm font-medium" id="themeLabel">Dark Mode</p>
+                </button>
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <p class="text-sm font-medium">Sign Out</p>
+                </button>
+            </div>
         </div>
     </aside>
 
@@ -357,15 +383,25 @@ while ($row = $result->fetch_assoc()) {
             }
         });
 
+        async function logout() {
+            await fetch('../StegaVault/api/super_admin_auth.php?action=logout', { method: 'POST' });
+            window.location.href = 'login.php';
+        }
+
         function toggleTheme() {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('owlops-theme', isDark ? 'dark' : 'light');
             const icon = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
             if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
         }
         document.addEventListener('DOMContentLoaded', function() {
+            const isDark = document.documentElement.classList.contains('dark');
             const icon = document.getElementById('themeIcon');
-            if (icon) icon.textContent = document.documentElement.classList.contains('dark') ? 'light_mode' : 'dark_mode';
+            const label = document.getElementById('themeLabel');
+            if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
         });
 
         // Status Message Helper
