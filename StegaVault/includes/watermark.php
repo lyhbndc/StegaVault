@@ -457,13 +457,12 @@ class Watermark
         fseek($fp, -$readSize, SEEK_END);
         $tail = fread($fp, $readSize);
 
+        $startTag = "\n[STEGAVAULT_DOC_WM]";
+        $startPosInTail = strpos($tail, $startTag);
+
         $originalSize = $size;
-        foreach (["\n% [STEGAVAULT_DOC_WM]", "\n[STEGAVAULT_DOC_WM]"] as $startTag) {
-            $startPosInTail = strpos($tail, $startTag);
-            if ($startPosInTail !== false) {
-                $originalSize = $size - $readSize + $startPosInTail;
-                break;
-            }
+        if ($startPosInTail !== false) {
+            $originalSize = $size - $readSize + $startPosInTail;
         }
 
         rewind($fp);
