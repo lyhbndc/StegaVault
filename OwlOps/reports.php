@@ -466,7 +466,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
             </section>
 
             <!-- ── Project Status Breakdown ───────────────────────── -->
-            <section class="print-card bg-slate-card border border-white/5 rounded-2xl p-6 space-y-5">
+            <section class="print-card bg-white dark:bg-slate-card border border-slate-200 dark:border-white/5 rounded-2xl p-6 space-y-5">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-sm font-bold text-slate-900 dark:text-white font-display">Project Status</h3>
@@ -477,7 +477,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                     <?php
                     $pStatuses = [
                         ['label'=>'Active',    'value'=>$activeProjects,    'icon'=>'play_circle',   'color'=>'text-emerald-400 bg-emerald-500/10'],
-                        ['label'=>'Archived',  'value'=>$archivedProjects,  'icon'=>'inventory_2',   'color'=>'text-slate-400 bg-white/5'],
+                        ['label'=>'Archived',  'value'=>$archivedProjects,  'icon'=>'inventory_2',   'color'=>'text-slate-400 bg-slate-200'],
                         ['label'=>'Completed', 'value'=>$completedProjects, 'icon'=>'task_alt',      'color'=>'text-blue-400 bg-blue-500/10'],
                     ];
                     foreach ($pStatuses as $ps): ?>
@@ -495,7 +495,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
             </section>
 
             <!-- ── Backup Status ──────────────────────────────────── -->
-            <section class="print-card bg-slate-card border border-white/5 rounded-2xl p-6 space-y-5">
+            <section class="print-card bg-white dark:bg-slate-card border border-slate-200 dark:border-white/5 rounded-2xl p-6 space-y-5">
                 <div class="flex items-center gap-3">
                     <div class="p-2 bg-blue-500/10 rounded-xl">
                         <span class="material-symbols-outlined text-blue-400 text-xl">backup</span>
@@ -531,10 +531,10 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                                         'database' => 'bg-blue-500/10 text-blue-400',
                                         'files'    => 'bg-purple-500/10 text-purple-400',
                                         'full'     => 'bg-emerald-500/10 text-emerald-400',
-                                        default    => 'bg-white/5 text-slate-400'
+                                        default    => 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400'
                                     };
                                     ?>
-                                    <span class="inline-flex px-2 py-0.5 rounded-full border border-white/10 <?php echo $btypeClass; ?> text-[10px] font-bold uppercase tracking-wider">
+                                    <span class="inline-flex px-2 py-0.5 rounded-full border border-slate-200 dark:border-white/10 <?php echo $btypeClass; ?> text-[10px] font-bold uppercase tracking-wider">
                                         <?php echo htmlspecialchars(ucfirst($btype)); ?>
                                     </span>
                                 </td>
@@ -547,13 +547,13 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                     </table>
                 </div>
                 <?php if ($totalBackups > 8): ?>
-                <p class="text-[10px] text-slate-600 text-right">Showing 8 of <?php echo $totalBackups; ?> backups. <a href="backup.php" class="text-slate-400 hover:text-white underline transition-colors">View all</a></p>
+                <p class="text-[10px] text-slate-600 text-right">Showing 8 of <?php echo $totalBackups; ?> backups. <a href="backup.php" class="text-slate-400 hover:text-slate-900 dark:hover:text-white underline transition-colors">View all</a></p>
                 <?php endif; ?>
                 <?php endif; ?>
             </section>
 
             <!-- ── Super Admin Accounts ───────────────────────────── -->
-            <section class="print-card bg-slate-card border border-white/5 rounded-2xl p-6 space-y-5">
+            <section class="print-card bg-white dark:bg-slate-card border border-slate-200 dark:border-white/5 rounded-2xl p-6 space-y-5">
                 <div class="flex items-center gap-3">
                     <div class="p-2 bg-purple-500/10 rounded-xl">
                         <span class="material-symbols-outlined text-purple-400 text-xl">shield_person</span>
@@ -597,7 +597,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
             </section>
 
             <!-- ── Recent Audit Activity ──────────────────────────── -->
-            <section class="print-card bg-slate-card border border-white/5 rounded-2xl p-6 space-y-5">
+            <section class="print-card bg-white dark:bg-slate-card border border-slate-200 dark:border-white/5 rounded-2xl p-6 space-y-5">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="p-2 bg-rose-500/10 rounded-xl">
@@ -655,7 +655,7 @@ $totalApps = (int) $db->query("SELECT COUNT(*) FROM web_apps")->fetch_row()[0];
                             ];
                             foreach ($recentAudit as $ev):
                                 $meta  = $actionLabels[$ev['action']] ?? [ucwords(str_replace('_',' ',$ev['action'])), 'info', 'text-slate-400'];
-                                $badge = $catBadge[$ev['category']] ?? 'bg-white/5 text-slate-400 border-white/10';
+                                $badge = $catBadge[$ev['category']] ?? 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10';
                             ?>
                             <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                                 <td class="py-3 pr-6 text-slate-500 font-mono whitespace-nowrap">
