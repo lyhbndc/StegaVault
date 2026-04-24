@@ -27,6 +27,8 @@ $error = null;
 $fileName = null;
 $fileSize = null;
 $extractionTime = null;
+$filePreview = null;
+$fileMimeType = null;
 
 // Handle file upload for extraction
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['suspect_file'])) {
@@ -36,6 +38,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['suspect_file'])) {
         $tmpPath = $file['tmp_name'];
         $fileName = $file['name'];
         $fileSize = $file['size'];
+
+        // Build file preview (images only, via data URI — no serving endpoint needed)
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $detectedMime = $finfo->file($tmpPath);
+        $fileMimeType = $detectedMime;
+        if (in_array($detectedMime, ['image/png', 'image/jpeg', 'image/gif', 'image/webp'])) {
+            $filePreview = 'data:' . $detectedMime . ';base64,' . base64_encode(file_get_contents($tmpPath));
+        }
 
         $startTime = microtime(true);
 
@@ -84,6 +94,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['suspect_file'])) {
 function safe_html($value, $default = 'N/A')
 {
     return htmlspecialchars($value ?? $default);
+}
+
+function mime_icon(string $mime): string
+{
+    if (str_starts_with($mime, 'image/')) return 'image';
+    if ($mime === 'application/pdf')      return 'picture_as_pdf';
+    if ($mime === 'video/mp4')            return 'videocam';
+    if (str_contains($mime, 'word'))      return 'description';
+    if (str_contains($mime, 'sheet') || str_contains($mime, 'excel')) return 'table_chart';
+    return 'insert_drive_file';
 }
 ?>
 <!DOCTYPE html>
@@ -292,6 +312,29 @@ function safe_html($value, $default = 'N/A')
                         </div>
                     </div>
 
+                    <?php if ($fileName): ?>
+                    <!-- File Preview (error state) -->
+                    <div class="bg-card-dark border border-border-dark rounded-xl overflow-hidden mb-6">
+                        <div class="flex items-center gap-2 px-4 py-3 border-b border-border-dark">
+                            <span class="material-symbols-outlined text-slate-400 text-sm">preview</span>
+                            <p class="text-white text-sm font-bold">Analyzed File</p>
+                            <span class="ml-auto text-slate-500 text-xs font-mono"><?php echo safe_html($fileName); ?></span>
+                        </div>
+                        <?php if ($filePreview): ?>
+                            <div class="flex items-center justify-center bg-black/40 p-4" style="max-height:300px;">
+                                <img src="<?php echo $filePreview; ?>"
+                                     alt="<?php echo safe_html($fileName); ?>"
+                                     class="max-w-full max-h-72 rounded object-contain shadow-lg opacity-70" />
+                            </div>
+                        <?php else: ?>
+                            <div class="flex flex-col items-center justify-center gap-3 py-10 text-slate-600">
+                                <span class="material-symbols-outlined text-5xl"><?php echo mime_icon($fileMimeType ?? ''); ?></span>
+                                <p class="text-xs"><?php echo safe_html($fileMimeType, 'Unknown type'); ?></p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
+
                     <form method="POST" enctype="multipart/form-data">
                         <input type="file" id="retryInput" name="suspect_file" accept=".png,.mp4,.pdf,.doc,.docx,.xls,.xlsx"
                             style="display: none;" onchange="this.form.submit()" />
@@ -331,6 +374,28 @@ function safe_html($value, $default = 'N/A')
                                 <span>Time: <?php echo $extractionTime; ?>ms</span>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- File Preview -->
+                    <div class="bg-card-dark border border-border-dark rounded-xl overflow-hidden mb-6">
+                        <div class="flex items-center gap-2 px-4 py-3 border-b border-border-dark">
+                            <span class="material-symbols-outlined text-primary text-sm">preview</span>
+                            <p class="text-white text-sm font-bold">File Preview</p>
+                            <span class="ml-auto text-slate-500 text-xs font-mono"><?php echo safe_html($fileName); ?></span>
+                        </div>
+                        <?php if ($filePreview): ?>
+                            <div class="flex items-center justify-center bg-black/40 p-4" style="max-height:360px;">
+                                <img src="<?php echo $filePreview; ?>"
+                                     alt="<?php echo safe_html($fileName); ?>"
+                                     class="max-w-full max-h-80 rounded object-contain shadow-lg" />
+                            </div>
+                        <?php else: ?>
+                            <div class="flex flex-col items-center justify-center gap-3 py-12 text-slate-500">
+                                <span class="material-symbols-outlined text-5xl"><?php echo mime_icon($fileMimeType ?? ''); ?></span>
+                                <p class="text-sm"><?php echo safe_html($fileMimeType, 'Unknown type'); ?></p>
+                                <p class="text-xs text-slate-600">Preview not available for this file type</p>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Extracted Data -->
