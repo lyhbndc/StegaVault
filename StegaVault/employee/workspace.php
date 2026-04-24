@@ -2043,7 +2043,7 @@ $userId = $user['id'];
                     <span class="material-symbols-outlined text-primary text-2xl">upload_file</span>
                 </div>
                 <p id="folderDropZoneText" class="text-slate-700 dark:text-slate-200 text-sm font-semibold">Drag & drop or click to browse</p>
-                <p id="folderDropZoneTextSub" class="text-slate-400 dark:text-slate-500 text-xs mt-1">Images, Videos, PDFs, Docs · Max 50MB</p>
+                <p id="folderDropZoneTextSub" class="text-slate-400 dark:text-slate-500 text-xs mt-1">Images, Videos, PDFs, Docs · Max 100MB</p>
                 <input type="file" id="folderFileInput" class="hidden" multiple
                     accept="image/png,video/mp4,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.pdf,.doc,.docx,.xls,.xlsx" />
             </div>
