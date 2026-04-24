@@ -200,61 +200,61 @@ $actionMeta = [
         <!-- Quick Access Control Cards -->
         <section class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Account Management -->
-            <a href="manage_admins.php" class="bg-slate-card border border-white/5 rounded-[2.5rem] p-10 group hover:border-primary/40 hover:-translate-y-2 transition-all duration-500 relative overflow-hidden">
+            <a href="manage_admins.php" class="bg-white dark:bg-slate-card border border-slate-200 dark:border-white/5 rounded-[2.5rem] p-10 group hover:border-primary/40 hover:-translate-y-2 transition-all duration-500 relative overflow-hidden">
                 <div class="absolute -right-16 -top-16 size-48 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
                 <div class="relative z-10 space-y-6">
-                    <div class="p-4 bg-white/10 rounded-[1.5rem] w-fit border border-white/10 group-hover:bg-primary group-hover:text-black transition-all">
+                    <div class="p-4 bg-slate-100 dark:bg-white/10 rounded-[1.5rem] w-fit border border-slate-200 dark:border-white/10 group-hover:bg-primary group-hover:text-white transition-all text-slate-600 dark:text-white">
                         <span class="material-symbols-outlined text-3xl">admin_panel_settings</span>
                     </div>
                     <div>
-                        <h3 class="text-2xl font-bold text-white font-display">Administrator Access</h3>
+                        <h3 class="text-2xl font-bold text-slate-900 dark:text-white font-display">Administrator Access</h3>
                         <p class="text-slate-500 text-sm mt-2 leading-relaxed">Manage global system owners and app-specific administrators in one place.</p>
                     </div>
-                    <div class="flex items-center gap-6 pt-4 border-t border-white/5">
+                    <div class="flex items-center gap-6 pt-4 border-t border-slate-100 dark:border-white/5">
                         <div>
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Super</p>
-                            <p class="text-xl font-bold text-white"><?php echo $stats['total_super_admins']; ?></p>
+                            <p class="text-xl font-bold text-slate-900 dark:text-white"><?php echo $stats['total_super_admins']; ?></p>
                         </div>
-                        <div class="w-px h-8 bg-white/5"></div>
+                        <div class="w-px h-8 bg-slate-200 dark:bg-white/5"></div>
                         <div>
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">App Admins</p>
-                            <p class="text-xl font-bold text-white"><?php echo $stats['total_app_admins']; ?></p>
+                            <p class="text-xl font-bold text-slate-900 dark:text-white"><?php echo $stats['total_app_admins']; ?></p>
                         </div>
                     </div>
                 </div>
             </a>
 
             <!-- Backup & Restore -->
-            <a href="backup.php" class="bg-slate-card border border-white/5 rounded-[2.5rem] p-10 group hover:border-blue-500/40 hover:-translate-y-2 transition-all duration-500 relative overflow-hidden">
+            <a href="backup.php" class="bg-white dark:bg-slate-card border border-slate-200 dark:border-white/5 rounded-[2.5rem] p-10 group hover:border-blue-500/40 hover:-translate-y-2 transition-all duration-500 relative overflow-hidden">
                 <div class="absolute -right-16 -top-16 size-48 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-colors"></div>
                 <div class="relative z-10 space-y-6">
-                    <div class="p-4 bg-blue-500/10 rounded-[1.5rem] w-fit border border-white/10 group-hover:bg-blue-500 group-hover:text-white transition-all text-blue-400">
+                    <div class="p-4 bg-blue-500/10 rounded-[1.5rem] w-fit border border-slate-200 dark:border-white/10 group-hover:bg-blue-500 group-hover:text-white transition-all text-blue-500 dark:text-blue-400">
                         <span class="material-symbols-outlined text-3xl">backup</span>
                     </div>
                     <div>
-                        <h3 class="text-2xl font-bold text-white font-display">Backup & Sync</h3>
+                        <h3 class="text-2xl font-bold text-slate-900 dark:text-white font-display">Backup & Sync</h3>
                         <p class="text-slate-500 text-sm mt-2 leading-relaxed">System-wide snapshots and environment restoration protocols.</p>
                     </div>
-                    <div class="pt-4 border-t border-white/5 space-y-2">
+                    <div class="pt-4 border-t border-slate-100 dark:border-white/5 space-y-2">
                         <?php if ($stats['total_backups'] > 0): ?>
                             <div class="flex items-center gap-3">
                                 <span class="material-symbols-outlined text-emerald-500 text-sm">check_circle</span>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Last: <?php echo htmlspecialchars($stats['last_backup'] ?? '—'); ?></p>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest truncate">Last: <?php echo htmlspecialchars($stats['last_backup'] ?? '—'); ?></p>
                             </div>
                             <div class="flex items-center gap-4">
                                 <div>
                                     <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">DB</p>
-                                    <p class="text-sm font-bold text-white"><?php echo $stats['total_backups'] - $stats['file_backups']; ?></p>
+                                    <p class="text-sm font-bold text-slate-900 dark:text-white"><?php echo $stats['total_backups'] - $stats['file_backups']; ?></p>
                                 </div>
-                                <div class="w-px h-6 bg-white/5"></div>
+                                <div class="w-px h-6 bg-slate-200 dark:bg-white/5"></div>
                                 <div>
                                     <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Files</p>
-                                    <p class="text-sm font-bold text-white"><?php echo $stats['file_backups']; ?></p>
+                                    <p class="text-sm font-bold text-slate-900 dark:text-white"><?php echo $stats['file_backups']; ?></p>
                                 </div>
                             </div>
                         <?php else: ?>
                             <div class="flex items-center gap-3">
-                                <span class="material-symbols-outlined text-slate-500 text-sm">radio_button_unchecked</span>
+                                <span class="material-symbols-outlined text-slate-400 text-sm">radio_button_unchecked</span>
                                 <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">No backups yet</p>
                             </div>
                         <?php endif; ?>
@@ -263,32 +263,32 @@ $actionMeta = [
             </a>
 
             <!-- System Report -->
-            <a href="audit-log.php" class="bg-slate-card border border-white/5 rounded-[2.5rem] p-10 group hover:border-emerald-500/40 hover:-translate-y-2 transition-all duration-500 relative overflow-hidden">
+            <a href="audit-log.php" class="bg-white dark:bg-slate-card border border-slate-200 dark:border-white/5 rounded-[2.5rem] p-10 group hover:border-emerald-500/40 hover:-translate-y-2 transition-all duration-500 relative overflow-hidden">
                 <div class="absolute -right-16 -top-16 size-48 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/10 transition-colors"></div>
                 <div class="relative z-10 space-y-6">
-                    <div class="p-4 bg-emerald-500/10 rounded-[1.5rem] w-fit border border-white/10 group-hover:bg-emerald-500 group-hover:text-white transition-all text-emerald-400">
+                    <div class="p-4 bg-emerald-500/10 rounded-[1.5rem] w-fit border border-slate-200 dark:border-white/10 group-hover:bg-emerald-500 group-hover:text-white transition-all text-emerald-600 dark:text-emerald-400">
                         <span class="material-symbols-outlined text-3xl">assessment</span>
                     </div>
                     <div>
-                        <h3 class="text-2xl font-bold text-white font-display">System Report</h3>
+                        <h3 class="text-2xl font-bold text-slate-900 dark:text-white font-display">System Report</h3>
                         <p class="text-slate-500 text-sm mt-2 leading-relaxed">Live overview of users, backups, and audit activity across the platform.</p>
                     </div>
-                    <div class="grid grid-cols-2 gap-x-6 gap-y-4 pt-4 border-t border-white/5">
+                    <div class="grid grid-cols-2 gap-x-6 gap-y-4 pt-4 border-t border-slate-100 dark:border-white/5">
                         <div>
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Total Users</p>
-                            <p class="text-xl font-bold text-white"><?php echo number_format($stats['total_users']); ?></p>
+                            <p class="text-xl font-bold text-slate-900 dark:text-white"><?php echo number_format($stats['total_users']); ?></p>
                         </div>
                         <div>
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Audit Events</p>
-                            <p class="text-xl font-bold text-white"><?php echo number_format($stats['total_audit_events']); ?></p>
+                            <p class="text-xl font-bold text-slate-900 dark:text-white"><?php echo number_format($stats['total_audit_events']); ?></p>
                         </div>
                         <div>
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Backups Stored</p>
-                            <p class="text-xl font-bold text-white"><?php echo $stats['total_backups']; ?></p>
+                            <p class="text-xl font-bold text-slate-900 dark:text-white"><?php echo $stats['total_backups']; ?></p>
                         </div>
                         <div>
                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Web Apps</p>
-                            <p class="text-xl font-bold text-white"><?php echo $stats['total_apps']; ?></p>
+                            <p class="text-xl font-bold text-slate-900 dark:text-white"><?php echo $stats['total_apps']; ?></p>
                         </div>
                     </div>
                 </div>
