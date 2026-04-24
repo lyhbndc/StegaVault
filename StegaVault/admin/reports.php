@@ -283,6 +283,18 @@ function fmtSize(int $bytes): string
     return $bytes . ' B';
 }
 
+function fmtDt(string $utcStr, string $fmt = 'M d, Y H:i'): string
+{
+    if (!$utcStr) return '—';
+    try {
+        $dt = new DateTime($utcStr, new DateTimeZone('UTC'));
+        $dt->setTimezone(new DateTimeZone('Asia/Manila'));
+        return $dt->format($fmt);
+    } catch (Exception $e) {
+        return $utcStr;
+    }
+}
+
 // ── Forensic Analysis Log ──────────────────────────────────────
 $forensicLogs = [];
 @$db->query("CREATE TABLE IF NOT EXISTS forensic_analysis_log (
@@ -368,7 +380,7 @@ $projectsPDF = array_map(fn($p) => [
     (string) $p['member_count'],
     (string) $p['file_count'],
     fmtSize((int) $p['total_size']),
-    date('M d, Y', strtotime($p['created_at'])),
+    fmtDt($p['created_at'], 'M d, Y'),
 ], $projects);
 
 $usersPDF = array_map(fn($u) => [
@@ -384,7 +396,7 @@ $usersPDF = array_map(fn($u) => [
     },
     'projects' => (int) $u['project_count'],
     'files'    => (int) $u['file_count'],
-    'joined'   => date('M d, Y', strtotime($u['created_at'])),
+    'joined'   => fmtDt($u['created_at'], 'M d, Y'),
 ], $userRows);
 
 $filesPDF = array_map(fn($f) => [
@@ -393,7 +405,7 @@ $filesPDF = array_map(fn($f) => [
     fmtSize((int) $f['file_size']),
     $f['uploader'] ?? '—',
     $f['project_name'] ?? '—',
-    date('M d, Y', strtotime($f['upload_date'])),
+    fmtDt($f['upload_date'], 'M d, Y'),
 ], $recentFiles);
 
 $activityPDF = array_map(fn($a) => [
@@ -401,7 +413,7 @@ $activityPDF = array_map(fn($a) => [
     $a['description'],
     $a['actor'] ?? 'System',
     $a['ip_address'] ?? '—',
-    date('M d, Y H:i', strtotime($a['created_at'])),
+    fmtDt($a['created_at']),
 ], $activityLog);
 
 $forensicPDF = array_map(fn($fl) => [
@@ -418,7 +430,7 @@ $forensicPDF = array_map(fn($fl) => [
     $fl['extracted_user_name'] ?? '—',
     $fl['extracted_ip'] ?? '—',
     $fl['crypto_verified'] === null ? '—' : ($fl['crypto_verified'] ? 'Valid' : 'Invalid'),
-    date('M d, Y H:i', strtotime($fl['analyzed_at'])),
+    fmtDt($fl['analyzed_at']),
 ], $forensicLogs);
 ?>
 <!DOCTYPE html>
@@ -1221,7 +1233,7 @@ $forensicPDF = array_map(fn($fl) => [
                                         <?php echo fmtSize((int) $p['total_size']); ?>
                                     </td>
                                     <td class="px-5 py-3 text-right text-slate-500 dark:text-slate-400">
-                                        <?php echo date('M d, Y', strtotime($p['created_at'])); ?>
+                                        <?php echo fmtDt($p['created_at'], 'M d, Y'); ?>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -1318,7 +1330,7 @@ $forensicPDF = array_map(fn($fl) => [
                                         <?php echo $u['file_count']; ?>
                                     </td>
                                     <td class="px-5 py-3 text-right text-slate-500 dark:text-slate-400">
-                                        <?php echo date('M d, Y', strtotime($u['created_at'])); ?>
+                                        <?php echo fmtDt($u['created_at'], 'M d, Y'); ?>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -1435,7 +1447,7 @@ $forensicPDF = array_map(fn($fl) => [
                                         <?php endif; ?>
                                     </td>
                                     <td class="px-5 py-3 text-right text-slate-500 dark:text-slate-400">
-                                        <?php echo date('M d, Y', strtotime($f['upload_date'])); ?>
+                                        <?php echo fmtDt($f['upload_date'], 'M d, Y'); ?>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -1497,7 +1509,7 @@ $forensicPDF = array_map(fn($fl) => [
                                         <?php echo htmlspecialchars($log['ip_address'] ?? '—'); ?>
                                     </td>
                                     <td class="px-5 py-3 text-right text-xs text-slate-400">
-                                        <?php echo date('M d, Y H:i', strtotime($log['created_at'])); ?>
+                                        <?php echo fmtDt($log['created_at']); ?>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -1564,7 +1576,7 @@ $forensicPDF = array_map(fn($fl) => [
                                 <?php foreach ($peakDates as $i => $pd): ?>
                                 <div class="flex items-center gap-3 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
                                     <span class="size-5 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center text-[10px] font-bold flex-shrink-0"><?php echo $i + 1; ?></span>
-                                    <span class="text-sm font-medium text-slate-900 dark:text-white flex-1"><?php echo date('M j, Y', strtotime($pd['day'])); ?></span>
+                                    <span class="text-sm font-medium text-slate-900 dark:text-white flex-1"><?php echo fmtDt($pd['day'], 'M j, Y'); ?></span>
                                     <span class="text-xs font-bold text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded-full"><?php echo (int)$pd['cnt']; ?></span>
                                 </div>
                                 <?php endforeach; ?>
@@ -1711,7 +1723,7 @@ $forensicPDF = array_map(fn($fl) => [
                                     <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400"><?php echo $downloadedBy; ?></td>
                                     <td class="px-5 py-3 font-mono text-xs text-slate-500 dark:text-slate-400"><?php echo $downloaderIp; ?></td>
                                     <td class="px-5 py-3 text-center text-xs font-semibold <?php echo $cryptoClass; ?>"><?php echo $cryptoLabel; ?></td>
-                                    <td class="px-5 py-3 text-right text-xs text-slate-400"><?php echo date('M d, Y H:i', strtotime($fl['analyzed_at'])); ?></td>
+                                    <td class="px-5 py-3 text-right text-xs text-slate-400"><?php echo fmtDt($fl['analyzed_at']); ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
