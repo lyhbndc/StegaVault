@@ -250,18 +250,6 @@ if ($appsResult) {
                         placeholder="name@company.com" />
                 </div>
 
-                <div id="appScopeField" class="hidden space-y-2">
-                    <label class="block text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Application Scope</label>
-                    <select id="adminWebAppId"
-                        class="w-full px-5 py-4 rounded-xl bg-slate-50 dark:bg-black border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
-                        <?php foreach ($webApps as $app): ?>
-                            <?php if (stripos($app['name'], 'stegavault') !== false): ?>
-                                <option value="<?php echo $app['id']; ?>"><?php echo htmlspecialchars($app['name']); ?></option>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
                 <div class="space-y-2">
                     <label class="block text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">
                         <span id="passwordLabel">Initial Password</span>
@@ -441,7 +429,6 @@ if ($appsResult) {
             document.getElementById('modalTitle').textContent = isEdit ? `Edit ${type === 'super' ? 'Super' : 'App'} Admin` : `New ${type === 'super' ? 'Super' : 'App'} Admin`;
             document.getElementById('modalSubtitle').textContent = isEdit ? 'Update account details and permissions.' : (type === 'super' ? 'Grant global administrative privileges.' : 'Assign admin rights to a specific environment.');
             document.getElementById('modalIcon').textContent = type === 'super' ? 'shield_person' : 'person_add';
-            document.getElementById('appScopeField').classList.toggle('hidden', type !== 'app');
             document.getElementById('submitBtn').textContent = isEdit ? 'Save Changes' : `Create ${type === 'super' ? 'Super Admin' : 'Admin'}`;
 
             document.getElementById('passwordLabel').textContent = isEdit ? 'New Password' : 'Initial Password';
