@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['suspect_file'])) {
         $fileSize = $file['size'];
 
         $previewExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-        if (in_array($previewExt, ['png', 'jpg', 'jpeg', 'gif', 'webp']) && $fileSize <= 10 * 1024 * 1024) {
+        if (in_array($previewExt, ['png', 'jpg', 'jpeg', 'gif', 'webp']) && $fileSize <= 50 * 1024 * 1024) {
             $filePreviewMime = 'image/' . ($previewExt === 'jpg' ? 'jpeg' : $previewExt);
             $filePreviewData = base64_encode(file_get_contents($tmpPath));
             $filePreviewable = true;
@@ -495,11 +495,13 @@ else: ?>
                             <?php
                             $prevExt = strtolower(pathinfo($fileName ?? '', PATHINFO_EXTENSION));
                             $prevIcon = match($prevExt) {
-                                'mp4'         => 'video_file',
-                                'pdf'         => 'picture_as_pdf',
-                                'doc', 'docx' => 'description',
-                                'xls', 'xlsx' => 'table_chart',
-                                default       => 'insert_drive_file'
+                                'mp4'                         => 'video_file',
+                                'pdf'                         => 'picture_as_pdf',
+                                'doc', 'docx'                 => 'description',
+                                'xls', 'xlsx'                 => 'table_chart',
+                                'png', 'jpg', 'jpeg',
+                                'gif', 'webp'                 => 'image',
+                                default                       => 'insert_drive_file'
                             };
                             ?>
                             <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700"><?php echo $prevIcon; ?></span>
