@@ -30,6 +30,9 @@ $fileSize = null;
 $extractionTime = null;
 $cryptoVerification = null;
 $hasCrypto = false;
+$filePreviewData = null;
+$filePreviewMime = null;
+$filePreviewable = false;
 
 // Handle file upload for extraction
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['suspect_file'])) {
@@ -39,6 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['suspect_file'])) {
         $tmpPath = $file['tmp_name'];
         $fileName = $file['name'];
         $fileSize = $file['size'];
+
+        $previewExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        if (in_array($previewExt, ['png', 'jpg', 'jpeg', 'gif', 'webp']) && $fileSize <= 10 * 1024 * 1024) {
+            $filePreviewMime = 'image/' . ($previewExt === 'jpg' ? 'jpeg' : $previewExt);
+            $filePreviewData = base64_encode(file_get_contents($tmpPath));
+            $filePreviewable = true;
+        }
 
         $startTime = microtime(true);
 
@@ -403,6 +413,42 @@ elseif ($error): ?>
                 </div>
             </div>
 
+            <?php if ($fileName): ?>
+            <!-- ── Evidence Preview ── -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-slate-400 text-[18px]">preview</span>
+                    <h2 class="text-slate-900 dark:text-white text-sm font-bold uppercase tracking-wider">Evidence Preview</h2>
+                    <div class="ml-auto flex items-center gap-2 min-w-0">
+                        <span class="text-xs text-slate-400 font-mono truncate max-w-[220px]"><?php echo htmlspecialchars($fileName); ?></span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 flex-shrink-0"><?php echo format_file_size($fileSize); ?></span>
+                    </div>
+                </div>
+                <div class="p-6 flex items-center justify-center bg-slate-50 dark:bg-slate-950 min-h-[160px]">
+                    <?php if ($filePreviewable && $filePreviewData): ?>
+                    <img src="data:<?php echo htmlspecialchars($filePreviewMime); ?>;base64,<?php echo $filePreviewData; ?>"
+                         alt="Evidence file preview"
+                         class="max-h-72 max-w-full object-contain rounded-lg shadow-sm border border-slate-200 dark:border-slate-700" />
+                    <?php else: ?>
+                    <div class="text-center">
+                        <?php
+                        $prevExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                        $prevIcon = match($prevExt) {
+                            'mp4'         => 'video_file',
+                            'pdf'         => 'picture_as_pdf',
+                            'doc', 'docx' => 'description',
+                            'xls', 'xlsx' => 'table_chart',
+                            default       => 'insert_drive_file'
+                        };
+                        ?>
+                        <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700"><?php echo $prevIcon; ?></span>
+                        <p class="text-slate-400 dark:text-slate-500 text-sm mt-2 font-medium"><?php echo strtoupper($prevExt); ?> — Preview not available</p>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <form method="POST" enctype="multipart/form-data">
                 <input type="file" id="retryInput" name="suspect_file" accept=".png,.mp4,.pdf,.doc,.docx,.xls,.xlsx"
                     style="display: none;" onchange="this.form.submit()" />
@@ -426,6 +472,40 @@ else: ?>
                         <p class="text-slate-500 dark:text-slate-400 text-sm">
                             <?php echo ($extractedData['content_tampered'] ?? false) ? 'Warning: Digital signature is valid, but content tampering was detected.' : 'Digital signature verified — watermark is intact and authentic.'; ?>
                         </p>
+                    </div>
+                </div>
+
+                <!-- ── Evidence Preview ── -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-slate-400 text-[18px]">preview</span>
+                        <h2 class="text-slate-900 dark:text-white text-sm font-bold uppercase tracking-wider">Evidence Preview</h2>
+                        <div class="ml-auto flex items-center gap-2 min-w-0">
+                            <span class="text-xs text-slate-400 font-mono truncate max-w-[220px]"><?php echo htmlspecialchars($fileName); ?></span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 flex-shrink-0"><?php echo format_file_size($fileSize); ?></span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex items-center justify-center bg-slate-50 dark:bg-slate-950 min-h-[160px]">
+                        <?php if ($filePreviewable && $filePreviewData): ?>
+                        <img src="data:<?php echo htmlspecialchars($filePreviewMime); ?>;base64,<?php echo $filePreviewData; ?>"
+                             alt="Evidence file preview"
+                             class="max-h-72 max-w-full object-contain rounded-lg shadow-sm border border-slate-200 dark:border-slate-700" />
+                        <?php else: ?>
+                        <div class="text-center">
+                            <?php
+                            $prevExt = strtolower(pathinfo($fileName ?? '', PATHINFO_EXTENSION));
+                            $prevIcon = match($prevExt) {
+                                'mp4'         => 'video_file',
+                                'pdf'         => 'picture_as_pdf',
+                                'doc', 'docx' => 'description',
+                                'xls', 'xlsx' => 'table_chart',
+                                default       => 'insert_drive_file'
+                            };
+                            ?>
+                            <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700"><?php echo $prevIcon; ?></span>
+                            <p class="text-slate-400 dark:text-slate-500 text-sm mt-2 font-medium"><?php echo strtoupper($prevExt); ?> — Preview not available</p>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
