@@ -567,6 +567,14 @@ $userId = $user['id'];
 
             html += '        </div>\n';
 
+            html += '        <!-- My Tasks -->\n';
+            html += '        <div class="flex items-center justify-between px-1">\n';
+            html += '            <h2 class="text-slate-900 dark:text-white text-base font-bold">My Tasks</h2>\n';
+            html += '        </div>\n';
+            html += '        <div id="empTasksPanel" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">\n';
+            html += '            <div class="p-6 text-center text-slate-400 dark:text-slate-500 text-sm animate-pulse">Loading tasks…</div>\n';
+            html += '        </div>\n';
+
             html += '        <!-- System Info Card (matching dashboard Quick Actions style) -->\n';
             html += '        <div class="bg-gradient-to-br from-primary/10 to-purple-500/10 border border-primary/20 rounded-xl p-5">\n';
             html += '            <div class="flex items-start gap-3">\n';
@@ -585,6 +593,7 @@ $userId = $user['id'];
             html += '</div>\n';
 
             content.innerHTML = html;
+            loadEmpTasks(id);
 
             // Global drag-and-drop removed per user request
         }
@@ -2133,6 +2142,162 @@ $userId = $user['id'];
             email: "<?php echo htmlspecialchars($user['email']); ?>"
         };
     </script>
+    <!-- ═══════════════════════════════════════
+         UPDATE TASK PROGRESS MODAL
+    ═══════════════════════════════════════ -->
+    <div id="updateTaskModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeUpdateTaskModal()"></div>
+        <div class="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-md p-6">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary">task_alt</span>
+                </div>
+                <div>
+                    <h3 class="text-slate-900 dark:text-white font-bold text-base">Update Progress</h3>
+                    <p id="updateTaskTitle" class="text-slate-500 dark:text-slate-400 text-xs truncate max-w-[220px]"></p>
+                </div>
+                <button onclick="closeUpdateTaskModal()" class="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+            <input type="hidden" id="updateTaskId" />
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Progress: <span id="progressValueLabel">0</span>%</label>
+            <input id="progressSlider" type="range" min="0" max="100" step="5" value="0"
+                oninput="document.getElementById('progressValueLabel').textContent = this.value"
+                class="w-full accent-primary cursor-pointer" />
+            <div class="flex justify-between text-[10px] text-slate-400 mt-0.5 mb-4"><span>0%</span><span>50%</span><span>100%</span></div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Status</label>
+            <select id="updateTaskStatus"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all mb-4">
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+            </select>
+            <p id="updateTaskError" class="text-red-500 text-xs mb-3 min-h-[1rem]"></p>
+            <div class="flex items-center justify-end gap-2">
+                <button onclick="closeUpdateTaskModal()"
+                    class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancel</button>
+                <button id="updateTaskBtn" onclick="submitUpdateTask()"
+                    class="px-5 py-2 rounded-xl text-sm font-bold bg-primary hover:bg-primary/90 text-white transition-colors shadow-sm disabled:opacity-60">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task JS for employee -->
+    <script>
+    (function () {
+        const TASK_API = '../api/projects.php';
+        const priorityColors = { high: 'text-red-500 bg-red-500/10 border-red-500/20', medium: 'text-amber-500 bg-amber-500/10 border-amber-500/20', low: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+        const statusColors   = { pending: 'text-slate-500 bg-slate-500/10 border-slate-500/20', in_progress: 'text-blue-500 bg-blue-500/10 border-blue-500/20', completed: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+        const statusLabels   = { pending: 'Pending', in_progress: 'In Progress', completed: 'Completed' };
+
+        window.loadEmpTasks = async function (projectId) {
+            const panel = document.getElementById('empTasksPanel');
+            if (!panel) return;
+            try {
+                const res = await fetch(`${TASK_API}?action=get-tasks&project_id=${projectId}`);
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                renderEmpTasks(data.data.tasks || []);
+            } catch (e) {
+                if (panel) panel.innerHTML = '<div class="p-6 text-center text-red-400 text-sm">Failed to load tasks.</div>';
+            }
+        };
+
+        function renderEmpTasks(tasks) {
+            const panel = document.getElementById('empTasksPanel');
+            if (!panel) return;
+
+            const mine = tasks.filter(t => String(t.assigned_to) === String(currentUserId));
+
+            if (mine.length === 0) {
+                panel.innerHTML = '<div class="p-6 text-center text-slate-400 dark:text-slate-500 text-sm">No tasks assigned to you in this project.</div>';
+                return;
+            }
+
+            let html = '<div class="divide-y divide-slate-100 dark:divide-slate-800">';
+            mine.forEach(t => {
+                const pCls = priorityColors[t.priority] || priorityColors.medium;
+                const sCls = statusColors[t.status]    || statusColors.pending;
+                const sLbl = statusLabels[t.status]    || t.status;
+                const due  = t.due_date ? new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+                const isOverdue = t.due_date && t.status !== 'completed' && new Date(t.due_date) < new Date();
+                html += `<div class="px-4 py-3.5">
+                    <div class="flex items-start justify-between gap-2">
+                        <p class="text-sm font-semibold text-slate-900 dark:text-white flex-1 truncate">${escapeHtml(t.title)}</p>
+                        ${t.status !== 'completed' ? `<button onclick="openUpdateTaskModal(${t.id}, '${escapeHtml(t.title).replace(/'/g,"\\'")}', ${t.progress}, '${t.status}')" class="flex-shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all border border-primary/20 hover:border-primary">Update</button>` : ''}
+                    </div>
+                    <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${pCls}">${t.priority}</span>
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${sCls}">${sLbl}</span>
+                        ${due ? `<span class="text-[10px] ${isOverdue ? 'text-red-500 font-semibold' : 'text-slate-400 dark:text-slate-500'}">${isOverdue ? '⚠ Overdue · ' : ''}Due ${due}</span>` : ''}
+                    </div>
+                    <div class="flex items-center gap-2 mt-2">
+                        <div class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                            <div class="h-full rounded-full transition-all ${t.status === 'completed' ? 'bg-emerald-500' : 'bg-primary'}" style="width:${t.progress}%"></div>
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 w-8 text-right">${t.progress}%</span>
+                    </div>
+                    ${t.description ? `<p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5 leading-snug">${escapeHtml(t.description)}</p>` : ''}
+                </div>`;
+            });
+            html += '</div>';
+            panel.innerHTML = html;
+        }
+
+        window.openUpdateTaskModal = function (taskId, title, progress, status) {
+            document.getElementById('updateTaskId').value = taskId;
+            document.getElementById('updateTaskTitle').textContent = title;
+            document.getElementById('progressSlider').value = progress;
+            document.getElementById('progressValueLabel').textContent = progress;
+            document.getElementById('updateTaskStatus').value = status;
+            document.getElementById('updateTaskError').textContent = '';
+            document.getElementById('updateTaskModal').classList.remove('hidden');
+        };
+
+        window.closeUpdateTaskModal = function () {
+            document.getElementById('updateTaskModal').classList.add('hidden');
+        };
+
+        window.submitUpdateTask = async function () {
+            const btn    = document.getElementById('updateTaskBtn');
+            const errEl  = document.getElementById('updateTaskError');
+            const taskId = document.getElementById('updateTaskId').value;
+            const prog   = document.getElementById('progressSlider').value;
+            const status = document.getElementById('updateTaskStatus').value;
+
+            btn.disabled = true;
+            btn.textContent = 'Saving…';
+            errEl.textContent = '';
+            try {
+                const fd = new FormData();
+                fd.append('action', 'update-task');
+                fd.append('task_id', taskId);
+                fd.append('progress', prog);
+                fd.append('status', status);
+                const res = await fetch(TASK_API, { method: 'POST', body: fd });
+                const data = await res.json();
+                if (data.success) {
+                    closeUpdateTaskModal();
+                    if (selectedProjectId) loadEmpTasks(selectedProjectId);
+                } else {
+                    errEl.textContent = data.error || 'Failed to update task.';
+                }
+            } catch { errEl.textContent = 'Network error.'; }
+            finally { btn.disabled = false; btn.textContent = 'Save'; }
+        };
+
+        // Sync slider and status automatically
+        document.getElementById('progressSlider').addEventListener('input', function () {
+            const val = parseInt(this.value);
+            const sel = document.getElementById('updateTaskStatus');
+            if (val === 100) sel.value = 'completed';
+            else if (val === 0) sel.value = 'pending';
+            else sel.value = 'in_progress';
+        });
+    })();
+    </script>
+
     <?php include '../includes/settings_modal.php'; ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {

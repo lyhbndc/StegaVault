@@ -578,6 +578,20 @@ endforeach; ?>
     endif; ?>
                                 </div>
 
+                                <!-- Tasks Section -->
+                                <div class="flex items-center justify-between px-1">
+                                    <h2 class="text-slate-900 dark:text-white text-base font-bold">Tasks</h2>
+                                    <button onclick="openCreateTaskModal()"
+                                        class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 dark:text-emerald-400 hover:text-white text-xs font-bold rounded-lg transition-all border border-emerald-500/20 hover:border-emerald-500">
+                                        <span class="material-symbols-outlined text-sm">add_task</span>
+                                        Add Task
+                                    </button>
+                                </div>
+
+                                <div id="tasksPanel" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+                                    <div class="p-6 text-center text-slate-400 dark:text-slate-500 text-sm">Loading tasks…</div>
+                                </div>
+
                                 <!-- Info Card -->
                                 <div class="bg-gradient-to-br from-primary/10 to-purple-500/10 border border-primary/20 rounded-xl p-5">
                                     <div class="flex items-start gap-3">
@@ -2384,6 +2398,204 @@ endif; ?>
                 </div>
             </div>
         </div>
+
+        <!-- ═══════════════════════════════════════
+             CREATE TASK MODAL
+        ═══════════════════════════════════════ -->
+        <div id="createTaskModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeCreateTaskModal()"></div>
+            <div class="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-lg p-6">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="size-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-emerald-500">add_task</span>
+                    </div>
+                    <div>
+                        <h3 class="text-slate-900 dark:text-white font-bold text-base">Create Task</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-xs">Assign a task to a team member</p>
+                    </div>
+                    <button onclick="closeCreateTaskModal()" class="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">close</span>
+                    </button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Title *</label>
+                        <input id="taskTitleInput" type="text" placeholder="e.g. Review Q3 documents"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Description</label>
+                        <textarea id="taskDescInput" rows="2" placeholder="Optional details…"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all resize-none"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Assign To</label>
+                            <select id="taskAssignSelect"
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all">
+                                <option value="">— Unassigned —</option>
+                                <?php foreach ($users as $u): ?>
+                                    <option value="<?php echo $u['id']; ?>"><?php echo htmlspecialchars($u['name']); ?> (<?php echo $u['role']; ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Priority</label>
+                            <select id="taskPrioritySelect"
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Due Date</label>
+                        <input id="taskDueDateInput" type="date"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all" />
+                    </div>
+                </div>
+                <p id="createTaskError" class="text-red-500 text-xs mt-3 min-h-[1rem]"></p>
+                <div class="flex items-center justify-end gap-2 mt-4">
+                    <button onclick="closeCreateTaskModal()"
+                        class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancel</button>
+                    <button id="createTaskBtn" onclick="submitCreateTask()"
+                        class="px-5 py-2 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-white transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">Create Task</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════
+             TASK JAVASCRIPT
+        ═══════════════════════════════════════ -->
+        <script>
+        (function () {
+            const TASK_API = '../api/projects.php';
+            const priorityColors = { high: 'text-red-500 bg-red-500/10 border-red-500/20', medium: 'text-amber-500 bg-amber-500/10 border-amber-500/20', low: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+            const statusColors  = { pending: 'text-slate-500 bg-slate-500/10 border-slate-500/20', in_progress: 'text-blue-500 bg-blue-500/10 border-blue-500/20', completed: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+            const statusLabels  = { pending: 'Pending', in_progress: 'In Progress', completed: 'Completed' };
+
+            window.openCreateTaskModal = function () {
+                document.getElementById('taskTitleInput').value = '';
+                document.getElementById('taskDescInput').value = '';
+                document.getElementById('taskAssignSelect').value = '';
+                document.getElementById('taskPrioritySelect').value = 'medium';
+                document.getElementById('taskDueDateInput').value = '';
+                document.getElementById('createTaskError').textContent = '';
+                document.getElementById('createTaskModal').classList.remove('hidden');
+            };
+
+            window.closeCreateTaskModal = function () {
+                document.getElementById('createTaskModal').classList.add('hidden');
+            };
+
+            window.submitCreateTask = async function () {
+                const btn = document.getElementById('createTaskBtn');
+                const errEl = document.getElementById('createTaskError');
+                const title = document.getElementById('taskTitleInput').value.trim();
+                if (!title) { errEl.textContent = 'Title is required.'; return; }
+                if (!currentProjectId) { errEl.textContent = 'No project selected.'; return; }
+
+                btn.disabled = true;
+                btn.textContent = 'Creating…';
+                errEl.textContent = '';
+                try {
+                    const fd = new FormData();
+                    fd.append('action', 'create-task');
+                    fd.append('project_id', currentProjectId);
+                    fd.append('title', title);
+                    fd.append('description', document.getElementById('taskDescInput').value.trim());
+                    fd.append('assigned_to', document.getElementById('taskAssignSelect').value);
+                    fd.append('priority', document.getElementById('taskPrioritySelect').value);
+                    fd.append('due_date', document.getElementById('taskDueDateInput').value);
+                    const res = await fetch(TASK_API, { method: 'POST', body: fd });
+                    const data = await res.json();
+                    if (data.success) {
+                        closeCreateTaskModal();
+                        loadTasks();
+                    } else {
+                        errEl.textContent = data.error || 'Failed to create task.';
+                    }
+                } catch { errEl.textContent = 'Network error.'; }
+                finally { btn.disabled = false; btn.textContent = 'Create Task'; }
+            };
+
+            window.loadTasks = async function () {
+                if (!currentProjectId) return;
+                const panel = document.getElementById('tasksPanel');
+                if (!panel) return;
+                panel.innerHTML = '<div class="p-6 text-center text-slate-400 dark:text-slate-500 text-sm">Loading…</div>';
+                try {
+                    const res = await fetch(`${TASK_API}?action=get-tasks&project_id=${currentProjectId}`);
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.error);
+                    renderTasks(data.data.tasks || []);
+                } catch (e) {
+                    panel.innerHTML = '<div class="p-6 text-center text-red-400 text-sm">Failed to load tasks.</div>';
+                }
+            };
+
+            function renderTasks(tasks) {
+                const panel = document.getElementById('tasksPanel');
+                if (!panel) return;
+                if (tasks.length === 0) {
+                    panel.innerHTML = '<div class="p-6 text-center text-slate-400 dark:text-slate-500 text-sm">No tasks yet. Click <strong>Add Task</strong> to create one.</div>';
+                    return;
+                }
+                let html = '<div class="divide-y divide-slate-100 dark:divide-slate-800">';
+                tasks.forEach(t => {
+                    const pCls = priorityColors[t.priority] || priorityColors.medium;
+                    const sCls = statusColors[t.status]   || statusColors.pending;
+                    const sLbl = statusLabels[t.status]   || t.status;
+                    const due  = t.due_date ? new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+                    const isOverdue = t.due_date && t.status !== 'completed' && new Date(t.due_date) < new Date();
+                    const progressBar = `<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mt-2 overflow-hidden">
+                        <div class="h-full rounded-full transition-all ${t.status === 'completed' ? 'bg-emerald-500' : 'bg-primary'}" style="width:${t.progress}%"></div>
+                    </div>`;
+                    html += `<div class="px-4 py-3.5 group">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-slate-900 dark:text-white truncate">${escapeHtml(t.title)}</p>
+                                ${t.assigned_name ? `<p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Assigned to: ${escapeHtml(t.assigned_name)}</p>` : '<p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Unassigned</p>'}
+                            </div>
+                            <button onclick="adminDeleteTask(${t.id})" class="p-1 rounded text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0" title="Delete task">
+                                <span class="material-symbols-outlined text-[15px]">delete</span>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${pCls}">${t.priority}</span>
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${sCls}">${sLbl}</span>
+                            ${due ? `<span class="text-[10px] ${isOverdue ? 'text-red-500 font-semibold' : 'text-slate-400 dark:text-slate-500'}">${isOverdue ? '⚠ Overdue · ' : ''}Due ${due}</span>` : ''}
+                        </div>
+                        <div class="flex items-center gap-2 mt-2">
+                            ${progressBar}
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 flex-shrink-0 w-8 text-right">${t.progress}%</span>
+                        </div>
+                    </div>`;
+                });
+                html += '</div>';
+                panel.innerHTML = html;
+            }
+
+            window.adminDeleteTask = async function (taskId) {
+                if (!confirm('Delete this task?')) return;
+                try {
+                    const fd = new FormData();
+                    fd.append('action', 'delete-task');
+                    fd.append('task_id', taskId);
+                    const res = await fetch(TASK_API, { method: 'POST', body: fd });
+                    const data = await res.json();
+                    if (data.success) { loadTasks(); }
+                    else { alert(data.error || 'Failed to delete task'); }
+                } catch { alert('Network error'); }
+            };
+
+            // Auto-load tasks when project is open
+            if (typeof currentProjectId !== 'undefined' && currentProjectId) {
+                document.addEventListener('DOMContentLoaded', loadTasks);
+            }
+        })();
+        </script>
 
         <script>
             try {

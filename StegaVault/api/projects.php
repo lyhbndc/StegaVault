@@ -1113,4 +1113,196 @@ if ($action === 'update-status') {
         exit;
     }
 }
+// ============================================
+// CREATE TASK (Admin only)
+// ============================================
+if ($action === 'create-task') {
+    try {
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+            echo json_encode(['success' => false, 'error' => 'Access denied']);
+            exit;
+        }
+
+        $projectId   = (int)($_POST['project_id'] ?? 0);
+        $title       = trim($_POST['title'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $assignedTo  = isset($_POST['assigned_to']) && is_numeric($_POST['assigned_to']) ? (int)$_POST['assigned_to'] : null;
+        $priority    = in_array($_POST['priority'] ?? '', ['low', 'medium', 'high']) ? $_POST['priority'] : 'medium';
+        $dueDate     = trim($_POST['due_date'] ?? '') ?: null;
+
+        if ($projectId <= 0 || $title === '') {
+            echo json_encode(['success' => false, 'error' => 'project_id and title are required']);
+            exit;
+        }
+
+        $stmt = $db->prepare("INSERT INTO project_tasks (project_id, title, description, assigned_to, created_by, priority, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param('isssiis', $projectId, $title, $description, $assignedTo, $userId, $priority, $dueDate);
+
+        if ($stmt->execute()) {
+            $newId = $db->lastInsertId();
+
+            // Notify assigned user
+            if ($assignedTo && $assignedTo !== (int)$userId) {
+                try {
+                    $assignedRole = getUserRoleForActivityLog($db, $assignedTo);
+                    $assignedTable = getRoleActivityTable($assignedRole);
+                    $adminName = $_SESSION['name'] ?? 'Admin';
+                    insertActivityRow($db, $assignedTable, $assignedTo, 'task_assigned', "Task assigned: \"{$title}\" by {$adminName}", $_SERVER['REMOTE_ADDR'] ?? null);
+                } catch (Exception $e) {}
+            }
+
+            echo json_encode(['success' => true, 'task_id' => $newId, 'message' => 'Task created']);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Failed to create task']);
+        }
+        exit;
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => 'Exception: ' . $e->getMessage()]);
+        exit;
+    }
+}
+
+// ============================================
+// GET TASKS (Members + Admin)
+// ============================================
+if ($action === 'get-tasks') {
+    try {
+        $projectId = (int)($_GET['project_id'] ?? 0);
+
+        if ($projectId <= 0) {
+            echo json_encode(['success' => false, 'error' => 'Invalid project ID']);
+            exit;
+        }
+
+        $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+
+        if (!$isAdmin) {
+            $check = $db->prepare("SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?");
+            $check->bind_param('ii', $projectId, $userId);
+            $check->execute();
+            if ($check->get_result()->num_rows === 0) {
+                echo json_encode(['success' => false, 'error' => 'Access denied']);
+                exit;
+            }
+        }
+
+        $stmt = $db->prepare("
+            SELECT t.id, t.title, t.description, t.priority, t.status, t.progress, t.due_date,
+                   t.created_at, t.updated_at,
+                   t.assigned_to,
+                   u.name AS assigned_name,
+                   cb.name AS created_by_name
+            FROM project_tasks t
+            LEFT JOIN users u  ON t.assigned_to = u.id
+            LEFT JOIN users cb ON t.created_by  = cb.id
+            WHERE t.project_id = ?
+            ORDER BY
+                CASE t.status WHEN 'in_progress' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END,
+                CASE t.priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END,
+                t.due_date ASC NULLS LAST,
+                t.created_at DESC
+        ");
+        $stmt->bind_param('i', $projectId);
+        $stmt->execute();
+        $tasks = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        echo json_encode(['success' => true, 'data' => ['tasks' => $tasks]]);
+        exit;
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => 'Exception: ' . $e->getMessage()]);
+        exit;
+    }
+}
+
+// ============================================
+// UPDATE TASK (Assigned user updates progress/status; admin can update anything)
+// ============================================
+if ($action === 'update-task') {
+    try {
+        $taskId  = (int)($_POST['task_id'] ?? 0);
+        $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+
+        if ($taskId <= 0) {
+            echo json_encode(['success' => false, 'error' => 'Invalid task ID']);
+            exit;
+        }
+
+        // Fetch task to verify ownership
+        $tk = $db->prepare("SELECT * FROM project_tasks WHERE id = ?");
+        $tk->bind_param('i', $taskId);
+        $tk->execute();
+        $task = $tk->get_result()->fetch_assoc();
+        if (!$task) {
+            echo json_encode(['success' => false, 'error' => 'Task not found']);
+            exit;
+        }
+
+        $isAssigned = ((int)$task['assigned_to'] === (int)$userId);
+        if (!$isAdmin && !$isAssigned) {
+            echo json_encode(['success' => false, 'error' => 'Access denied']);
+            exit;
+        }
+
+        // Fields employees can update
+        $progress = isset($_POST['progress']) ? max(0, min(100, (int)$_POST['progress'])) : (int)$task['progress'];
+        $status   = in_array($_POST['status'] ?? '', ['pending', 'in_progress', 'completed']) ? $_POST['status'] : $task['status'];
+
+        // Auto-sync: 100% => completed, 0% pending => pending
+        if ($progress === 100) $status = 'completed';
+        if ($progress === 0 && $status !== 'completed') $status = 'pending';
+        if ($progress > 0 && $progress < 100 && $status === 'pending') $status = 'in_progress';
+
+        // Admin-only fields
+        $title       = $isAdmin ? (trim($_POST['title'] ?? '') ?: $task['title']) : $task['title'];
+        $description = $isAdmin ? (trim($_POST['description'] ?? '')) : $task['description'];
+        $priority    = $isAdmin && in_array($_POST['priority'] ?? '', ['low', 'medium', 'high']) ? $_POST['priority'] : $task['priority'];
+        $assignedTo  = $isAdmin && isset($_POST['assigned_to']) && is_numeric($_POST['assigned_to']) ? (int)$_POST['assigned_to'] : $task['assigned_to'];
+        $dueDate     = $isAdmin ? (trim($_POST['due_date'] ?? '') ?: null) : $task['due_date'];
+
+        $stmt = $db->prepare("UPDATE project_tasks SET title=?, description=?, assigned_to=?, priority=?, status=?, progress=?, due_date=? WHERE id=?");
+        $stmt->bind_param('ssiisisi', $title, $description, $assignedTo, $priority, $status, $progress, $dueDate, $taskId);
+
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Task updated', 'status' => $status, 'progress' => $progress]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Failed to update task']);
+        }
+        exit;
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => 'Exception: ' . $e->getMessage()]);
+        exit;
+    }
+}
+
+// ============================================
+// DELETE TASK (Admin only)
+// ============================================
+if ($action === 'delete-task') {
+    try {
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+            echo json_encode(['success' => false, 'error' => 'Access denied']);
+            exit;
+        }
+
+        $taskId = (int)($_POST['task_id'] ?? 0);
+        if ($taskId <= 0) {
+            echo json_encode(['success' => false, 'error' => 'Invalid task ID']);
+            exit;
+        }
+
+        $stmt = $db->prepare("DELETE FROM project_tasks WHERE id = ?");
+        $stmt->bind_param('i', $taskId);
+
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Task deleted']);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Failed to delete task']);
+        }
+        exit;
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => 'Exception: ' . $e->getMessage()]);
+        exit;
+    }
+}
+
 echo json_encode(['success' => false, 'error' => 'Unknown action: ' . $action, 'received_post' => $_POST]);

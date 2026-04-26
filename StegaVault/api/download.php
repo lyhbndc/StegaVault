@@ -12,6 +12,7 @@ require_once __DIR__ . '/../includes/ActivityLogger.php';
 require_once __DIR__ . '/../includes/Encryption.php';
 require_once __DIR__ . '/../includes/watermark.php';
 require_once __DIR__ . '/../includes/CryptoWatermark.php';
+require_once __DIR__ . '/../includes/PdfWatermark.php';
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 if (!isset($_SESSION['user_id'])) {
@@ -55,6 +56,7 @@ $isImage = in_array($storedMime, ['image/jpeg', 'image/jpg', 'image/png', 'image
     || in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
 $isVideo = (strpos($storedMime, 'video/') === 0)
     || in_array($ext, ['mp4', 'webm', 'mov', 'ogg']);
+$isPdf = ($storedMime === 'application/pdf') || ($ext === 'pdf');
 
 // Normalise the MIME used for response headers
 if ($isImage && !$storedMime)
@@ -228,7 +230,7 @@ if ($isImage) {
 
     $baseName = pathinfo($file['original_name'], PATHINFO_FILENAME);
     $safeName = str_replace('"', '', $baseName . '_watermarked.png');
-    
+
     ob_end_clean(); // Discard any whitespace/output from includes
     header('Content-Type: image/png');
     header('Content-Disposition: attachment; filename="' . $safeName . '"');
@@ -236,6 +238,60 @@ if ($isImage) {
     header('Cache-Control: no-cache, must-revalidate');
     header('Pragma: public');
     readfile($watermarkedPath);
+    exit;
+} elseif ($isPdf) {
+    // ── PDF: Visible diagonal watermark overlay ───────────────────────────────────
+
+    $pdfWmError = null;
+    $watermarkedPdfPath = PdfWatermark::applyWatermark($tempDecryptedPath, $watermarkData, $pdfWmError);
+    @unlink($tempDecryptedPath);
+
+    if (!$watermarkedPdfPath) {
+        http_response_code(500);
+        die('Failed to watermark PDF: ' . ($pdfWmError ?? 'unknown error'));
+    }
+
+    try {
+        $watermarkId  = md5($userId . '_' . $fileId . '_' . time());
+        $relativePath = 'tmp/' . basename($watermarkedPdfPath);
+
+        $chk = $db->prepare("SELECT id FROM watermark_mappings WHERE file_id = ? AND user_id = ?");
+        $chk->bind_param('ii', $fileId, $userId);
+        $chk->execute();
+
+        if ($chk->get_result()->num_rows > 0) {
+            $upd = $db->prepare("UPDATE watermark_mappings SET download_count = download_count + 1, last_download = NOW() WHERE file_id = ? AND user_id = ?");
+            $upd->bind_param('ii', $fileId, $userId);
+            $upd->execute();
+        } else {
+            $ins = $db->prepare("INSERT INTO watermark_mappings (file_id, user_id, watermark_id, watermarked_path, download_count, last_download, crypto_enabled, signature) VALUES (?, ?, ?, ?, 1, NOW(), TRUE, ?)");
+            $ins->bind_param('iisss', $fileId, $userId, $watermarkId, $relativePath, $cryptoWatermark['signature']);
+            $ins->execute();
+        }
+
+        try {
+            CryptoWatermark::logWatermark($db, $cryptoWatermark, $fileId, $userId, $watermarkId);
+        } catch (Exception $e) {
+            error_log('CryptoWatermark log skipped: ' . $e->getMessage());
+        }
+
+        $updF = $db->prepare("UPDATE files SET download_count = download_count + 1, watermarked = TRUE WHERE id = ?");
+        $updF->bind_param('i', $fileId);
+        $updF->execute();
+    } catch (Exception $e) {
+        error_log('PDF watermark DB error (non-fatal): ' . $e->getMessage());
+    }
+
+    $safePdfName = str_replace('"', '', pathinfo($file['original_name'], PATHINFO_FILENAME) . '_watermarked.pdf');
+
+    ob_end_clean();
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: attachment; filename="' . $safePdfName . '"');
+    header('Content-Length: ' . filesize($watermarkedPdfPath));
+    header('Cache-Control: no-cache, must-revalidate');
+    header('Pragma: public');
+    readfile($watermarkedPdfPath);
+    @unlink($watermarkedPdfPath);
     exit;
 } else {
     // ── VIDEO / OTHER: Embed Document Watermark & Serve ──────────────────────────
