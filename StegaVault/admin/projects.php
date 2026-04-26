@@ -439,7 +439,38 @@ endforeach; ?>
                                     <?php endif; ?>
                                     <span class="text-xs text-slate-400 dark:text-slate-500">Created <?php echo date('M d, Y', strtotime($selectedProject['created_at'])); ?></span>
                                 </div>
-                                <h1 class="text-slate-900 dark:text-white text-2xl font-bold"><?php echo htmlspecialchars($selectedProject['name']); ?></h1>
+                                <?php
+                                    $avgProgress    = (int)($selectedProject['avg_progress'] ?? 0);
+                                    $taskCount      = (int)($selectedProject['task_count'] ?? 0);
+                                    $completedTasks = (int)($selectedProject['completed_tasks'] ?? 0);
+                                    $progressColor  = $avgProgress >= 100 ? 'bg-emerald-500' : ($avgProgress >= 50 ? 'bg-primary' : 'bg-amber-500');
+                                ?>
+                                <!-- Title + inline progress -->
+                                <div class="flex items-center gap-4 mt-1">
+                                    <h1 class="text-slate-900 dark:text-white text-2xl font-bold flex-shrink-0"><?php echo htmlspecialchars($selectedProject['name']); ?></h1>
+                                    <!-- Inline progress bar -->
+                                    <div id="projectProgressCard" class="flex-1 min-w-0 max-w-xs">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span id="projectProgressStats" class="text-[11px] text-slate-400 dark:text-slate-500">
+                                                <?php echo $taskCount > 0 ? "{$completedTasks}/{$taskCount} tasks done" : 'No tasks yet'; ?>
+                                            </span>
+                                            <span id="projectProgressPct" class="text-xs font-bold text-slate-700 dark:text-slate-200 ml-2"><?php echo $avgProgress; ?>%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                                            <div id="projectProgressBar" class="h-full rounded-full transition-all duration-500 <?php echo $progressColor; ?>" style="width:<?php echo $avgProgress; ?>%"></div>
+                                        </div>
+                                        <?php if ($taskCount > 0 && $avgProgress >= 100): ?>
+                                            <p id="projectProgressNote" class="text-[10px] text-emerald-500 font-semibold mt-0.5 flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-[12px]">check_circle</span> All done!
+                                            </p>
+                                        <?php elseif ($taskCount > 0): ?>
+                                            <p id="projectProgressNote" class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5"><?php echo $taskCount - $completedTasks; ?> remaining</p>
+                                        <?php else: ?>
+                                            <p id="projectProgressNote" class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 italic"></p>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
                                 <!-- Description (inline editable) -->
                                 <div id="descDisplay" class="group/desc flex items-start gap-1 mt-0.5">
                                     <p id="descText" class="text-slate-500 dark:text-slate-400 text-sm"><?php echo htmlspecialchars($selectedProject['description'] ?? ''); ?></p>
@@ -460,42 +491,6 @@ endforeach; ?>
                                         <button onclick="saveDesc()" class="px-3 py-1 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors">Save</button>
                                         <button onclick="cancelEditDesc()" class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Cancel</button>
                                     </div>
-                                </div>
-
-                                <?php
-                                    $avgProgress    = (int)($selectedProject['avg_progress'] ?? 0);
-                                    $taskCount      = (int)($selectedProject['task_count'] ?? 0);
-                                    $completedTasks = (int)($selectedProject['completed_tasks'] ?? 0);
-                                    $progressColor  = $avgProgress >= 100 ? 'bg-emerald-500' : ($avgProgress >= 50 ? 'bg-primary' : 'bg-amber-500');
-                                ?>
-                                <!-- Project Progress Bar -->
-                                <div class="mt-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm" id="projectProgressCard">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                                            <span class="material-symbols-outlined text-[15px] text-primary">analytics</span>
-                                            Project Progress
-                                        </span>
-                                        <div class="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                                            <?php if ($taskCount > 0): ?>
-                                                <span id="projectProgressStats"><?php echo $completedTasks; ?>/<?php echo $taskCount; ?> tasks done</span>
-                                            <?php else: ?>
-                                                <span id="projectProgressStats" class="italic">No tasks yet</span>
-                                            <?php endif; ?>
-                                            <span id="projectProgressPct" class="font-bold text-slate-800 dark:text-white text-sm"><?php echo $avgProgress; ?>%</span>
-                                        </div>
-                                    </div>
-                                    <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
-                                        <div id="projectProgressBar" class="h-full rounded-full transition-all duration-500 <?php echo $progressColor; ?>" style="width:<?php echo $avgProgress; ?>%"></div>
-                                    </div>
-                                    <?php if ($taskCount > 0 && $avgProgress >= 100): ?>
-                                        <p id="projectProgressNote" class="text-[11px] text-emerald-500 font-semibold mt-1.5 flex items-center gap-1">
-                                            <span class="material-symbols-outlined text-[13px]">check_circle</span> All tasks completed!
-                                        </p>
-                                    <?php elseif ($taskCount > 0): ?>
-                                        <p id="projectProgressNote" class="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5"><?php echo $taskCount - $completedTasks; ?> task<?php echo ($taskCount - $completedTasks) != 1 ? 's' : ''; ?> remaining</p>
-                                    <?php else: ?>
-                                        <p id="projectProgressNote" class="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5 italic">No tasks yet</p>
-                                    <?php endif; ?>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 flex-shrink-0">
@@ -2739,7 +2734,7 @@ endif; ?>
                     barEl.className = barEl.className.replace(/bg-\S+/g, 'bg-slate-300 dark:bg-slate-700');
                     pctEl.textContent = '0%';
                     statsEl.textContent = 'No tasks yet';
-                    statsEl.className = 'text-xs text-slate-500 dark:text-slate-400 italic';
+                    statsEl.className = 'text-[11px] text-slate-400 dark:text-slate-500 italic';
                     return;
                 }
 
@@ -2750,21 +2745,21 @@ endif; ?>
                     avg >= 100 ? 'bg-emerald-500' : avg >= 50 ? 'bg-primary' : 'bg-amber-500');
                 pctEl.textContent = avg + '%';
                 statsEl.textContent = `${completed}/${tasks.length} tasks done`;
-                statsEl.className = 'text-xs text-slate-500 dark:text-slate-400';
+                statsEl.className = 'text-[11px] text-slate-400 dark:text-slate-500';
 
-                // Update remaining text note (reuse the PHP-rendered element by ID)
+                // Update note line
                 const note = document.getElementById('projectProgressNote');
                 if (note) {
                     if (tasks.length === 0) {
-                        note.className = 'text-[11px] text-slate-400 dark:text-slate-500 mt-1.5 italic';
-                        note.innerHTML = 'No tasks yet';
+                        note.className = 'text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 italic';
+                        note.innerHTML = '';
                     } else if (avg >= 100) {
-                        note.className = 'text-[11px] text-emerald-500 font-semibold mt-1.5 flex items-center gap-1';
-                        note.innerHTML = '<span class="material-symbols-outlined text-[13px]">check_circle</span> All tasks completed!';
+                        note.className = 'text-[10px] text-emerald-500 font-semibold mt-0.5 flex items-center gap-1';
+                        note.innerHTML = '<span class="material-symbols-outlined text-[12px]">check_circle</span> All done!';
                     } else {
                         const rem = tasks.length - completed;
-                        note.className = 'text-[11px] text-slate-400 dark:text-slate-500 mt-1.5';
-                        note.textContent = `${rem} task${rem !== 1 ? 's' : ''} remaining`;
+                        note.className = 'text-[10px] text-slate-400 dark:text-slate-500 mt-0.5';
+                        note.textContent = `${rem} remaining`;
                     }
                 }
             };
