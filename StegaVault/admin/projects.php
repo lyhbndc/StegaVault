@@ -205,7 +205,7 @@ endforeach; ?>
                                                 <span class="text-[10px] text-slate-500"><?php echo htmlspecialchars($u['role']); ?></span>
                                             </div>
                                         </div>
-                                        <button type="button" onclick="addMember(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars(str_replace("'", "\\'", $u['name'])); ?>')"
+                                        <button type="button" onclick="addMember(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars(str_replace("'", "\\'", $u['name'])); ?>', '<?php echo htmlspecialchars($u['role']); ?>')"
                                             class="text-slate-300 dark:text-slate-600 hover:text-primary opacity-0 group-hover:opacity-100 transition-all">
                                             <span class="material-symbols-outlined text-[20px]">add_circle</span>
                                         </button>
@@ -224,6 +224,23 @@ endforeach; ?>
                                 <p class="text-center text-slate-400 dark:text-slate-500 text-xs py-4">No members selected</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Initial Tasks -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[18px] text-emerald-500">add_task</span>
+                            Initial Tasks <span class="text-slate-400 font-normal">(Optional)</span>
+                        </h3>
+                        <button type="button" onclick="addPendingTaskRow()"
+                            class="flex items-center gap-1 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 dark:text-emerald-400 hover:text-white text-xs font-bold rounded-lg transition-all border border-emerald-500/20 hover:border-emerald-500">
+                            <span class="material-symbols-outlined text-sm">add</span>Add Task
+                        </button>
+                    </div>
+                    <div id="pendingTasksList" class="space-y-2">
+                        <p id="pendingTasksEmpty" class="text-xs text-slate-400 dark:text-slate-500 italic px-1">No tasks added yet. Tasks can be assigned to selected team members.</p>
                     </div>
                 </div>
 
@@ -471,11 +488,13 @@ endforeach; ?>
                                         <div id="projectProgressBar" class="h-full rounded-full transition-all duration-500 <?php echo $progressColor; ?>" style="width:<?php echo $avgProgress; ?>%"></div>
                                     </div>
                                     <?php if ($taskCount > 0 && $avgProgress >= 100): ?>
-                                        <p class="text-[11px] text-emerald-500 font-semibold mt-1.5 flex items-center gap-1">
+                                        <p id="projectProgressNote" class="text-[11px] text-emerald-500 font-semibold mt-1.5 flex items-center gap-1">
                                             <span class="material-symbols-outlined text-[13px]">check_circle</span> All tasks completed!
                                         </p>
                                     <?php elseif ($taskCount > 0): ?>
-                                        <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5"><?php echo $taskCount - $completedTasks; ?> task<?php echo ($taskCount - $completedTasks) != 1 ? 's' : ''; ?> remaining</p>
+                                        <p id="projectProgressNote" class="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5"><?php echo $taskCount - $completedTasks; ?> task<?php echo ($taskCount - $completedTasks) != 1 ? 's' : ''; ?> remaining</p>
+                                    <?php else: ?>
+                                        <p id="projectProgressNote" class="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5 italic">No tasks yet</p>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -683,6 +702,9 @@ endif; ?>
 
         <script>
             let selectedMemberIds = [];
+            let selectedMemberNames = {}; // id -> {name, role} for pending task dropdowns
+            let pendingTasks = [];
+            let pendingTaskCounter = 0;
             const currentUserId = <?php echo $_SESSION['user_id']; ?>;
             const currentProjectId = <?php echo $selectedProject ? $selectedProject['id'] : 'null'; ?>;
 
@@ -1419,8 +1441,12 @@ endif; ?>
                 document.getElementById('createModal').classList.add('modal-hidden');
                 document.getElementById('createModal').classList.remove('modal-visible');
                 selectedMemberIds = [];
+                selectedMemberNames = {};
+                pendingTasks = [];
+                pendingTaskCounter = 0;
                 document.getElementById('selectedMembers').innerHTML = '<p class="text-center text-slate-400 dark:text-slate-500 text-xs py-4">No members selected</p>';
                 document.getElementById('memberCount').textContent = '0';
+                document.getElementById('pendingTasksList').innerHTML = '<p id="pendingTasksEmpty" class="text-xs text-slate-400 dark:text-slate-500 italic px-1">No tasks added yet. Tasks can be assigned to selected team members.</p>';
             }
 
             function searchMembers() {
@@ -1432,9 +1458,10 @@ endif; ?>
                 });
             }
 
-            function addMember(id, name) {
+            function addMember(id, name, role) {
                 if (selectedMemberIds.includes(id)) return;
                 selectedMemberIds.push(id);
+                selectedMemberNames[id] = { name, role: role || '' };
 
                 const container = document.getElementById('selectedMembers');
                 if (selectedMemberIds.length === 1) container.innerHTML = '';
@@ -1450,6 +1477,7 @@ endif; ?>
         `;
                 container.appendChild(memberDiv);
                 document.getElementById('memberCount').textContent = selectedMemberIds.length;
+                refreshPendingTaskAssignDropdowns();
             }
 
             function escapeHtml(text) {
@@ -1460,11 +1488,91 @@ endif; ?>
 
             function removeMemberFromModal(id) {
                 selectedMemberIds = selectedMemberIds.filter(mid => mid !== id);
+                delete selectedMemberNames[id];
                 document.getElementById('member-' + id).remove();
                 document.getElementById('memberCount').textContent = selectedMemberIds.length;
                 if (selectedMemberIds.length === 0) {
                     document.getElementById('selectedMembers').innerHTML = '<p class="text-center text-slate-400 dark:text-slate-500 text-xs py-4">No members selected</p>';
                 }
+                refreshPendingTaskAssignDropdowns();
+            }
+
+            function refreshPendingTaskAssignDropdowns() {
+                document.querySelectorAll('.pending-task-assign').forEach(sel => {
+                    const prev = sel.value;
+                    sel.innerHTML = '<option value="">— Unassigned —</option>';
+                    Object.entries(selectedMemberNames).forEach(([mid, m]) => {
+                        const opt = document.createElement('option');
+                        opt.value = mid;
+                        opt.textContent = m.name + (m.role ? ' (' + m.role + ')' : '');
+                        if (String(mid) === String(prev)) opt.selected = true;
+                        sel.appendChild(opt);
+                    });
+                });
+            }
+
+            function addPendingTaskRow() {
+                const list = document.getElementById('pendingTasksList');
+                const empty = document.getElementById('pendingTasksEmpty');
+                if (empty) empty.remove();
+
+                const idx = pendingTaskCounter++;
+                const row = document.createElement('div');
+                row.id = 'ptask-' + idx;
+                row.className = 'grid grid-cols-1 gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl relative';
+
+                let memberOptions = '<option value="">— Unassigned —</option>';
+                Object.entries(selectedMemberNames).forEach(([mid, m]) => {
+                    memberOptions += `<option value="${mid}">${escapeHtml(m.name)}${m.role ? ' (' + m.role + ')' : ''}</option>`;
+                });
+
+                row.innerHTML = `
+                    <div class="flex items-center justify-between gap-2">
+                        <input type="text" placeholder="Task title *" data-ptask-title="${idx}"
+                            class="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all" />
+                        <button type="button" onclick="removePendingTaskRow(${idx})" class="p-1 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors flex-shrink-0">
+                            <span class="material-symbols-outlined text-[16px]">delete</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <select data-ptask-assign="${idx}" class="pending-task-assign px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all">
+                            ${memberOptions}
+                        </select>
+                        <select data-ptask-priority="${idx}" class="px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                        <input type="date" data-ptask-due="${idx}"
+                            class="px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all" />
+                    </div>`;
+
+                list.appendChild(row);
+            }
+
+            function removePendingTaskRow(idx) {
+                const row = document.getElementById('ptask-' + idx);
+                if (row) row.remove();
+                if (document.getElementById('pendingTasksList').children.length === 0) {
+                    document.getElementById('pendingTasksList').innerHTML =
+                        '<p id="pendingTasksEmpty" class="text-xs text-slate-400 dark:text-slate-500 italic px-1">No tasks added yet. Tasks can be assigned to selected team members.</p>';
+                }
+            }
+
+            function collectPendingTasks() {
+                const tasks = [];
+                document.querySelectorAll('[data-ptask-title]').forEach(el => {
+                    const idx = el.dataset.ptaskTitle;
+                    const title = el.value.trim();
+                    if (!title) return;
+                    tasks.push({
+                        title,
+                        assignedTo: document.querySelector(`[data-ptask-assign="${idx}"]`)?.value || '',
+                        priority:   document.querySelector(`[data-ptask-priority="${idx}"]`)?.value || 'medium',
+                        dueDate:    document.querySelector(`[data-ptask-due="${idx}"]`)?.value || '',
+                    });
+                });
+                return tasks;
             }
 
             async function createProject(event) {
@@ -1473,6 +1581,8 @@ endif; ?>
                 formData.append('action', 'create');
                 formData.append('members', JSON.stringify(selectedMemberIds));
 
+                const tasksToCreate = collectPendingTasks();
+
                 try {
                     const response = await fetch('../api/projects.php', {
                         method: 'POST',
@@ -1480,6 +1590,19 @@ endif; ?>
                     });
                     const data = await response.json();
                     if (data.success) {
+                        // Create any pending tasks now that we have the project ID
+                        if (tasksToCreate.length > 0) {
+                            for (const task of tasksToCreate) {
+                                const fd = new FormData();
+                                fd.append('action', 'create-task');
+                                fd.append('project_id', data.project_id);
+                                fd.append('title', task.title);
+                                fd.append('assigned_to', task.assignedTo);
+                                fd.append('priority', task.priority);
+                                fd.append('due_date', task.dueDate);
+                                await fetch('../api/projects.php', { method: 'POST', body: fd });
+                            }
+                        }
                         showToast('Project created successfully!', 'success');
                         setTimeout(() => location.reload(), 1000);
                     } else {
@@ -2483,10 +2606,7 @@ endif; ?>
                             <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Assign To</label>
                             <select id="taskAssignSelect"
                                 class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all">
-                                <option value="">— Unassigned —</option>
-                                <?php foreach ($users as $u): ?>
-                                    <option value="<?php echo $u['id']; ?>"><?php echo htmlspecialchars($u['name']); ?> (<?php echo $u['role']; ?>)</option>
-                                <?php endforeach; ?>
+                                <option value="">Loading members…</option>
                             </select>
                         </div>
                         <div>
@@ -2525,14 +2645,35 @@ endif; ?>
             const statusColors  = { pending: 'text-slate-500 bg-slate-500/10 border-slate-500/20', in_progress: 'text-blue-500 bg-blue-500/10 border-blue-500/20', completed: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
             const statusLabels  = { pending: 'Pending', in_progress: 'In Progress', completed: 'Completed' };
 
-            window.openCreateTaskModal = function () {
+            window.openCreateTaskModal = async function () {
                 document.getElementById('taskTitleInput').value = '';
                 document.getElementById('taskDescInput').value = '';
-                document.getElementById('taskAssignSelect').value = '';
                 document.getElementById('taskPrioritySelect').value = 'medium';
                 document.getElementById('taskDueDateInput').value = '';
                 document.getElementById('createTaskError').textContent = '';
+
+                // Populate assign dropdown with project members only
+                const sel = document.getElementById('taskAssignSelect');
+                sel.innerHTML = '<option value="">Loading…</option>';
                 document.getElementById('createTaskModal').classList.remove('hidden');
+
+                try {
+                    const res = await fetch(`${TASK_API}?action=members&project_id=${currentProjectId}`);
+                    const data = await res.json();
+                    const members = data.data?.members || [];
+                    sel.innerHTML = '<option value="">— Unassigned —</option>';
+                    members.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.id;
+                        opt.textContent = m.name + ' (' + (m.user_role || m.project_role || '') + ')';
+                        sel.appendChild(opt);
+                    });
+                    if (members.length === 0) {
+                        sel.innerHTML = '<option value="">No members in this project</option>';
+                    }
+                } catch {
+                    sel.innerHTML = '<option value="">— Unassigned —</option>';
+                }
             };
 
             window.closeCreateTaskModal = function () {
@@ -2611,21 +2752,18 @@ endif; ?>
                 statsEl.textContent = `${completed}/${tasks.length} tasks done`;
                 statsEl.className = 'text-xs text-slate-500 dark:text-slate-400';
 
-                // Update remaining text
-                const card = document.getElementById('projectProgressCard');
-                if (card) {
-                    let note = card.querySelector('.progress-note');
-                    if (!note) {
-                        note = document.createElement('p');
-                        note.className = 'progress-note text-[11px] mt-1.5';
-                        card.appendChild(note);
-                    }
-                    if (avg >= 100) {
-                        note.className = 'progress-note text-[11px] text-emerald-500 font-semibold mt-1.5 flex items-center gap-1';
+                // Update remaining text note (reuse the PHP-rendered element by ID)
+                const note = document.getElementById('projectProgressNote');
+                if (note) {
+                    if (tasks.length === 0) {
+                        note.className = 'text-[11px] text-slate-400 dark:text-slate-500 mt-1.5 italic';
+                        note.innerHTML = 'No tasks yet';
+                    } else if (avg >= 100) {
+                        note.className = 'text-[11px] text-emerald-500 font-semibold mt-1.5 flex items-center gap-1';
                         note.innerHTML = '<span class="material-symbols-outlined text-[13px]">check_circle</span> All tasks completed!';
                     } else {
                         const rem = tasks.length - completed;
-                        note.className = 'progress-note text-[11px] text-slate-400 dark:text-slate-500 mt-1.5';
+                        note.className = 'text-[11px] text-slate-400 dark:text-slate-500 mt-1.5';
                         note.textContent = `${rem} task${rem !== 1 ? 's' : ''} remaining`;
                     }
                 }
