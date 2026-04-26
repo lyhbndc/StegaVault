@@ -318,10 +318,13 @@ if ($action === 'add_member') {
 if ($action === 'my-projects') {
     try {
         $stmt = $db->prepare("
-            SELECT p.*, 
+            SELECT p.*,
                    (SELECT COUNT(*) FROM files f WHERE f.project_id = p.id) as file_count,
                    (SELECT COUNT(*) FROM project_members pm2 WHERE pm2.project_id = p.id) as member_count,
-                   pm.role as user_role
+                   pm.role as user_role,
+                   COALESCE((SELECT ROUND(AVG(progress)) FROM project_tasks WHERE project_id = p.id), 0) as avg_progress,
+                   (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id) as task_count,
+                   (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id AND status = 'completed') as completed_tasks
             FROM projects p
             JOIN project_members pm ON p.id = pm.project_id
             WHERE pm.user_id = ? " . (($_SESSION['role'] ?? '') === 'admin' ? "" : "AND p.status = 'active'") . "
@@ -353,21 +356,27 @@ if ($action === 'dashboard-projects') {
         $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 
         if ($isAdmin) {
-            $stmt = $db->prepare(" 
-                SELECT p.*, 
+            $stmt = $db->prepare("
+                SELECT p.*,
                        (SELECT COUNT(*) FROM files f WHERE f.project_id = p.id) as file_count,
                        (SELECT COUNT(*) FROM project_members pm2 WHERE pm2.project_id = p.id) as member_count,
-                       'admin' as user_role
+                       'admin' as user_role,
+                       COALESCE((SELECT ROUND(AVG(progress)) FROM project_tasks WHERE project_id = p.id), 0) as avg_progress,
+                       (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id) as task_count,
+                       (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id AND status = 'completed') as completed_tasks
                 FROM projects p
                 ORDER BY p.updated_at DESC
             ");
         }
         else {
-            $stmt = $db->prepare(" 
-                SELECT p.*, 
+            $stmt = $db->prepare("
+                SELECT p.*,
                        (SELECT COUNT(*) FROM files f WHERE f.project_id = p.id) as file_count,
                        (SELECT COUNT(*) FROM project_members pm2 WHERE pm2.project_id = p.id) as member_count,
-                       pm.role as user_role
+                       pm.role as user_role,
+                       COALESCE((SELECT ROUND(AVG(progress)) FROM project_tasks WHERE project_id = p.id), 0) as avg_progress,
+                       (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id) as task_count,
+                       (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id AND status = 'completed') as completed_tasks
                 FROM projects p
                 JOIN project_members pm ON p.id = pm.project_id
                 WHERE pm.user_id = ? AND (p.status = 'active' OR ? = 'admin')

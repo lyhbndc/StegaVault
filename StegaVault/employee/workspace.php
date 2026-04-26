@@ -208,18 +208,29 @@ $userId = $user['id'];
                 return;
             }
 
-            list.innerHTML = myProjects.map(p => `
-                <button onclick="selectProject(${p.id})"
-                    class="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${p.id == selectedProjectId
+            list.innerHTML = myProjects.map(p => {
+                const isSelected = p.id == selectedProjectId;
+                const hasTasks   = parseInt(p.task_count || 0) > 0;
+                const avg        = parseInt(p.avg_progress || 0);
+                const progressHtml = hasTasks ? `
+                    <div class="flex items-center gap-1.5 mt-1.5">
+                        <div class="flex-1 ${isSelected ? 'bg-primary/30' : 'bg-slate-200 dark:bg-slate-700'} rounded-full h-1 overflow-hidden">
+                            <div class="h-full rounded-full ${isSelected ? 'bg-primary' : 'bg-primary'} transition-all" style="width:${avg}%"></div>
+                        </div>
+                        <span class="text-[10px] font-semibold flex-shrink-0 ${isSelected ? 'text-primary' : 'text-slate-400 dark:text-slate-500'}">${avg}%</span>
+                    </div>` : '';
+                return `<button onclick="selectProject(${p.id})"
+                    class="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isSelected
                     ? 'bg-primary/10 text-primary border border-primary/20'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent'}">
                     <span class="size-2 rounded-full flex-shrink-0" style="background-color: ${p.color}"></span>
                     <div class="flex-1 min-w-0">
                         <div class="text-sm font-medium truncate">${p.name}</div>
                         <div class="text-[10px] text-slate-400 dark:text-slate-500">${p.file_count} file${p.file_count !== 1 ? 's' : ''}</div>
+                        ${progressHtml}
                     </div>
-                </button>
-            `).join('');
+                </button>`;
+            }).join('');
         }
 
         function selectProject(id) {
@@ -468,6 +479,33 @@ $userId = $user['id'];
             html += '        </div>\n';
             html += '        <h1 class="text-slate-900 dark:text-white text-2xl font-bold">' + project.name + '</h1>\n';
             html += '        <p class="text-slate-500 dark:text-slate-400 text-sm mt-0.5">' + (project.description || 'No description') + '</p>\n';
+
+            // Project progress bar
+            const avg      = parseInt(project.avg_progress || 0);
+            const taskCnt  = parseInt(project.task_count || 0);
+            const doneCnt  = parseInt(project.completed_tasks || 0);
+            const barColor = avg >= 100 ? 'bg-emerald-500' : avg >= 50 ? 'bg-primary' : 'bg-amber-500';
+            if (taskCnt > 0) {
+                html += '        <div class="mt-3 p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">\n';
+                html += '            <div class="flex items-center justify-between mb-1.5">\n';
+                html += '                <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">analytics</span>Project Progress</span>\n';
+                html += '                <div class="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">\n';
+                html += '                    <span>' + doneCnt + '/' + taskCnt + ' tasks done</span>\n';
+                html += '                    <span class="font-bold text-slate-800 dark:text-white text-sm">' + avg + '%</span>\n';
+                html += '                </div>\n';
+                html += '            </div>\n';
+                html += '            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">\n';
+                html += '                <div class="h-full rounded-full transition-all duration-500 ' + barColor + '" style="width:' + avg + '%"></div>\n';
+                html += '            </div>\n';
+                const rem = taskCnt - doneCnt;
+                if (avg >= 100) {
+                    html += '            <p class="text-[11px] text-emerald-500 font-semibold mt-1 flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">check_circle</span>All tasks completed!</p>\n';
+                } else {
+                    html += '            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">' + rem + ' task' + (rem !== 1 ? 's' : '') + ' remaining</p>\n';
+                }
+                html += '        </div>\n';
+            }
+
             html += '    </div>\n';
             html += '    <div class="flex items-center gap-2">\n';
             html += '        <button onclick="openCreateFolderModal(' + project.id + ')" class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-bold rounded-lg transition-all shadow-sm border border-slate-200 dark:border-slate-700">\n';

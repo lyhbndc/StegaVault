@@ -21,12 +21,16 @@ $user = [
     'role' => $_SESSION['role']
 ];
 
-// Get all projects
-$stmt = $db->prepare("SELECT p.*, u.name as creator_name, COUNT(DISTINCT pm.user_id) as member_count 
-                      FROM projects p 
-                      LEFT JOIN users u ON p.created_by = u.id 
-                      LEFT JOIN project_members pm ON p.id = pm.project_id 
-                      GROUP BY p.id, u.name 
+// Get all projects with task progress stats
+$stmt = $db->prepare("SELECT p.*, u.name as creator_name,
+                      COUNT(DISTINCT pm.user_id) as member_count,
+                      COALESCE((SELECT ROUND(AVG(progress)) FROM project_tasks WHERE project_id = p.id), 0) as avg_progress,
+                      (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id) as task_count,
+                      (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id AND status = 'completed') as completed_tasks
+                      FROM projects p
+                      LEFT JOIN users u ON p.created_by = u.id
+                      LEFT JOIN project_members pm ON p.id = pm.project_id
+                      GROUP BY p.id, u.name
                       ORDER BY p.created_at DESC");
 $stmt->execute();
 $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -50,7 +54,11 @@ $selectedProject = null;
 $projectMembers = [];
 if (isset($_GET['project_id'])) {
     $projectId = (int)$_GET['project_id'];
-    $stmt = $db->prepare("SELECT * FROM projects WHERE id = ?");
+    $stmt = $db->prepare("SELECT p.*,
+                          COALESCE((SELECT ROUND(AVG(progress)) FROM project_tasks WHERE project_id = p.id), 0) as avg_progress,
+                          (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id) as task_count,
+                          (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id AND status = 'completed') as completed_tasks
+                          FROM projects p WHERE p.id = ?");
     $stmt->bind_param('i', $projectId);
     $stmt->execute();
     $selectedProject = $stmt->get_result()->fetch_assoc();
@@ -346,6 +354,14 @@ endforeach; ?>
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-semibold truncate"><?php echo htmlspecialchars($proj['name']); ?></p>
                                         <p class="text-xs <?php echo $isActive ? 'text-white/70' : 'text-slate-500 dark:text-slate-500'; ?>"><?php echo $proj['member_count']; ?> member<?php echo $proj['member_count'] != 1 ? 's' : ''; ?></p>
+                                        <?php if ((int)$proj['task_count'] > 0): ?>
+                                        <div class="flex items-center gap-1.5 mt-1.5">
+                                            <div class="flex-1 <?php echo $isActive ? 'bg-white/20' : 'bg-slate-200 dark:bg-slate-700'; ?> rounded-full h-1 overflow-hidden">
+                                                <div class="h-full rounded-full <?php echo $isActive ? 'bg-white' : 'bg-primary'; ?> transition-all" style="width:<?php echo (int)$proj['avg_progress']; ?>%"></div>
+                                            </div>
+                                            <span class="text-[10px] font-semibold flex-shrink-0 <?php echo $isActive ? 'text-white/80' : 'text-slate-400 dark:text-slate-500'; ?>"><?php echo (int)$proj['avg_progress']; ?>%</span>
+                                        </div>
+                                        <?php endif; ?>
                                     </div>
                                 </a>
                                 <button
@@ -427,6 +443,40 @@ endforeach; ?>
                                         <button onclick="saveDesc()" class="px-3 py-1 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors">Save</button>
                                         <button onclick="cancelEditDesc()" class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Cancel</button>
                                     </div>
+                                </div>
+
+                                <?php
+                                    $avgProgress    = (int)($selectedProject['avg_progress'] ?? 0);
+                                    $taskCount      = (int)($selectedProject['task_count'] ?? 0);
+                                    $completedTasks = (int)($selectedProject['completed_tasks'] ?? 0);
+                                    $progressColor  = $avgProgress >= 100 ? 'bg-emerald-500' : ($avgProgress >= 50 ? 'bg-primary' : 'bg-amber-500');
+                                ?>
+                                <!-- Project Progress Bar -->
+                                <div class="mt-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm" id="projectProgressCard">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                            <span class="material-symbols-outlined text-[15px] text-primary">analytics</span>
+                                            Project Progress
+                                        </span>
+                                        <div class="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                            <?php if ($taskCount > 0): ?>
+                                                <span id="projectProgressStats"><?php echo $completedTasks; ?>/<?php echo $taskCount; ?> tasks done</span>
+                                            <?php else: ?>
+                                                <span id="projectProgressStats" class="italic">No tasks yet</span>
+                                            <?php endif; ?>
+                                            <span id="projectProgressPct" class="font-bold text-slate-800 dark:text-white text-sm"><?php echo $avgProgress; ?>%</span>
+                                        </div>
+                                    </div>
+                                    <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                                        <div id="projectProgressBar" class="h-full rounded-full transition-all duration-500 <?php echo $progressColor; ?>" style="width:<?php echo $avgProgress; ?>%"></div>
+                                    </div>
+                                    <?php if ($taskCount > 0 && $avgProgress >= 100): ?>
+                                        <p class="text-[11px] text-emerald-500 font-semibold mt-1.5 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[13px]">check_circle</span> All tasks completed!
+                                        </p>
+                                    <?php elseif ($taskCount > 0): ?>
+                                        <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5"><?php echo $taskCount - $completedTasks; ?> task<?php echo ($taskCount - $completedTasks) != 1 ? 's' : ''; ?> remaining</p>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 flex-shrink-0">
@@ -2529,9 +2579,55 @@ endif; ?>
                     const res = await fetch(`${TASK_API}?action=get-tasks&project_id=${currentProjectId}`);
                     const data = await res.json();
                     if (!data.success) throw new Error(data.error);
-                    renderTasks(data.data.tasks || []);
+                    const tasks = data.data.tasks || [];
+                    renderTasks(tasks);
+                    updateProjectProgressBar(tasks);
                 } catch (e) {
                     panel.innerHTML = '<div class="p-6 text-center text-red-400 text-sm">Failed to load tasks.</div>';
+                }
+            };
+
+            function updateProjectProgressBar(tasks) {
+                const barEl   = document.getElementById('projectProgressBar');
+                const pctEl   = document.getElementById('projectProgressPct');
+                const statsEl = document.getElementById('projectProgressStats');
+                if (!barEl || !pctEl || !statsEl) return;
+
+                if (tasks.length === 0) {
+                    barEl.style.width = '0%';
+                    barEl.className = barEl.className.replace(/bg-\S+/g, 'bg-slate-300 dark:bg-slate-700');
+                    pctEl.textContent = '0%';
+                    statsEl.textContent = 'No tasks yet';
+                    statsEl.className = 'text-xs text-slate-500 dark:text-slate-400 italic';
+                    return;
+                }
+
+                const avg       = Math.round(tasks.reduce((s, t) => s + parseInt(t.progress || 0), 0) / tasks.length);
+                const completed = tasks.filter(t => t.status === 'completed').length;
+                barEl.style.width = avg + '%';
+                barEl.className = barEl.className.replace(/bg-\S+/g,
+                    avg >= 100 ? 'bg-emerald-500' : avg >= 50 ? 'bg-primary' : 'bg-amber-500');
+                pctEl.textContent = avg + '%';
+                statsEl.textContent = `${completed}/${tasks.length} tasks done`;
+                statsEl.className = 'text-xs text-slate-500 dark:text-slate-400';
+
+                // Update remaining text
+                const card = document.getElementById('projectProgressCard');
+                if (card) {
+                    let note = card.querySelector('.progress-note');
+                    if (!note) {
+                        note = document.createElement('p');
+                        note.className = 'progress-note text-[11px] mt-1.5';
+                        card.appendChild(note);
+                    }
+                    if (avg >= 100) {
+                        note.className = 'progress-note text-[11px] text-emerald-500 font-semibold mt-1.5 flex items-center gap-1';
+                        note.innerHTML = '<span class="material-symbols-outlined text-[13px]">check_circle</span> All tasks completed!';
+                    } else {
+                        const rem = tasks.length - completed;
+                        note.className = 'progress-note text-[11px] text-slate-400 dark:text-slate-500 mt-1.5';
+                        note.textContent = `${rem} task${rem !== 1 ? 's' : ''} remaining`;
+                    }
                 }
             };
 
