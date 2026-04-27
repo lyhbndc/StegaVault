@@ -210,15 +210,14 @@ $userId = $user['id'];
 
             list.innerHTML = myProjects.map(p => {
                 const isSelected = p.id == selectedProjectId;
-                const hasTasks   = parseInt(p.task_count || 0) > 0;
                 const avg        = parseInt(p.avg_progress || 0);
-                const progressHtml = hasTasks ? `
+                const progressHtml = `
                     <div class="flex items-center gap-1.5 mt-1.5">
                         <div class="flex-1 ${isSelected ? 'bg-primary/30' : 'bg-slate-200 dark:bg-slate-700'} rounded-full h-1 overflow-hidden">
-                            <div class="h-full rounded-full ${isSelected ? 'bg-primary' : 'bg-primary'} transition-all" style="width:${avg}%"></div>
+                            <div class="h-full rounded-full bg-primary transition-all" style="width:${avg}%"></div>
                         </div>
                         <span class="text-[10px] font-semibold flex-shrink-0 ${isSelected ? 'text-primary' : 'text-slate-400 dark:text-slate-500'}">${avg}%</span>
-                    </div>` : '';
+                    </div>`;
                 return `<button onclick="selectProject(${p.id})"
                     class="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isSelected
                     ? 'bg-primary/10 text-primary border border-primary/20'

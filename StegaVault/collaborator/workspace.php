@@ -204,18 +204,26 @@ $userId = $user['id'];
                 return;
             }
 
-            list.innerHTML = myProjects.map(p => `
-                <button onclick="selectProject(${p.id})"
-                    class="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${p.id == selectedProjectId
+            list.innerHTML = myProjects.map(p => {
+                const isSelected = p.id == selectedProjectId;
+                const avg = parseInt(p.avg_progress || 0);
+                return `<button onclick="selectProject(${p.id})"
+                    class="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isSelected
                     ? 'bg-primary/10 text-primary border border-primary/20'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent'}">
                     <span class="size-2 rounded-full flex-shrink-0" style="background-color: ${p.color}"></span>
                     <div class="flex-1 min-w-0">
                         <div class="text-sm font-medium truncate">${p.name}</div>
                         <div class="text-[10px] text-slate-400 dark:text-slate-500">${p.file_count} file${p.file_count !== 1 ? 's' : ''}</div>
+                        <div class="flex items-center gap-1.5 mt-1.5">
+                            <div class="flex-1 ${isSelected ? 'bg-primary/30' : 'bg-slate-200 dark:bg-slate-700'} rounded-full h-1 overflow-hidden">
+                                <div class="h-full rounded-full bg-primary transition-all" style="width:${avg}%"></div>
+                            </div>
+                            <span class="text-[10px] font-semibold flex-shrink-0 ${isSelected ? 'text-primary' : 'text-slate-400 dark:text-slate-500'}">${avg}%</span>
+                        </div>
                     </div>
-                </button>
-            `).join('');
+                </button>`;
+            }).join('');
         }
 
         function selectProject(id) {

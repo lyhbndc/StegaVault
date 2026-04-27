@@ -44,8 +44,8 @@ class PdfWatermark
         $userRole  = strtoupper($watermarkData['u_role'] ?? '');
         $timestamp = isset($watermarkData['ts']) ? date('Y-m-d H:i', (int)$watermarkData['ts']) : date('Y-m-d H:i');
 
-        $wmLine1 = 'Downloaded by: ' . strtoupper($userName);
-        $wmLine2 = ($userRole ? $userRole . ' | ' : '') . $timestamp;
+        $logoPath = __DIR__ . '/../PGMN LOGOS white.png';
+        $hasLogo  = file_exists($logoPath);
 
         $tmpPath = false;
 
@@ -66,31 +66,45 @@ class PdfWatermark
                 $pdf->AddPage($orient, [$size['width'], $size['height']]);
                 $pdf->useTemplate($tpl, 0, 0, $size['width'], $size['height']);
 
-                $w = $pdf->getPageWidth();
-                $h = $pdf->getPageHeight();
+                $w  = $pdf->getPageWidth();
+                $h  = $pdf->getPageHeight();
                 $cx = $w / 2;
                 $cy = $h / 2;
 
-                // Semi-transparent grey text
-                $pdf->SetAlpha(0.30);
-                $pdf->SetFont('helvetica', 'B', 11);
-                $pdf->SetTextColor(100, 100, 100);
+                if ($hasLogo) {
+                    // ── Logo watermark (centred, rotated 45°, 20% opacity) ──────────
+                    $logoSize = min($w, $h) * 0.55; // 55% of shorter side
+                    $logoX    = $cx - ($logoSize / 2);
+                    $logoY    = $cy - ($logoSize / 2);
 
-                // Rotate 45° around page centre, draw two text lines
-                $pdf->StartTransform();
-                $pdf->Rotate(45, $cx, $cy);
+                    $pdf->SetAlpha(0.20);
+                    $pdf->StartTransform();
+                    $pdf->Rotate(45, $cx, $cy);
+                    $pdf->Image($logoPath, $logoX, $logoY, $logoSize, $logoSize, 'PNG');
+                    $pdf->StopTransform();
+                    $pdf->SetAlpha(1);
+                } else {
+                    // ── Fallback: text watermark ──────────────────────────────────
+                    $wmLine1 = 'Downloaded by: ' . strtoupper($userName);
+                    $wmLine2 = ($userRole ? $userRole . ' | ' : '') . $timestamp;
 
-                $lineH = 7;
-                $cellW = min($w * 0.8, 130);
+                    $pdf->SetAlpha(0.30);
+                    $pdf->SetFont('helvetica', 'B', 11);
+                    $pdf->SetTextColor(100, 100, 100);
+                    $pdf->StartTransform();
+                    $pdf->Rotate(45, $cx, $cy);
 
-                $pdf->SetXY($cx - ($cellW / 2), $cy - $lineH);
-                $pdf->Cell($cellW, $lineH, $wmLine1, 0, 1, 'C');
+                    $lineH = 7;
+                    $cellW = min($w * 0.8, 130);
 
-                $pdf->SetXY($cx - ($cellW / 2), $cy);
-                $pdf->Cell($cellW, $lineH, $wmLine2, 0, 1, 'C');
+                    $pdf->SetXY($cx - ($cellW / 2), $cy - $lineH);
+                    $pdf->Cell($cellW, $lineH, $wmLine1, 0, 1, 'C');
+                    $pdf->SetXY($cx - ($cellW / 2), $cy);
+                    $pdf->Cell($cellW, $lineH, $wmLine2, 0, 1, 'C');
 
-                $pdf->StopTransform();
-                $pdf->SetAlpha(1);
+                    $pdf->StopTransform();
+                    $pdf->SetAlpha(1);
+                }
             }
 
             $tmpDir = __DIR__ . '/../tmp/';
