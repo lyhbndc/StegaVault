@@ -86,6 +86,11 @@ if ($action === 'change_password') {
         exit;
     }
 
+    if (password_verify($newPass, $row['password_hash'])) {
+        echo json_encode(['success' => false, 'error' => 'New password must be different from your current password']);
+        exit;
+    }
+
     $newHash = password_hash($newPass, PASSWORD_BCRYPT);
     $upd = $db->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
     $upd->bind_param('si', $newHash, $userId);

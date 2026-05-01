@@ -56,7 +56,7 @@ switch ($period) {
 
     case 'monthly':
         $selMonth  = min(12, max(1, (int)($_GET['month'] ?? date('n'))));
-        $selYear   = min(2030, max(2020, (int)($_GET['year'] ?? date('Y'))));
+        $selYear   = min(2030, max(2025, (int)($_GET['year'] ?? date('Y'))));
         $daysInMon = cal_days_in_month(CAL_GREGORIAN, $selMonth, $selYear);
         $dateStart = sprintf('%04d-%02d-01 00:00:00', $selYear, $selMonth);
         $dateEnd   = sprintf('%04d-%02d-%02d 23:59:59', $selYear, $selMonth, $daysInMon);
@@ -100,6 +100,27 @@ $user = [
     'name' => $_SESSION['name'],
     'role' => $_SESSION['role']
 ];
+
+// ── Years that have actual data (for month/year dropdowns) ───────
+$availableYears = [];
+$yearRes = $db->query("
+    SELECT DISTINCT YEAR(upload_date) AS y FROM files WHERE upload_date IS NOT NULL
+    UNION
+    SELECT DISTINCT YEAR(created_at)  AS y FROM activity_log WHERE created_at IS NOT NULL
+    UNION
+    SELECT DISTINCT YEAR(created_at)  AS y FROM projects WHERE created_at IS NOT NULL
+    UNION
+    SELECT DISTINCT YEAR(created_at)  AS y FROM users WHERE created_at IS NOT NULL
+    ORDER BY y ASC
+");
+if ($yearRes) {
+    while ($row = $yearRes->fetch_row()) {
+        if ($row[0]) $availableYears[] = (int)$row[0];
+    }
+}
+if (empty($availableYears)) {
+    $availableYears = [(int)date('Y')];
+}
 
 // ── Summary Statistics ──────────────────────────────────────────
 $totalUsers = $db->query("SELECT COUNT(*) FROM users")->fetch_row()[0];
@@ -899,9 +920,9 @@ $forensicPDF = array_map(fn($fl) => [
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Year</label>
                                 <select name="year" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
-                                    <?php for ($y = 2024; $y <= 2027; $y++): ?>
+                                    <?php foreach ($availableYears as $y): ?>
                                     <option value="<?php echo $y; ?>" <?php echo ($selYear ?? (int)date('Y')) === $y ? 'selected' : ''; ?>><?php echo $y; ?></option>
-                                    <?php endfor; ?>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>

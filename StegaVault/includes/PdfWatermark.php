@@ -44,7 +44,7 @@ class PdfWatermark
         $userRole  = strtoupper($watermarkData['u_role'] ?? '');
         $timestamp = isset($watermarkData['ts']) ? date('Y-m-d H:i', (int)$watermarkData['ts']) : date('Y-m-d H:i');
 
-        $logoPath = __DIR__ . '/../PGMN LOGOS white.png';
+        $logoPath = __DIR__ . '/../PGMN_WatermarkBg.png';
         $hasLogo  = file_exists($logoPath);
 
         $tmpPath = false;

@@ -341,10 +341,6 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
                         displayRecoveryCodes(data.data.recovery_codes);
                         recoverySection.classList.remove('hidden');
                     }
-                    
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 5000);
                 } else {
                     errorDiv.textContent = data.error || 'Invalid code. Please try again.';
                     errorDiv.classList.remove('hidden');
