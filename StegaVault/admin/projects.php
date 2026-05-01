@@ -184,43 +184,42 @@ endforeach; ?>
                         <span class="material-symbols-outlined text-[18px] text-primary">group_add</span>
                         Team Members <span class="text-slate-400 font-normal">(Optional)</span>
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[280px]">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" style="height:240px;">
                         <!-- Available Users -->
-                        <div class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/30 overflow-hidden">
-                            <div class="p-3 border-b border-slate-200 dark:border-slate-700">
+                        <div class="flex flex-col h-full border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/30 overflow-hidden">
+                            <div class="px-3 py-2.5 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
                                 <input id="searchMembers" type="text" onkeyup="searchMembers()" placeholder="Search users..."
                                     class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs py-2 px-3 text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" />
                             </div>
-                            <div id="availableUsers" class="flex-1 overflow-y-auto p-2 space-y-1">
+                            <div id="availableUsers" class="overflow-y-auto p-2 space-y-1" style="flex:1;min-height:0;">
                                 <?php foreach ($users as $u): ?>
                                     <div class="user-item flex items-center justify-between p-2 rounded-lg hover:bg-white dark:hover:bg-slate-800 cursor-pointer group transition-colors"
                                         data-name="<?php echo htmlspecialchars($u['name']); ?>"
                                         data-email="<?php echo htmlspecialchars($u['email']); ?>">
                                         <div class="flex items-center gap-2">
-                                            <div class="size-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                                                <?php echo strtoupper(substr($u['name'], 0, 2)); ?>
+                                            <div class="size-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
+                                                <?php echo strtoupper(substr($u['name'] ?? '?', 0, 2)); ?>
                                             </div>
                                             <div>
                                                 <span class="text-xs font-semibold text-slate-900 dark:text-white block"><?php echo htmlspecialchars($u['name']); ?></span>
-                                                <span class="text-[10px] text-slate-500"><?php echo htmlspecialchars($u['role']); ?></span>
+                                                <span class="text-[10px] text-slate-500 capitalize"><?php echo htmlspecialchars($u['role']); ?></span>
                                             </div>
                                         </div>
                                         <button type="button" onclick="addMember(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars(str_replace("'", "\\'", $u['name'])); ?>', '<?php echo htmlspecialchars($u['role']); ?>')"
-                                            class="text-slate-300 dark:text-slate-600 hover:text-primary opacity-0 group-hover:opacity-100 transition-all">
+                                            class="text-slate-300 dark:text-slate-600 hover:text-primary opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
                                             <span class="material-symbols-outlined text-[20px]">add_circle</span>
                                         </button>
                                     </div>
-                                <?php
-endforeach; ?>
+                                <?php endforeach; ?>
                             </div>
                         </div>
 
                         <!-- Selected Members -->
-                        <div class="flex flex-col border border-primary/20 rounded-xl bg-primary/5 overflow-hidden">
-                            <div class="p-3 border-b border-primary/10">
+                        <div class="flex flex-col h-full border border-primary/20 rounded-xl bg-primary/5 overflow-hidden">
+                            <div class="px-3 py-2.5 border-b border-primary/10 flex-shrink-0">
                                 <span class="text-xs font-bold text-primary uppercase tracking-wider">Selected (<span id="memberCount">0</span>)</span>
                             </div>
-                            <div id="selectedMembers" class="flex-1 overflow-y-auto p-2 space-y-2">
+                            <div id="selectedMembers" class="overflow-y-auto p-2 space-y-2" style="flex:1;min-height:0;">
                                 <p class="text-center text-slate-400 dark:text-slate-500 text-xs py-4">No members selected</p>
                             </div>
                         </div>
@@ -239,7 +238,7 @@ endforeach; ?>
                             <span class="material-symbols-outlined text-sm">add</span>Add Task
                         </button>
                     </div>
-                    <div id="pendingTasksList" class="space-y-2">
+                    <div id="pendingTasksList" class="space-y-2 max-h-52 overflow-y-auto pr-1">
                         <p id="pendingTasksEmpty" class="text-xs text-slate-400 dark:text-slate-500 italic px-1">No tasks added yet. Tasks can be assigned to selected team members.</p>
                     </div>
                 </div>
