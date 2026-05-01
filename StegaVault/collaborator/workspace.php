@@ -556,7 +556,7 @@ $userId = $user['id'];
                 members.forEach(m => {
                     html += '                <div class="px-5 py-3.5 flex items-center gap-3">\n';
                     html += '                    <div class="size-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">\n';
-                    html += '                        ' + m.name.substring(0, 2).toUpperCase() + '\n';
+                    html += '                        ' + (m.name || '?').substring(0, 2).toUpperCase() + '\n';
                     html += '                    </div>\n';
                     html += '                    <div class="flex-1 min-w-0">\n';
                     html += '                        <p class="text-sm font-semibold text-slate-900 dark:text-white truncate">' + m.name + '</p>\n';

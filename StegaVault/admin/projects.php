@@ -2182,7 +2182,7 @@ endif; ?>
                 <div class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
                     <div class="flex items-center gap-3">
                         <div class="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
-                            ${escapeHtml(u.name.substring(0, 2).toUpperCase())}
+                            ${escapeHtml((u.name || '?').substring(0, 2).toUpperCase())}
                         </div>
                         <div>
                             <p class="text-sm font-semibold text-slate-900 dark:text-white">${escapeHtml(u.name)}</p>
