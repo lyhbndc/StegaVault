@@ -1132,20 +1132,21 @@ if ($action === 'create-task') {
             exit;
         }
 
-        $projectId   = (int)($_POST['project_id'] ?? 0);
-        $title       = trim($_POST['title'] ?? '');
-        $description = trim($_POST['description'] ?? '');
-        $assignedTo  = isset($_POST['assigned_to']) && is_numeric($_POST['assigned_to']) ? (int)$_POST['assigned_to'] : null;
-        $priority    = in_array($_POST['priority'] ?? '', ['low', 'medium', 'high']) ? $_POST['priority'] : 'medium';
-        $dueDate     = trim($_POST['due_date'] ?? '') ?: null;
+        $projectId        = (int)($_POST['project_id'] ?? 0);
+        $title            = trim($_POST['title'] ?? '');
+        $description      = trim($_POST['description'] ?? '');
+        $assignedTo       = isset($_POST['assigned_to']) && is_numeric($_POST['assigned_to']) ? (int)$_POST['assigned_to'] : null;
+        $priority         = in_array($_POST['priority'] ?? '', ['low', 'medium', 'high']) ? $_POST['priority'] : 'medium';
+        $dueDate          = trim($_POST['due_date'] ?? '') ?: null;
+        $requiredFileType = in_array($_POST['required_file_type'] ?? '', ['image', 'document', 'video', 'any']) ? $_POST['required_file_type'] : 'any';
 
         if ($projectId <= 0 || $title === '') {
             echo json_encode(['success' => false, 'error' => 'project_id and title are required']);
             exit;
         }
 
-        $stmt = $db->prepare("INSERT INTO project_tasks (project_id, title, description, assigned_to, created_by, priority, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param('isssiis', $projectId, $title, $description, $assignedTo, $userId, $priority, $dueDate);
+        $stmt = $db->prepare("INSERT INTO project_tasks (project_id, title, description, assigned_to, created_by, priority, due_date, required_file_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param('isssiiss', $projectId, $title, $description, $assignedTo, $userId, $priority, $dueDate, $requiredFileType);
 
         if ($stmt->execute()) {
             $newId = $db->lastInsertId();
@@ -1197,6 +1198,7 @@ if ($action === 'get-tasks') {
 
         $stmt = $db->prepare("
             SELECT t.id, t.title, t.description, t.priority, t.status, t.progress, t.due_date,
+                   t.required_file_type,
                    t.created_at, t.updated_at,
                    t.assigned_to,
                    u.name AS assigned_name,
@@ -1262,14 +1264,15 @@ if ($action === 'update-task') {
         if ($progress > 0 && $progress < 100 && $status === 'pending') $status = 'in_progress';
 
         // Admin-only fields
-        $title       = $isAdmin ? (trim($_POST['title'] ?? '') ?: $task['title']) : $task['title'];
-        $description = $isAdmin ? (trim($_POST['description'] ?? '')) : $task['description'];
-        $priority    = $isAdmin && in_array($_POST['priority'] ?? '', ['low', 'medium', 'high']) ? $_POST['priority'] : $task['priority'];
-        $assignedTo  = $isAdmin && isset($_POST['assigned_to']) && is_numeric($_POST['assigned_to']) ? (int)$_POST['assigned_to'] : $task['assigned_to'];
-        $dueDate     = $isAdmin ? (trim($_POST['due_date'] ?? '') ?: null) : $task['due_date'];
+        $title            = $isAdmin ? (trim($_POST['title'] ?? '') ?: $task['title']) : $task['title'];
+        $description      = $isAdmin ? (trim($_POST['description'] ?? '')) : $task['description'];
+        $priority         = $isAdmin && in_array($_POST['priority'] ?? '', ['low', 'medium', 'high']) ? $_POST['priority'] : $task['priority'];
+        $assignedTo       = $isAdmin && isset($_POST['assigned_to']) && is_numeric($_POST['assigned_to']) ? (int)$_POST['assigned_to'] : $task['assigned_to'];
+        $dueDate          = $isAdmin ? (trim($_POST['due_date'] ?? '') ?: null) : $task['due_date'];
+        $requiredFileType = $isAdmin && in_array($_POST['required_file_type'] ?? '', ['image', 'document', 'video', 'any']) ? $_POST['required_file_type'] : ($task['required_file_type'] ?? 'any');
 
-        $stmt = $db->prepare("UPDATE project_tasks SET title=?, description=?, assigned_to=?, priority=?, status=?, progress=?, due_date=? WHERE id=?");
-        $stmt->bind_param('ssiisisi', $title, $description, $assignedTo, $priority, $status, $progress, $dueDate, $taskId);
+        $stmt = $db->prepare("UPDATE project_tasks SET title=?, description=?, assigned_to=?, priority=?, status=?, progress=?, due_date=?, required_file_type=? WHERE id=?");
+        $stmt->bind_param('ssiisissi', $title, $description, $assignedTo, $priority, $status, $progress, $dueDate, $requiredFileType, $taskId);
 
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Task updated', 'status' => $status, 'progress' => $progress]);

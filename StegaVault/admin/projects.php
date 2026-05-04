@@ -2621,10 +2621,22 @@ endif; ?>
                             </select>
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Due Date</label>
-                        <input id="taskDueDateInput" type="date"
-                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all" />
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Required File Type</label>
+                            <select id="taskFileTypeSelect"
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all">
+                                <option value="any">Any File</option>
+                                <option value="image">Image</option>
+                                <option value="document">Document</option>
+                                <option value="video">Video</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Due Date</label>
+                            <input id="taskDueDateInput" type="date"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all" />
+                        </div>
                     </div>
                 </div>
                 <p id="createTaskError" class="text-red-500 text-xs mt-3 min-h-[1rem]"></p>
@@ -2712,6 +2724,16 @@ endif; ?>
                             <span>0%</span><span>50%</span><span>100%</span>
                         </div>
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Required File Type</label>
+                        <select id="editTaskFileType"
+                            class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all">
+                            <option value="any">Any File</option>
+                            <option value="image">Image</option>
+                            <option value="document">Document</option>
+                            <option value="video">Video</option>
+                        </select>
+                    </div>
                 </div>
                 <p id="editTaskError" class="text-red-500 text-xs mt-3 min-h-[1rem]"></p>
                 <div class="flex items-center justify-end gap-2 mt-4">
@@ -2729,9 +2751,11 @@ endif; ?>
         <script>
         (function () {
             const TASK_API = '../api/projects.php';
-            const priorityColors = { high: 'text-red-500 bg-red-500/10 border-red-500/20', medium: 'text-amber-500 bg-amber-500/10 border-amber-500/20', low: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
-            const statusColors  = { pending: 'text-slate-500 bg-slate-500/10 border-slate-500/20', in_progress: 'text-blue-500 bg-blue-500/10 border-blue-500/20', completed: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
-            const statusLabels  = { pending: 'Pending', in_progress: 'In Progress', completed: 'Completed' };
+            const priorityColors  = { high: 'text-red-500 bg-red-500/10 border-red-500/20', medium: 'text-amber-500 bg-amber-500/10 border-amber-500/20', low: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+            const statusColors   = { pending: 'text-slate-500 bg-slate-500/10 border-slate-500/20', in_progress: 'text-blue-500 bg-blue-500/10 border-blue-500/20', completed: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+            const statusLabels   = { pending: 'Pending', in_progress: 'In Progress', completed: 'Completed' };
+            const fileTypeIcons  = { image: 'image', document: 'description', video: 'videocam' };
+            const fileTypeLabels = { image: 'Image', document: 'Document', video: 'Video' };
             let adminCurrentTasks = [];
 
             window.openCreateTaskModal = async function () {
@@ -2739,6 +2763,7 @@ endif; ?>
                 document.getElementById('taskDescInput').value = '';
                 document.getElementById('taskPrioritySelect').value = 'medium';
                 document.getElementById('taskDueDateInput').value = '';
+                document.getElementById('taskFileTypeSelect').value = 'any';
                 document.getElementById('createTaskError').textContent = '';
 
                 // Populate assign dropdown with project members only
@@ -2788,6 +2813,7 @@ endif; ?>
                     fd.append('assigned_to', document.getElementById('taskAssignSelect').value);
                     fd.append('priority', document.getElementById('taskPrioritySelect').value);
                     fd.append('due_date', document.getElementById('taskDueDateInput').value);
+                    fd.append('required_file_type', document.getElementById('taskFileTypeSelect').value);
                     const res = await fetch(TASK_API, { method: 'POST', body: fd });
                     const data = await res.json();
                     if (data.success) {
@@ -2894,6 +2920,7 @@ endif; ?>
                         <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
                             <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${pCls}">${t.priority}</span>
                             <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${sCls}">${sLbl}</span>
+                            ${t.required_file_type && t.required_file_type !== 'any' ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold border text-violet-500 bg-violet-500/10 border-violet-500/20"><span class="material-symbols-outlined text-[11px]">${fileTypeIcons[t.required_file_type] || 'attach_file'}</span>${fileTypeLabels[t.required_file_type] || t.required_file_type}</span>` : ''}
                             ${due ? `<span class="text-[10px] ${isOverdue ? 'text-red-500 font-semibold' : 'text-slate-400 dark:text-slate-500'}">${isOverdue ? '⚠ Overdue · ' : ''}Due ${due}</span>` : ''}
                         </div>
                         <div class="flex items-center gap-2 mt-2">
@@ -2910,14 +2937,15 @@ endif; ?>
                 const t = adminCurrentTasks.find(x => x.id == taskId);
                 if (!t) return;
 
-                document.getElementById('editTaskId').value     = t.id;
-                document.getElementById('editTaskTitle').value  = t.title || '';
-                document.getElementById('editTaskDesc').value   = t.description || '';
+                document.getElementById('editTaskId').value       = t.id;
+                document.getElementById('editTaskTitle').value    = t.title || '';
+                document.getElementById('editTaskDesc').value     = t.description || '';
                 document.getElementById('editTaskPriority').value = t.priority || 'medium';
                 document.getElementById('editTaskStatus').value   = t.status   || 'pending';
                 document.getElementById('editTaskDueDate').value  = t.due_date ? t.due_date.split('T')[0] : '';
                 document.getElementById('editTaskProgress').value = t.progress || 0;
                 document.getElementById('editTaskProgressLabel').textContent = t.progress || 0;
+                document.getElementById('editTaskFileType').value  = t.required_file_type || 'any';
                 document.getElementById('editTaskError').textContent = '';
 
                 // Populate assign dropdown
@@ -2966,15 +2994,16 @@ endif; ?>
                 btn.textContent = 'Saving…';
                 try {
                     const fd = new FormData();
-                    fd.append('action',      'update-task');
-                    fd.append('task_id',     document.getElementById('editTaskId').value);
-                    fd.append('title',       title);
-                    fd.append('description', document.getElementById('editTaskDesc').value);
-                    fd.append('assigned_to', document.getElementById('editTaskAssign').value);
-                    fd.append('priority',    document.getElementById('editTaskPriority').value);
-                    fd.append('status',      document.getElementById('editTaskStatus').value);
-                    fd.append('progress',    document.getElementById('editTaskProgress').value);
-                    fd.append('due_date',    document.getElementById('editTaskDueDate').value);
+                    fd.append('action',             'update-task');
+                    fd.append('task_id',            document.getElementById('editTaskId').value);
+                    fd.append('title',              title);
+                    fd.append('description',        document.getElementById('editTaskDesc').value);
+                    fd.append('assigned_to',        document.getElementById('editTaskAssign').value);
+                    fd.append('priority',           document.getElementById('editTaskPriority').value);
+                    fd.append('status',             document.getElementById('editTaskStatus').value);
+                    fd.append('progress',           document.getElementById('editTaskProgress').value);
+                    fd.append('due_date',           document.getElementById('editTaskDueDate').value);
+                    fd.append('required_file_type', document.getElementById('editTaskFileType').value);
 
                     const res  = await fetch(TASK_API, { method: 'POST', body: fd });
                     const data = await res.json();

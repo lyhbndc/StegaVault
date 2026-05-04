@@ -1820,6 +1820,7 @@ $userId = $user['id'];
             status.classList.remove('text-slate-500', 'text-slate-400');
             status.classList.add('text-emerald-500', 'font-semibold');
             loadPane(_currentFolderId);
+            if (selectedProjectId) loadEmpTasks(selectedProjectId);
             document.getElementById('folderUploadTriggerBtn').classList.add('hidden');
         }
 
@@ -2326,6 +2327,7 @@ $userId = $user['id'];
                     <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
                         <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${pCls}">${t.priority}</span>
                         <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${sCls}">${sLbl}</span>
+                        ${t.required_file_type && t.required_file_type !== 'any' ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold border text-violet-500 bg-violet-500/10 border-violet-500/20"><span class="material-symbols-outlined text-[11px]">${{'image':'image','document':'description','video':'videocam'}[t.required_file_type]||'attach_file'}</span>${{'image':'Image','document':'Document','video':'Video'}[t.required_file_type]||t.required_file_type}</span>` : ''}
                         ${due ? `<span class="text-[10px] ${isOverdue ? 'text-red-500 font-semibold' : 'text-slate-400 dark:text-slate-500'}">${isOverdue ? '⚠ Overdue · ' : ''}Due ${due}</span>` : ''}
                     </div>
                     <div class="flex items-center gap-2 mt-2">

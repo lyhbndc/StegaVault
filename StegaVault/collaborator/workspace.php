@@ -713,11 +713,15 @@ $userId = $user['id'];
             mine.forEach(t => {
                 const sCls = statusColors[t.status] || statusColors.pending;
                 const sLbl = statusLabels[t.status] || t.status;
+                const ftBadge = (t.required_file_type && t.required_file_type !== 'any')
+                    ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold border text-violet-500 bg-violet-500/10 border-violet-500/20"><span class="material-symbols-outlined text-[11px]">${{'image':'image','document':'description','video':'videocam'}[t.required_file_type]||'attach_file'}</span>${{'image':'Image','document':'Document','video':'Video'}[t.required_file_type]||t.required_file_type}</span>`
+                    : '';
                 html += `<div class="px-4 py-3.5">
                     <div class="flex items-start justify-between gap-2">
                         <p class="text-sm font-semibold text-slate-900 dark:text-white flex-1 truncate">${t.title}</p>
                         <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase flex-shrink-0 ${sCls}">${sLbl}</span>
                     </div>
+                    ${ftBadge ? `<div class="flex items-center gap-1.5 mt-1.5">${ftBadge}</div>` : ''}
                     <div class="flex items-center gap-2 mt-2">
                         <div class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
                             <div class="h-full rounded-full transition-all ${t.status === 'completed' ? 'bg-emerald-500' : 'bg-primary'}" style="width:${t.progress}%"></div>
@@ -1904,8 +1908,12 @@ $userId = $user['id'];
 
             status.textContent = `Done! ${successCount}/${files.length} file(s) uploaded.`;
             if (errEl.textContent) {
-                if (successCount > 0) loadPane(_currentFolderId);
+                if (successCount > 0) {
+                    loadPane(_currentFolderId);
+                    if (selectedProjectId) loadCollabTasks(selectedProjectId);
+                }
             } else {
+                if (selectedProjectId) loadCollabTasks(selectedProjectId);
                 setTimeout(() => {
                     closeFolderUploadModal();
                     loadPane(_currentFolderId);

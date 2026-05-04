@@ -325,6 +325,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     /* =====================================================
+       STEP 6: AUTO-COMPLETE MATCHING TASK
+    ===================================================== */
+
+    if ($projectId && $uploaderRole !== 'admin') {
+        $fileCategory = 'document';
+        if (strpos($mimeType, 'image/') === 0) $fileCategory = 'image';
+        elseif (strpos($mimeType, 'video/') === 0) $fileCategory = 'video';
+
+        $taskStmt = $db->prepare("
+            SELECT id FROM project_tasks
+            WHERE project_id = ? AND assigned_to = ?
+              AND status != 'completed'
+              AND (required_file_type = 'any' OR required_file_type IS NULL OR required_file_type = ?)
+            ORDER BY
+                CASE WHEN required_file_type = ? THEN 0 ELSE 1 END,
+                created_at ASC
+            LIMIT 1
+        ");
+        $taskStmt->bind_param('iiss', $projectId, $userId, $fileCategory, $fileCategory);
+        $taskStmt->execute();
+        $taskRow = $taskStmt->get_result()->fetch_assoc();
+        if ($taskRow) {
+            $updTask = $db->prepare("UPDATE project_tasks SET status = 'completed', progress = 100 WHERE id = ?");
+            $updTask->bind_param('i', $taskRow['id']);
+            $updTask->execute();
+        }
+    }
+
+    /* =====================================================
        SUCCESS
     ===================================================== */
 
