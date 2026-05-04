@@ -225,6 +225,10 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
                                 <span class="material-symbols-outlined">content_copy</span>
                                 <span>Copy Codes</span>
                             </button>
+                            <button onclick="downloadRecoveryCodes()" class="flex-1 py-2 px-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined">download</span>
+                                <span>Download</span>
+                            </button>
                             <button onclick="printRecoveryCodes()" class="flex-1 py-2 px-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all flex items-center justify-center gap-2">
                                 <span class="material-symbols-outlined">print</span>
                                 <span>Print</span>
@@ -370,6 +374,24 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
             });
         }
 
+        function downloadRecoveryCodes() {
+            if (!window.currentRecoveryCodes) return;
+            const text = `StegaVault Recovery Codes\nGenerated: ${new Date().toLocaleString()}\n\n${window.currentRecoveryCodes.join('\n')}\n\nEach code can only be used once. Keep these in a safe place.`;
+            const a = document.createElement('a');
+            a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
+            a.download = 'stegavault-recovery-codes.txt';
+            a.click();
+        }
+
+        function downloadNewCodes(codes) {
+            const list = codes.split('|');
+            const text = `StegaVault Recovery Codes\nGenerated: ${new Date().toLocaleString()}\n\n${list.join('\n')}\n\nEach code can only be used once. Keep these in a safe place.`;
+            const a = document.createElement('a');
+            a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
+            a.download = 'stegavault-recovery-codes.txt';
+            a.click();
+        }
+
         function printRecoveryCodes() {
             if (!window.currentRecoveryCodes) return;
             const printWindow = window.open('', '', 'height=400,width=600');
@@ -434,6 +456,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
                             <div id="newCodesDisplay" class="bg-slate-800 border border-slate-700 rounded-lg p-4 mb-4 font-mono text-sm text-slate-300 max-h-64 overflow-y-auto"></div>
                             <div class="flex gap-2">
                                 <button onclick="this.parentElement.parentElement.parentElement.remove()" class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg">Close</button>
+                                <button onclick="downloadNewCodes('${data.data.recovery_codes.join('|')}')" class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg flex items-center justify-center gap-1"><span class="material-symbols-outlined text-sm">download</span>Download</button>
                                 <button onclick="copyNewCodes('${data.data.recovery_codes.join('|')}')" class="flex-1 py-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg">Copy Codes</button>
                             </div>
                         </div>
