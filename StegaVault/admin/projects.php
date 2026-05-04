@@ -1119,11 +1119,11 @@ endif; ?>
                                     </div>
                                 </div>
                                 <!-- Date cell -->
-                                <div class="px-3 py-3 text-xs text-slate-500 dark:text-slate-400 ${rowBg} cursor-pointer"
+                                <div class="px-3 py-3 text-xs text-slate-500 dark:text-slate-400 self-center ${rowBg} cursor-pointer"
                                     onclick="previewFile(${file.id})"
                                     oncontextmenu="openFileMenu(event,${file.id},'${sfn}');return false;">${fmtDate(file.upload_date)}</div>
                                 <!-- Uploader cell -->
-                                <div class="px-3 py-3 flex items-center gap-2 ${rowBg} cursor-pointer"
+                                <div class="px-3 py-3 flex items-center gap-2 self-center ${rowBg} cursor-pointer"
                                     onclick="previewFile(${file.id})"
                                     oncontextmenu="openFileMenu(event,${file.id},'${sfn}');return false;">
                                     <div class="size-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white shadow-sm" style="background:${avatarBg}">${avatarTxt}</div>

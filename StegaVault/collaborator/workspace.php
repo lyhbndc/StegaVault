@@ -1228,10 +1228,10 @@ $userId = $user['id'];
                         html += '                </button>';
                         html += '            </div>';
                         html += '        </div>';
-                        html += '        <div class="px-3 py-3 text-xs text-slate-500 dark:text-slate-400 ' + rowBg + ' cursor-pointer"';
+                        html += '        <div class="px-3 py-3 text-xs text-slate-500 dark:text-slate-400 self-center ' + rowBg + ' cursor-pointer"';
                         html += '            onclick="previewFile(' + file.id + ')"';
                         html += '            oncontextmenu="openFileMenu(event,' + file.id + ',\'' + sfn + '\',' + isMine + ');return false;">' + fmtDate(file.upload_date) + '</div>';
-                        html += '        <div class="px-3 py-3 flex items-center gap-2 ' + rowBg + ' cursor-pointer"';
+                        html += '        <div class="px-3 py-3 flex items-center gap-2 self-center ' + rowBg + ' cursor-pointer"';
                         html += '            onclick="previewFile(' + file.id + ')"';
                         html += '            oncontextmenu="openFileMenu(event,' + file.id + ',\'' + sfn + '\',' + isMine + ');return false;">';
                         html += '            <div class="size-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white shadow-sm" style="background:' + avatarBg + '">' + avatarTxt + '</div>';
@@ -1569,8 +1569,8 @@ $userId = $user['id'];
                             </button>
                         </div>
                     </div>
-                    <div class="px-3 py-3 text-xs text-slate-500 dark:text-slate-400 ${rowBg}" onclick="previewFile(${file.id})" oncontextmenu="openFileMenu(event, ${file.id}, '${sfn}', ${isMine}); return false;">${fmtDate(file.upload_date)}</div>
-                    <div class="px-3 py-3 flex items-center gap-2 ${rowBg}" onclick="previewFile(${file.id})" oncontextmenu="openFileMenu(event, ${file.id}, '${sfn}', ${isMine}); return false;">
+                    <div class="px-3 py-3 text-xs text-slate-500 dark:text-slate-400 self-center ${rowBg}" onclick="previewFile(${file.id})" oncontextmenu="openFileMenu(event, ${file.id}, '${sfn}', ${isMine}); return false;">${fmtDate(file.upload_date)}</div>
+                    <div class="px-3 py-3 flex items-center gap-2 self-center ${rowBg}" onclick="previewFile(${file.id})" oncontextmenu="openFileMenu(event, ${file.id}, '${sfn}', ${isMine}); return false;">
                         <div class="size-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white shadow-sm" style="background:${avatarBg}">${avatarTxt}</div>
                         <span class="text-xs text-slate-600 dark:text-slate-300 font-medium truncate">${isMine ? 'You' : (escapeHtml(uploader) || '\\u2014')}</span>
                     </div>
