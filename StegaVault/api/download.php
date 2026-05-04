@@ -251,10 +251,14 @@ if ($isImage) {
         die('Failed to watermark PDF: ' . ($pdfWmError ?? 'unknown error'));
     }
 
-    // Embed forensic signature after the TCPDF-rendered PDF.
-    // PDF readers ignore bytes after %%EOF, so this is safe and invisible to viewers.
-    // Watermark::extractDocumentWatermark() reads the last 16KB to find it.
-    $forensicPayload = "\n% [STEGAVAULT_DOC_WM]"
+    // Recompute content_hash from the TCPDF-rendered output (before appending
+    // forensic tag) so analysis hashes the same bytes that are stored on disk.
+    $watermarkData['content_hash'] = Watermark::calculateDocumentHash($watermarkedPdfPath);
+
+    // Embed forensic signature after %%EOF — PDF readers ignore trailing bytes.
+    // Use \n[STEGAVAULT_DOC_WM] (no % prefix) so calculateDocumentHash can
+    // detect and strip the tag when computing the tamper-detection hash.
+    $forensicPayload = "\n[STEGAVAULT_DOC_WM]"
         . base64_encode(json_encode($watermarkData))
         . "[/STEGAVAULT_DOC_WM]\n";
     file_put_contents($watermarkedPdfPath, $forensicPayload, FILE_APPEND);

@@ -439,7 +439,7 @@ endforeach; ?>
                             $progressColor  = $avgProgress >= 100 ? 'bg-emerald-500' : ($avgProgress >= 50 ? 'bg-primary' : 'bg-amber-500');
                         ?>
                         <!-- Project Header: 3-column — title | progress | buttons -->
-                        <div class="flex items-center gap-6 mb-6">
+                        <div class="flex items-start gap-6 mb-6">
 
                             <!-- LEFT: title + description -->
                             <div class="flex-shrink-0">
@@ -2922,7 +2922,7 @@ endif; ?>
                     const sLbl = statusLabels[t.status]   || t.status;
                     const due  = t.due_date ? new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
                     const isOverdue = t.due_date && t.status !== 'completed' && new Date(t.due_date) < new Date();
-                    const progressBar = `<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mt-2 overflow-hidden">
+                    const progressBar = `<div class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
                         <div class="h-full rounded-full transition-all ${t.status === 'completed' ? 'bg-emerald-500' : 'bg-primary'}" style="width:${t.progress}%"></div>
                     </div>`;
                     html += `<div class="px-4 py-3.5 group">
@@ -2943,7 +2943,7 @@ endif; ?>
                         <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
                             <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${pCls}">${t.priority}</span>
                             <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${sCls}">${sLbl}</span>
-                            ${t.required_file_type && t.required_file_type !== 'any' ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold border text-violet-500 bg-violet-500/10 border-violet-500/20"><span class="material-symbols-outlined text-[11px]">${fileTypeIcons[t.required_file_type] || 'attach_file'}</span>${fileTypeLabels[t.required_file_type] || t.required_file_type}</span>` : ''}
+                            ${t.required_file_type && t.required_file_type !== 'any' ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold border text-violet-500 bg-violet-500/10 border-violet-500/20"><span class="material-symbols-outlined leading-none" style="font-size:11px">${fileTypeIcons[t.required_file_type] || 'attach_file'}</span>${fileTypeLabels[t.required_file_type] || t.required_file_type}</span>` : ''}
                             ${due ? `<span class="text-[10px] ${isOverdue ? 'text-red-500 font-semibold' : 'text-slate-400 dark:text-slate-500'}">${isOverdue ? '⚠ Overdue · ' : ''}Due ${due}</span>` : ''}
                         </div>
                         <div class="flex items-center gap-2 mt-2">
