@@ -2638,6 +2638,92 @@ endif; ?>
         </div>
 
         <!-- ═══════════════════════════════════════
+             EDIT TASK MODAL
+        ═══════════════════════════════════════ -->
+        <div id="editTaskModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeEditTaskModal()"></div>
+            <div class="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-lg p-6">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary">edit_note</span>
+                    </div>
+                    <div>
+                        <h3 class="text-slate-900 dark:text-white font-bold text-base">Edit Task</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-xs">Update task details and assignment</p>
+                    </div>
+                    <button onclick="closeEditTaskModal()" class="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">close</span>
+                    </button>
+                </div>
+                <input type="hidden" id="editTaskId" />
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Title *</label>
+                        <input id="editTaskTitle" type="text" placeholder="Task title"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Description</label>
+                        <textarea id="editTaskDesc" rows="2" placeholder="Optional details…"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all resize-none"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Assign To</label>
+                            <select id="editTaskAssign"
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all">
+                                <option value="">Loading…</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Priority</label>
+                            <select id="editTaskPriority"
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all">
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Status</label>
+                            <select id="editTaskStatus"
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all">
+                                <option value="pending">Pending</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Due Date</label>
+                            <input id="editTaskDueDate" type="date"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                            Progress: <span id="editTaskProgressLabel" class="text-primary font-bold">0</span>%
+                        </label>
+                        <input id="editTaskProgress" type="range" min="0" max="100" step="5" value="0"
+                            oninput="document.getElementById('editTaskProgressLabel').textContent = this.value; syncEditTaskStatus(this.value);"
+                            class="w-full accent-primary" />
+                        <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
+                            <span>0%</span><span>50%</span><span>100%</span>
+                        </div>
+                    </div>
+                </div>
+                <p id="editTaskError" class="text-red-500 text-xs mt-3 min-h-[1rem]"></p>
+                <div class="flex items-center justify-end gap-2 mt-4">
+                    <button onclick="closeEditTaskModal()"
+                        class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancel</button>
+                    <button id="editTaskBtn" onclick="submitEditTask()"
+                        class="px-5 py-2 rounded-xl text-sm font-bold bg-primary hover:bg-primary/90 text-white transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">Save Changes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════
              TASK JAVASCRIPT
         ═══════════════════════════════════════ -->
         <script>
@@ -2646,6 +2732,7 @@ endif; ?>
             const priorityColors = { high: 'text-red-500 bg-red-500/10 border-red-500/20', medium: 'text-amber-500 bg-amber-500/10 border-amber-500/20', low: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
             const statusColors  = { pending: 'text-slate-500 bg-slate-500/10 border-slate-500/20', in_progress: 'text-blue-500 bg-blue-500/10 border-blue-500/20', completed: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
             const statusLabels  = { pending: 'Pending', in_progress: 'In Progress', completed: 'Completed' };
+            let adminCurrentTasks = [];
 
             window.openCreateTaskModal = async function () {
                 document.getElementById('taskTitleInput').value = '';
@@ -2723,6 +2810,7 @@ endif; ?>
                     const data = await res.json();
                     if (!data.success) throw new Error(data.error);
                     const tasks = data.data.tasks || [];
+                    adminCurrentTasks = tasks;
                     renderTasks(tasks);
                     updateProjectProgressBar(tasks);
                 } catch (e) {
@@ -2794,9 +2882,14 @@ endif; ?>
                                 <p class="text-sm font-semibold text-slate-900 dark:text-white truncate">${escapeHtml(t.title)}</p>
                                 ${t.assigned_name ? `<p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Assigned to: ${escapeHtml(t.assigned_name)}</p>` : '<p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Unassigned</p>'}
                             </div>
-                            <button onclick="adminDeleteTask(${t.id})" class="p-1 rounded text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0" title="Delete task">
-                                <span class="material-symbols-outlined text-[15px]">delete</span>
-                            </button>
+                            <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity">
+                                <button onclick="openEditTaskModal(${t.id})" class="p-1 rounded text-slate-300 dark:text-slate-600 hover:text-primary hover:bg-primary/10 transition-colors" title="Edit task">
+                                    <span class="material-symbols-outlined text-[15px]">edit</span>
+                                </button>
+                                <button onclick="adminDeleteTask(${t.id})" class="p-1 rounded text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-500/10 transition-colors" title="Delete task">
+                                    <span class="material-symbols-outlined text-[15px]">delete</span>
+                                </button>
+                            </div>
                         </div>
                         <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
                             <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${pCls}">${t.priority}</span>
@@ -2812,6 +2905,88 @@ endif; ?>
                 html += '</div>';
                 panel.innerHTML = html;
             }
+
+            window.openEditTaskModal = async function (taskId) {
+                const t = adminCurrentTasks.find(x => x.id == taskId);
+                if (!t) return;
+
+                document.getElementById('editTaskId').value     = t.id;
+                document.getElementById('editTaskTitle').value  = t.title || '';
+                document.getElementById('editTaskDesc').value   = t.description || '';
+                document.getElementById('editTaskPriority').value = t.priority || 'medium';
+                document.getElementById('editTaskStatus').value   = t.status   || 'pending';
+                document.getElementById('editTaskDueDate').value  = t.due_date ? t.due_date.split('T')[0] : '';
+                document.getElementById('editTaskProgress').value = t.progress || 0;
+                document.getElementById('editTaskProgressLabel').textContent = t.progress || 0;
+                document.getElementById('editTaskError').textContent = '';
+
+                // Populate assign dropdown
+                const sel = document.getElementById('editTaskAssign');
+                sel.innerHTML = '<option value="">Loading…</option>';
+                document.getElementById('editTaskModal').classList.remove('hidden');
+
+                try {
+                    const res  = await fetch(`${TASK_API}?action=members&project_id=${currentProjectId}`);
+                    const data = await res.json();
+                    const members = data.data?.members || [];
+                    sel.innerHTML = '<option value="">— Unassigned —</option>';
+                    members.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.id;
+                        opt.textContent = m.name + ' (' + (m.user_role || m.project_role || '') + ')';
+                        if (String(m.id) === String(t.assigned_to)) opt.selected = true;
+                        sel.appendChild(opt);
+                    });
+                } catch {
+                    sel.innerHTML = '<option value="">— Unassigned —</option>';
+                }
+            };
+
+            window.closeEditTaskModal = function () {
+                document.getElementById('editTaskModal').classList.add('hidden');
+            };
+
+            window.syncEditTaskStatus = function (val) {
+                const sel = document.getElementById('editTaskStatus');
+                const v = parseInt(val);
+                if (v === 100) sel.value = 'completed';
+                else if (v === 0) sel.value = 'pending';
+                else sel.value = 'in_progress';
+            };
+
+            window.submitEditTask = async function () {
+                const btn   = document.getElementById('editTaskBtn');
+                const errEl = document.getElementById('editTaskError');
+                errEl.textContent = '';
+
+                const title = document.getElementById('editTaskTitle').value.trim();
+                if (!title) { errEl.textContent = 'Title is required.'; return; }
+
+                btn.disabled = true;
+                btn.textContent = 'Saving…';
+                try {
+                    const fd = new FormData();
+                    fd.append('action',      'update-task');
+                    fd.append('task_id',     document.getElementById('editTaskId').value);
+                    fd.append('title',       title);
+                    fd.append('description', document.getElementById('editTaskDesc').value);
+                    fd.append('assigned_to', document.getElementById('editTaskAssign').value);
+                    fd.append('priority',    document.getElementById('editTaskPriority').value);
+                    fd.append('status',      document.getElementById('editTaskStatus').value);
+                    fd.append('progress',    document.getElementById('editTaskProgress').value);
+                    fd.append('due_date',    document.getElementById('editTaskDueDate').value);
+
+                    const res  = await fetch(TASK_API, { method: 'POST', body: fd });
+                    const data = await res.json();
+                    if (data.success) {
+                        closeEditTaskModal();
+                        loadTasks();
+                    } else {
+                        errEl.textContent = data.error || 'Failed to save changes.';
+                    }
+                } catch { errEl.textContent = 'Network error.'; }
+                finally { btn.disabled = false; btn.textContent = 'Save Changes'; }
+            };
 
             window.adminDeleteTask = async function (taskId) {
                 if (!confirm('Delete this task?')) return;

@@ -462,10 +462,18 @@ $userId = $user['id'];
         function displayProjectContent(project, members) {
             const content = document.getElementById('mainContent');
 
+            const avg0      = parseInt(project.avg_progress || 0);
+            const barColor0 = avg0 >= 100 ? 'bg-emerald-500' : avg0 >= 50 ? 'bg-primary' : 'bg-amber-500';
+            const taskCnt0  = parseInt(project.task_count || 0);
+            const doneCnt0  = parseInt(project.completed_tasks || 0);
+            const rem0      = taskCnt0 - doneCnt0;
+
             let html = '';
-            html += '<!-- Project Header -->\n';
-            html += '<div class="flex items-start justify-between mb-6">\n';
-            html += '    <div>\n';
+            html += '<!-- Project Header: 3-column title | progress | buttons -->\n';
+            html += '<div class="flex items-center gap-6 mb-6">\n';
+
+            // LEFT: title + description
+            html += '    <div class="flex-shrink-0">\n';
             html += '        <div class="flex items-center gap-2 mb-1">\n';
             html += '            <span class="size-3 rounded-full" style="background-color: ' + project.color + '"></span>\n';
             html += '            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Active Project</span>\n';
@@ -473,12 +481,37 @@ $userId = $user['id'];
             html += '        <h1 class="text-slate-900 dark:text-white text-2xl font-bold">' + project.name + '</h1>\n';
             html += '        <p class="text-slate-500 dark:text-slate-400 text-sm mt-0.5">' + (project.description || 'No description') + '</p>\n';
             html += '    </div>\n';
-            html += '    <div class="flex items-center gap-2">\n';
-            html += '        <button onclick="openCreateFolderModal(' + project.id + ')" class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-bold rounded-lg transition-all shadow-sm border border-slate-200 dark:border-slate-700">\n';
-            html += '            <span class="material-symbols-outlined text-[18px]">create_new_folder</span>New Folder\n';
+
+            // CENTER: project progress (always shown)
+            html += '    <div class="flex-1 min-w-0 px-6 border-x border-slate-200 dark:border-slate-700">\n';
+            html += '        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1.5">\n';
+            html += '            <span class="material-symbols-outlined text-[14px] text-primary">analytics</span>Project Progress\n';
+            html += '        </p>\n';
+            html += '        <div class="flex items-center gap-3">\n';
+            html += '            <div class="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">\n';
+            html += '                <div id="collabProgressBar" class="h-full rounded-full transition-all duration-500 ' + barColor0 + '" style="width:' + avg0 + '%"></div>\n';
+            html += '            </div>\n';
+            html += '            <span id="collabProgressPct" class="text-sm font-bold text-slate-800 dark:text-white flex-shrink-0">' + avg0 + '%</span>\n';
+            html += '        </div>\n';
+            html += '        <div class="flex items-center justify-between mt-1">\n';
+            html += '            <span id="collabProgressStats" class="text-[11px] text-slate-400 dark:text-slate-500">' + (taskCnt0 > 0 ? doneCnt0 + '/' + taskCnt0 + ' tasks done' : 'No tasks yet') + '</span>\n';
+            if (avg0 >= 100 && taskCnt0 > 0) {
+                html += '            <p id="collabProgressNote" class="text-[11px] text-emerald-500 font-semibold flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">check_circle</span>All done!</p>\n';
+            } else if (taskCnt0 > 0) {
+                html += '            <p id="collabProgressNote" class="text-[11px] text-slate-400 dark:text-slate-500">' + rem0 + ' remaining</p>\n';
+            } else {
+                html += '            <p id="collabProgressNote" class="text-[11px] text-slate-400 dark:text-slate-500 italic"></p>\n';
+            }
+            html += '        </div>\n';
+            html += '    </div>\n';
+
+            // RIGHT: action buttons
+            html += '    <div class="flex items-center gap-2 flex-shrink-0">\n';
+            html += '        <button onclick="openCreateFolderModal(' + project.id + ')" class="flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-bold rounded-lg transition-all shadow-sm border border-slate-200 dark:border-slate-700">\n';
+            html += '            <span class="material-symbols-outlined text-[17px]">create_new_folder</span>New Folder\n';
             html += '        </button>\n';
-            html += '        <button onclick="openFolderUploadModal()" class="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-lg transition-all shadow-sm">\n';
-            html += '            <span class="material-symbols-outlined text-[18px]">cloud_upload</span>Upload Files\n';
+            html += '        <button id="collabUploadBtn" onclick="openFolderUploadModal()" class="flex items-center gap-2 px-3.5 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-lg transition-all shadow-sm">\n';
+            html += '            <span class="material-symbols-outlined text-[17px]">cloud_upload</span>Upload Files\n';
             html += '        </button>\n';
             html += '    </div>\n';
             html += '</div>\n';
@@ -571,6 +604,14 @@ $userId = $user['id'];
 
             html += '        </div>\n';
 
+            html += '        <!-- My Tasks -->\n';
+            html += '        <div class="flex items-center justify-between px-1">\n';
+            html += '            <h2 class="text-slate-900 dark:text-white text-base font-bold">My Tasks</h2>\n';
+            html += '        </div>\n';
+            html += '        <div id="collabTasksPanel" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">\n';
+            html += '            <div class="p-6 text-center text-slate-400 dark:text-slate-500 text-sm animate-pulse">Loading tasks…</div>\n';
+            html += '        </div>\n';
+
             html += '        <!-- System Info Card (matching dashboard Quick Actions style) -->\n';
             html += '        <div class="bg-gradient-to-br from-primary/10 to-purple-500/10 border border-primary/20 rounded-xl p-5">\n';
             html += '            <div class="flex items-start gap-3">\n';
@@ -589,8 +630,104 @@ $userId = $user['id'];
             html += '</div>\n';
 
             content.innerHTML = html;
+            loadCollabTasks(project.id);
+        }
 
-            // Global drag-and-drop removed per user request
+        async function loadCollabTasks(projectId) {
+            const panel = document.getElementById('collabTasksPanel');
+            if (!panel) return;
+            try {
+                const res  = await fetch(`../api/projects.php?action=get-tasks&project_id=${projectId}`);
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                const tasks = data.data.tasks || [];
+                updateCollabProgressBar(tasks);
+                renderCollabTasks(tasks);
+            } catch (e) {
+                if (panel) panel.innerHTML = '<div class="p-6 text-center text-red-400 text-sm">Failed to load tasks.</div>';
+            }
+        }
+
+        function updateCollabProgressBar(tasks) {
+            const barEl   = document.getElementById('collabProgressBar');
+            const pctEl   = document.getElementById('collabProgressPct');
+            const statsEl = document.getElementById('collabProgressStats');
+            const noteEl  = document.getElementById('collabProgressNote');
+            if (!barEl || !pctEl || !statsEl) return;
+            if (tasks.length === 0) {
+                barEl.style.width = '0%';
+                barEl.className = barEl.className.replace(/bg-\S+/g, 'bg-slate-300 dark:bg-slate-600');
+                pctEl.textContent = '0%';
+                statsEl.textContent = 'No tasks yet';
+                if (noteEl) noteEl.innerHTML = '';
+                return;
+            }
+            const avg       = Math.round(tasks.reduce((s, t) => s + parseInt(t.progress || 0), 0) / tasks.length);
+            const completed = tasks.filter(t => t.status === 'completed').length;
+            barEl.style.width = avg + '%';
+            barEl.className = barEl.className.replace(/bg-\S+/g,
+                avg >= 100 ? 'bg-emerald-500' : avg >= 50 ? 'bg-primary' : 'bg-amber-500');
+            pctEl.textContent = avg + '%';
+            statsEl.textContent = completed + '/' + tasks.length + ' tasks done';
+            if (noteEl) {
+                if (avg >= 100) {
+                    noteEl.className = 'text-[11px] text-emerald-500 font-semibold flex items-center gap-1';
+                    noteEl.innerHTML = '<span class="material-symbols-outlined text-[12px]">check_circle</span>All done!';
+                } else {
+                    noteEl.className = 'text-[11px] text-slate-400 dark:text-slate-500';
+                    noteEl.textContent = (tasks.length - completed) + ' remaining';
+                }
+            }
+        }
+
+        function renderCollabTasks(tasks) {
+            const panel = document.getElementById('collabTasksPanel');
+            if (!panel) return;
+            const mine = tasks.filter(t => String(t.assigned_to) === String(currentUserId));
+
+            // Upload gate
+            const uploadBtn = document.getElementById('collabUploadBtn');
+            if (uploadBtn) {
+                if (mine.length === 0) {
+                    uploadBtn.disabled = true;
+                    uploadBtn.title = 'You need an assigned task to upload files';
+                    uploadBtn.className = uploadBtn.className
+                        .replace('bg-primary hover:bg-primary/90 text-white', 'bg-slate-300 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed');
+                    uploadBtn.onclick = null;
+                } else {
+                    uploadBtn.disabled = false;
+                    uploadBtn.title = '';
+                    uploadBtn.className = uploadBtn.className
+                        .replace('bg-slate-300 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed', 'bg-primary hover:bg-primary/90 text-white');
+                    uploadBtn.onclick = openFolderUploadModal;
+                }
+            }
+
+            if (mine.length === 0) {
+                panel.innerHTML = '<div class="p-6 text-center text-slate-400 dark:text-slate-500 text-sm">No tasks assigned to you in this project.</div>';
+                return;
+            }
+            const statusColors = { pending: 'text-slate-500 bg-slate-500/10 border-slate-500/20', in_progress: 'text-blue-500 bg-blue-500/10 border-blue-500/20', completed: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+            const statusLabels = { pending: 'Pending', in_progress: 'In Progress', completed: 'Completed' };
+            let html = '<div class="divide-y divide-slate-100 dark:divide-slate-800">';
+            mine.forEach(t => {
+                const sCls = statusColors[t.status] || statusColors.pending;
+                const sLbl = statusLabels[t.status] || t.status;
+                html += `<div class="px-4 py-3.5">
+                    <div class="flex items-start justify-between gap-2">
+                        <p class="text-sm font-semibold text-slate-900 dark:text-white flex-1 truncate">${t.title}</p>
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase flex-shrink-0 ${sCls}">${sLbl}</span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-2">
+                        <div class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                            <div class="h-full rounded-full transition-all ${t.status === 'completed' ? 'bg-emerald-500' : 'bg-primary'}" style="width:${t.progress}%"></div>
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-400 w-8 text-right">${t.progress}%</span>
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+            panel.innerHTML = html;
         }
 
         async function folderDuplicate() {

@@ -88,6 +88,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $folderId = isset($_POST['folder_id']) && is_numeric($_POST['folder_id']) ? (int) $_POST['folder_id'] : null;
 
     /* =====================================================
+       TASK-ASSIGNMENT GATE  (non-admins only)
+    ===================================================== */
+    $uploaderRole = $_SESSION['role'] ?? 'employee';
+    if ($uploaderRole !== 'admin' && $projectId) {
+        $taskCheck = $db->prepare(
+            "SELECT 1 FROM project_tasks WHERE project_id = ? AND assigned_to = ? LIMIT 1"
+        );
+        $taskCheck->bind_param('ii', $projectId, $userId);
+        $taskCheck->execute();
+        if ($taskCheck->get_result()->num_rows === 0) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'You need an assigned task in this project before you can upload files.']);
+            exit;
+        }
+    }
+
+    /* =====================================================
        VALIDATION
     ===================================================== */
 
