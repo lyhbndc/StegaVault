@@ -2344,7 +2344,6 @@ $userId = $user['id'];
                 html += `<div class="px-4 py-3.5">
                     <div class="flex items-start justify-between gap-2">
                         <p class="text-sm font-semibold text-slate-900 dark:text-white flex-1 truncate">${escapeHtml(t.title)}</p>
-                        ${t.status !== 'completed' ? `<button onclick="openUpdateTaskModal(${t.id}, '${escapeHtml(t.title).replace(/'/g,"\\'")}', ${t.progress}, '${t.status}')" class="flex-shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all border border-primary/20 hover:border-primary">Update</button>` : ''}
                     </div>
                     <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
                         <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${pCls}">${t.priority}</span>
