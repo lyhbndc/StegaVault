@@ -57,7 +57,7 @@ switch ($period) {
     case 'monthly':
         $selMonth  = min(12, max(1, (int)($_GET['month'] ?? date('n'))));
         $selYear   = min(2030, max(2025, (int)($_GET['year'] ?? date('Y'))));
-        $daysInMon = cal_days_in_month(CAL_GREGORIAN, $selMonth, $selYear);
+        $daysInMon = (int) date('t', mktime(0, 0, 0, $selMonth, 1, $selYear));
         $dateStart = sprintf('%04d-%02d-01 00:00:00', $selYear, $selMonth);
         $dateEnd   = sprintf('%04d-%02d-%02d 23:59:59', $selYear, $selMonth, $daysInMon);
         $mName     = date('F', mktime(0, 0, 0, $selMonth, 1, $selYear));
