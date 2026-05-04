@@ -188,7 +188,7 @@ endforeach; ?>
                         <!-- Available Users -->
                         <div class="flex flex-col h-full border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/30 overflow-hidden">
                             <div class="px-3 py-2.5 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
-                                <input id="searchMembers" type="text" onkeyup="searchMembers()" placeholder="Search users..."
+                                <input id="memberSearchInput" type="text" onkeyup="filterMemberList()" placeholder="Search users..."
                                     class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs py-2 px-3 text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" />
                             </div>
                             <div id="availableUsers" class="overflow-y-auto p-2 space-y-1" style="flex:1;min-height:0;">
@@ -1446,16 +1446,18 @@ endif; ?>
                 selectedMemberNames = {};
                 pendingTasks = [];
                 pendingTaskCounter = 0;
+                document.getElementById('memberSearchInput').value = '';
+                filterMemberList();
                 document.getElementById('selectedMembers').innerHTML = '<p class="text-center text-slate-400 dark:text-slate-500 text-xs py-4">No members selected</p>';
                 document.getElementById('memberCount').textContent = '0';
                 document.getElementById('pendingTasksList').innerHTML = '<p id="pendingTasksEmpty" class="text-xs text-slate-400 dark:text-slate-500 italic px-1">No tasks added yet. Tasks can be assigned to selected team members.</p>';
             }
 
-            function searchMembers() {
-                const input = document.getElementById('searchMembers').value.toLowerCase();
+            function filterMemberList() {
+                const input = document.getElementById('memberSearchInput').value.toLowerCase();
                 document.querySelectorAll('.user-item').forEach(item => {
-                    const name = item.dataset.name.toLowerCase();
-                    const email = item.dataset.email.toLowerCase();
+                    const name = (item.dataset.name || '').toLowerCase();
+                    const email = (item.dataset.email || '').toLowerCase();
                     item.style.display = (name.includes(input) || email.includes(input)) ? '' : 'none';
                 });
             }
@@ -1536,7 +1538,7 @@ endif; ?>
                             <span class="material-symbols-outlined text-[16px]">delete</span>
                         </button>
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-2 gap-2">
                         <select data-ptask-assign="${idx}" class="pending-task-assign px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all">
                             ${memberOptions}
                         </select>
@@ -1544,6 +1546,14 @@ endif; ?>
                             <option value="low">Low</option>
                             <option value="medium" selected>Medium</option>
                             <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select data-ptask-filetype="${idx}" class="px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all">
+                            <option value="any">Any File</option>
+                            <option value="image">Image</option>
+                            <option value="document">Document</option>
+                            <option value="video">Video</option>
                         </select>
                         <input type="date" data-ptask-due="${idx}"
                             class="px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all" />
@@ -1569,9 +1579,10 @@ endif; ?>
                     if (!title) return;
                     tasks.push({
                         title,
-                        assignedTo: document.querySelector(`[data-ptask-assign="${idx}"]`)?.value || '',
-                        priority:   document.querySelector(`[data-ptask-priority="${idx}"]`)?.value || 'medium',
-                        dueDate:    document.querySelector(`[data-ptask-due="${idx}"]`)?.value || '',
+                        assignedTo:       document.querySelector(`[data-ptask-assign="${idx}"]`)?.value || '',
+                        priority:         document.querySelector(`[data-ptask-priority="${idx}"]`)?.value || 'medium',
+                        dueDate:          document.querySelector(`[data-ptask-due="${idx}"]`)?.value || '',
+                        requiredFileType: document.querySelector(`[data-ptask-filetype="${idx}"]`)?.value || 'any',
                     });
                 });
                 return tasks;
@@ -1602,6 +1613,7 @@ endif; ?>
                                 fd.append('assigned_to', task.assignedTo);
                                 fd.append('priority', task.priority);
                                 fd.append('due_date', task.dueDate);
+                                fd.append('required_file_type', task.requiredFileType || 'any');
                                 await fetch('../api/projects.php', { method: 'POST', body: fd });
                             }
                         }
