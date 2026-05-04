@@ -21,7 +21,7 @@ $user = [
     'role' => $_SESSION['role']
 ];
 
-// Get projects created by this admin only
+// Get all projects — every admin can see all projects
 $adminId = (int)$_SESSION['user_id'];
 $stmt = $db->prepare("SELECT p.*, u.name as creator_name,
                       COUNT(DISTINCT pm.user_id) as member_count,
@@ -31,10 +31,8 @@ $stmt = $db->prepare("SELECT p.*, u.name as creator_name,
                       FROM projects p
                       LEFT JOIN users u ON p.created_by = u.id
                       LEFT JOIN project_members pm ON p.id = pm.project_id
-                      WHERE p.created_by = ?
                       GROUP BY p.id, u.name
                       ORDER BY p.created_at DESC");
-$stmt->bind_param('i', $adminId);
 $stmt->execute();
 $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -61,10 +59,12 @@ if (isset($_GET['project_id'])) {
                           COALESCE((SELECT ROUND(AVG(progress)) FROM project_tasks WHERE project_id = p.id), 0) as avg_progress,
                           (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id) as task_count,
                           (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id AND status = 'completed') as completed_tasks
-                          FROM projects p WHERE p.id = ? AND p.created_by = ?");
-    $stmt->bind_param('ii', $projectId, $adminId);
+                          FROM projects p WHERE p.id = ?");
+    $stmt->bind_param('i', $projectId);
     $stmt->execute();
     $selectedProject = $stmt->get_result()->fetch_assoc();
+    // Only the creator can edit/upload/manage this project
+    $isOwner = $selectedProject && (int)$selectedProject['created_by'] === $adminId;
 
     if ($selectedProject) {
         $stmt = $db->prepare("SELECT pm.*, u.name, u.email, u.role FROM project_members pm 
@@ -364,10 +364,13 @@ endforeach; ?>
                             <h4 class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Active Projects</h4>
                         </div>
                         <?php foreach ($activeProjects as $proj): ?>
-                            <?php $isActive = $selectedProject && $selectedProject['id'] == $proj['id']; ?>
+                            <?php
+                            $isActive = $selectedProject && $selectedProject['id'] == $proj['id'];
+                            $projIsOwned = (int)$proj['created_by'] === $adminId;
+                            ?>
                             <div class="relative group/item">
                                 <a href="?project_id=<?php echo $proj['id']; ?>"
-                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors pr-9 <?php echo $isActive ? 'bg-primary text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'; ?>">
+                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors <?php echo $projIsOwned ? 'pr-9' : 'pr-3'; ?> <?php echo $isActive ? 'bg-primary text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'; ?>">
                                     <div class="size-8 rounded-lg flex items-center justify-center flex-shrink-0"
                                         style="background-color: <?php echo htmlspecialchars($proj['color'] ?? '#667eea'); ?>20;">
                                         <span class="material-symbols-outlined text-[18px]" style="color: <?php echo htmlspecialchars($proj['color'] ?? '#667eea'); ?>">folder</span>
@@ -383,12 +386,14 @@ endforeach; ?>
                                         </div>
                                     </div>
                                 </a>
+                                <?php if ($projIsOwned): ?>
                                 <button
                                     onclick="event.preventDefault(); event.stopPropagation(); openProjectMenu(event, <?php echo $proj['id']; ?>, '<?php echo addslashes(htmlspecialchars($proj['name'])); ?>', 'active')"
                                     class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md <?php echo $isActive ? 'text-white/70 hover:bg-white/20' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700'; ?> transition-colors opacity-0 group-hover/item:opacity-100 focus:opacity-100"
                                     title="More options">
                                     <span class="material-symbols-outlined text-[16px]">more_vert</span>
                                 </button>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -398,10 +403,13 @@ endforeach; ?>
                             <h4 class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Inactive Projects</h4>
                         </div>
                         <?php foreach ($inactiveProjects as $proj): ?>
-                            <?php $isActive = $selectedProject && $selectedProject['id'] == $proj['id']; ?>
+                            <?php
+                            $isActive = $selectedProject && $selectedProject['id'] == $proj['id'];
+                            $projIsOwned = (int)$proj['created_by'] === $adminId;
+                            ?>
                             <div class="relative group/item">
                                 <a href="?project_id=<?php echo $proj['id']; ?>"
-                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors pr-9 opacity-60 grayscale-[0.5] <?php echo $isActive ? 'bg-primary text-white grayscale-0 opacity-100' : 'text-slate-500 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:opacity-100 hover:grayscale-0'; ?>">
+                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors <?php echo $projIsOwned ? 'pr-9' : 'pr-3'; ?> opacity-60 grayscale-[0.5] <?php echo $isActive ? 'bg-primary text-white grayscale-0 opacity-100' : 'text-slate-500 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:opacity-100 hover:grayscale-0'; ?>">
                                     <div class="size-8 rounded-lg flex items-center justify-center flex-shrink-0"
                                         style="background-color: <?php echo htmlspecialchars($proj['color'] ?? '#667eea'); ?>10;">
                                         <span class="material-symbols-outlined text-[18px]" style="color: <?php echo htmlspecialchars($proj['color'] ?? '#667eea'); ?>;">folder_off</span>
@@ -417,12 +425,14 @@ endforeach; ?>
                                         </div>
                                     </div>
                                 </a>
+                                <?php if ($projIsOwned): ?>
                                 <button
                                     onclick="event.preventDefault(); event.stopPropagation(); openProjectMenu(event, <?php echo $proj['id']; ?>, '<?php echo addslashes(htmlspecialchars($proj['name'])); ?>', 'inactive')"
                                     class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md <?php echo $isActive ? 'text-white/70 hover:bg-white/20' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700'; ?> transition-colors opacity-0 group-hover/item:opacity-100 focus:opacity-100"
                                     title="More options">
                                     <span class="material-symbols-outlined text-[16px]">more_vert</span>
                                 </button>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -506,6 +516,7 @@ endforeach; ?>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 flex-shrink-0">
+                                <?php if ($isOwner): ?>
                                 <!-- Folder actions -->
                                 <div id="folderActionBtns" class="flex items-center gap-2">
                                     <div id="folderBreadcrumb" class="hidden items-center gap-1 text-xs text-slate-400 flex-wrap"></div>
@@ -524,6 +535,12 @@ endforeach; ?>
                                     <span class="material-symbols-outlined text-[17px]">delete</span>
                                     Delete
                                 </button>
+                                <?php else: ?>
+                                <span class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs font-medium flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-[14px]">visibility</span>
+                                    View only
+                                </span>
+                                <?php endif; ?>
                             </div>
                         </div>
 
@@ -616,11 +633,13 @@ endforeach; ?>
                                 <!-- Members Header -->
                                 <div class="flex items-center justify-between px-1">
                                     <h2 class="text-slate-900 dark:text-white text-base font-bold">Team Members</h2>
+                                    <?php if ($isOwner): ?>
                                     <button onclick="openAddMemberModal()" title="Add member"
                                         class="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white text-xs font-bold rounded-lg transition-all border border-primary/20 hover:border-primary">
                                         <span class="material-symbols-outlined text-sm">person_add</span>
                                         Add
                                     </button>
+                                    <?php endif; ?>
                                 </div>
 
                                 <!-- Members List -->
@@ -642,10 +661,12 @@ endforeach; ?>
                                                             <span class="text-[10px] text-slate-400 dark:text-slate-500 truncate"><?php echo htmlspecialchars($member['email']); ?></span>
                                                         </div>
                                                     </div>
+                                                    <?php if ($isOwner): ?>
                                                     <button onclick="removeMember(<?php echo $selectedProject['id']; ?>, <?php echo $member['user_id']; ?>)"
                                                         class="p-1.5 rounded-lg text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0" title="Remove member">
                                                         <span class="material-symbols-outlined text-[16px]">person_remove</span>
                                                     </button>
+                                                    <?php endif; ?>
                                                 </div>
                                             <?php
         endforeach; ?>
@@ -657,11 +678,13 @@ endforeach; ?>
                                 <!-- Tasks Section -->
                                 <div class="flex items-center justify-between px-1">
                                     <h2 class="text-slate-900 dark:text-white text-base font-bold">Tasks</h2>
+                                    <?php if ($isOwner): ?>
                                     <button onclick="openCreateTaskModal()"
                                         class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 dark:text-emerald-400 hover:text-white text-xs font-bold rounded-lg transition-all border border-emerald-500/20 hover:border-emerald-500">
                                         <span class="material-symbols-outlined text-sm">add_task</span>
                                         Add Task
                                     </button>
+                                    <?php endif; ?>
                                 </div>
 
                                 <div id="tasksPanel" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
@@ -714,6 +737,7 @@ endif; ?>
             let pendingTaskCounter = 0;
             const currentUserId = <?php echo $_SESSION['user_id']; ?>;
             const currentProjectId = <?php echo $selectedProject ? $selectedProject['id'] : 'null'; ?>;
+            const isProjectOwner = <?php echo ($selectedProject && $isOwner) ? 'true' : 'false'; ?>;
 
             if (currentProjectId) {
                 document.addEventListener('DOMContentLoaded', () => {
@@ -927,11 +951,11 @@ endif; ?>
                         <p class="text-slate-500 dark:text-slate-400 font-semibold text-sm mb-1">
                             ${_adminCurrentFolderId ? 'This folder is empty' : 'No files yet'}
                         </p>
-                        <p class="text-slate-400 dark:text-slate-500 text-xs mb-4">Drag &amp; drop files here, or click Upload</p>
-                        <button onclick="openFolderUploadModal()"
+                        <p class="text-slate-400 dark:text-slate-500 text-xs mb-4">${isProjectOwner ? 'Drag &amp; drop files here, or click Upload' : 'No files in this project yet'}</p>
+                        ${isProjectOwner ? `<button onclick="openFolderUploadModal()"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white text-xs font-bold rounded-lg transition-all border border-primary/20">
                             <span class="material-symbols-outlined text-[15px]">cloud_upload</span>Browse Files
-                        </button>
+                        </button>` : ''}
                     </div>`;
                     return;
                 }
@@ -975,10 +999,10 @@ endif; ?>
                                 <p class="text-sm font-semibold text-slate-900 dark:text-white truncate pr-6">${escapeHtml(f.name)}</p>
                                 <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">${count} file${count!==1?'s':''}</p>
                             </button>
-                            <button onclick="event.stopPropagation();openFolderMenu(event,${f.id},'${sfn}')"
+                            ${isProjectOwner ? `<button onclick="event.stopPropagation();openFolderMenu(event,${f.id},'${sfn}')"
                                 class="absolute top-2 right-2 p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600 opacity-0 group-hover/fc:opacity-100 focus:opacity-100 transition-opacity" title="More">
                                 <span class="material-symbols-outlined text-[15px]">more_vert</span>
-                            </button>
+                            </button>` : ''}
                         </div>`;
                     });
                     html += `</div>`;
@@ -1247,6 +1271,7 @@ endif; ?>
 
 
             function openFolderUploadModal() {
+                if (!isProjectOwner) return;
                 _stagedUploadFiles = null;
                 if (document.getElementById('folderDropZoneText')) {
                     document.getElementById('folderDropZoneText').textContent = 'Drag & drop or click to browse';
@@ -1714,6 +1739,7 @@ endif; ?>
             let _folderMenuName = null;
 
             function openFolderMenu(event, folderId, folderName) {
+                if (!isProjectOwner) return;
                 _folderMenuId = folderId;
                 _folderMenuName = folderName;
                 const menu = document.getElementById('folderContextMenu');
@@ -1843,6 +1869,10 @@ endif; ?>
                 _fileMenuId = fileId;
                 _fileMenuName = fileName;
                 const menu = document.getElementById('fileContextMenu');
+                // Hide write actions for non-owners
+                menu.querySelectorAll('[data-owner-only]').forEach(el => {
+                    el.style.display = isProjectOwner ? '' : 'none';
+                });
                 menu.classList.remove('hidden');
 
                 const rect = event.currentTarget.getBoundingClientRect();
@@ -2353,13 +2383,13 @@ endif; ?>
                 <span class="material-symbols-outlined text-[18px] text-slate-400">download</span>
                 Download
             </a>
-            <button onclick="fileMenuRename()"
+            <button data-owner-only onclick="fileMenuRename()"
                 class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                 <span class="material-symbols-outlined text-[18px] text-slate-400">drive_file_rename_outline</span>
                 Rename
             </button>
-            <div class="border-t border-slate-100 dark:border-slate-800 mx-2"></div>
-            <button onclick="fileMenuDelete()"
+            <div data-owner-only class="border-t border-slate-100 dark:border-slate-800 mx-2"></div>
+            <button data-owner-only onclick="fileMenuDelete()"
                 class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
                 <span class="material-symbols-outlined text-[18px]">delete</span>
                 Delete
@@ -2955,14 +2985,14 @@ endif; ?>
                                 <p class="text-sm font-semibold text-slate-900 dark:text-white truncate">${escapeHtml(t.title)}</p>
                                 ${t.assigned_name ? `<p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Assigned to: ${escapeHtml(t.assigned_name)}</p>` : '<p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Unassigned</p>'}
                             </div>
-                            <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity">
+                            ${isProjectOwner ? `<div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity">
                                 <button onclick="openEditTaskModal(${t.id})" class="p-1 rounded text-slate-300 dark:text-slate-600 hover:text-primary hover:bg-primary/10 transition-colors" title="Edit task">
                                     <span class="material-symbols-outlined text-[15px]">edit</span>
                                 </button>
                                 <button onclick="adminDeleteTask(${t.id})" class="p-1 rounded text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-500/10 transition-colors" title="Delete task">
                                     <span class="material-symbols-outlined text-[15px]">delete</span>
                                 </button>
-                            </div>
+                            </div>` : ''}
                         </div>
                         <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
                             <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${pCls}">${t.priority}</span>

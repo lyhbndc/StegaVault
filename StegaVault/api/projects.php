@@ -40,6 +40,14 @@ if (!isset($_SESSION['user_id'])) {
 $userId = $_SESSION['user_id'];
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
+// Returns true if the current user (admin) created the given project
+function adminOwnsProject($db, $projectId, $userId): bool {
+    $s = $db->prepare("SELECT id FROM projects WHERE id = ? AND created_by = ?");
+    $s->bind_param('ii', $projectId, $userId);
+    $s->execute();
+    return $s->get_result()->num_rows > 0;
+}
+
 // ============================================
 // CREATE PROJECT
 // ============================================
@@ -145,6 +153,11 @@ if ($action === 'delete') {
             exit;
         }
 
+        if (!adminOwnsProject($db, $projectId, $userId)) {
+            echo json_encode(['success' => false, 'error' => 'Only the project owner can delete this project.']);
+            exit;
+        }
+
         // Delete members
         $delMembers = $db->prepare("DELETE FROM project_members WHERE project_id = ?");
         $delMembers->bind_param('i', $projectId);
@@ -186,9 +199,13 @@ if ($action === 'rename') {
             exit;
         }
 
-        // Admin only
+        // Admin only, and must be the project owner
         if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
             echo json_encode(['success' => false, 'error' => 'Access denied']);
+            exit;
+        }
+        if (!adminOwnsProject($db, $projectId, $userId)) {
+            echo json_encode(['success' => false, 'error' => 'Only the project owner can rename this project.']);
             exit;
         }
 
@@ -227,6 +244,10 @@ if ($action === 'remove_member') {
 
         if ($projectId <= 0 || $memberId <= 0) {
             echo json_encode(['success' => false, 'error' => 'Invalid parameters']);
+            exit;
+        }
+        if (!adminOwnsProject($db, $projectId, $userId)) {
+            echo json_encode(['success' => false, 'error' => 'Only the project owner can manage members.']);
             exit;
         }
 
@@ -365,10 +386,8 @@ if ($action === 'dashboard-projects') {
                        (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id) as task_count,
                        (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id AND status = 'completed') as completed_tasks
                 FROM projects p
-                WHERE p.created_by = ?
                 ORDER BY p.updated_at DESC
             ");
-            $stmt->bind_param('i', $userId);
         }
         else {
             $stmt = $db->prepare("
@@ -526,14 +545,21 @@ if ($action === 'create-folder') {
             exit;
         }
 
-        // Must be a project member
-        $check = $db->prepare("SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?");
-        $check->bind_param('ii', $projectId, $userId);
-        $check->execute();
+        // Must be project owner (admin) or a member
         $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
-        if ($check->get_result()->num_rows === 0 && !$isAdmin) {
-            echo json_encode(['success' => false, 'error' => 'Access denied']);
-            exit;
+        if ($isAdmin) {
+            if (!adminOwnsProject($db, $projectId, $userId)) {
+                echo json_encode(['success' => false, 'error' => 'Only the project owner can create folders.']);
+                exit;
+            }
+        } else {
+            $check = $db->prepare("SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?");
+            $check->bind_param('ii', $projectId, $userId);
+            $check->execute();
+            if ($check->get_result()->num_rows === 0) {
+                echo json_encode(['success' => false, 'error' => 'Access denied']);
+                exit;
+            }
         }
 
         // If parent_id provided, validate it belongs to this project
@@ -729,14 +755,21 @@ if ($action === 'rename-folder') {
             exit;
         }
 
-        // Access check
-        $check = $db->prepare("SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?");
-        $check->bind_param('ii', $projectId, $userId);
-        $check->execute();
+        // Must be project owner (admin) to rename folder
         $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
-        if ($check->get_result()->num_rows === 0 && !$isAdmin) {
-            echo json_encode(['success' => false, 'error' => 'Access denied']);
-            exit;
+        if ($isAdmin) {
+            if (!adminOwnsProject($db, $projectId, $userId)) {
+                echo json_encode(['success' => false, 'error' => 'Only the project owner can rename folders.']);
+                exit;
+            }
+        } else {
+            $check = $db->prepare("SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?");
+            $check->bind_param('ii', $projectId, $userId);
+            $check->execute();
+            if ($check->get_result()->num_rows === 0) {
+                echo json_encode(['success' => false, 'error' => 'Access denied']);
+                exit;
+            }
         }
 
         // Verify folder belongs to project
@@ -793,14 +826,21 @@ if ($action === 'delete-folder') {
             exit;
         }
 
-        // Access check
-        $check = $db->prepare("SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?");
-        $check->bind_param('ii', $projectId, $userId);
-        $check->execute();
+        // Must be project owner (admin) to delete folder
         $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
-        if ($check->get_result()->num_rows === 0 && !$isAdmin) {
-            echo json_encode(['success' => false, 'error' => 'Access denied']);
-            exit;
+        if ($isAdmin) {
+            if (!adminOwnsProject($db, $projectId, $userId)) {
+                echo json_encode(['success' => false, 'error' => 'Only the project owner can delete folders.']);
+                exit;
+            }
+        } else {
+            $check = $db->prepare("SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?");
+            $check->bind_param('ii', $projectId, $userId);
+            $check->execute();
+            if ($check->get_result()->num_rows === 0) {
+                echo json_encode(['success' => false, 'error' => 'Access denied']);
+                exit;
+            }
         }
 
         // Verify folder belongs to project
@@ -925,14 +965,21 @@ if ($action === 'rename-file') {
             exit;
         }
 
-        // Access check
-        $check = $db->prepare("SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?");
-        $check->bind_param('ii', $projectId, $userId);
-        $check->execute();
+        // Must be project owner (admin) to rename file
         $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
-        if ($check->get_result()->num_rows === 0 && !$isAdmin) {
-            echo json_encode(['success' => false, 'error' => 'Access denied']);
-            exit;
+        if ($isAdmin) {
+            if (!adminOwnsProject($db, $projectId, $userId)) {
+                echo json_encode(['success' => false, 'error' => 'Only the project owner can rename files.']);
+                exit;
+            }
+        } else {
+            $check = $db->prepare("SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?");
+            $check->bind_param('ii', $projectId, $userId);
+            $check->execute();
+            if ($check->get_result()->num_rows === 0) {
+                echo json_encode(['success' => false, 'error' => 'Access denied']);
+                exit;
+            }
         }
 
         // Verify file belongs to the project
@@ -1008,9 +1055,13 @@ if ($action === 'delete-file') {
             exit;
         }
 
-        // Admin only
+        // Admin only, and must be the project owner
         if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
             echo json_encode(['success' => false, 'error' => 'Only admins can delete files.']);
+            exit;
+        }
+        if (!adminOwnsProject($db, $projectId, $userId)) {
+            echo json_encode(['success' => false, 'error' => 'Only the project owner can delete files.']);
             exit;
         }
 
@@ -1105,6 +1156,10 @@ if ($action === 'update-status') {
             echo json_encode(['success' => false, 'error' => 'Invalid project ID']);
             exit;
         }
+        if (!adminOwnsProject($db, $projectId, $userId)) {
+            echo json_encode(['success' => false, 'error' => 'Only the project owner can change the project status.']);
+            exit;
+        }
         $stmt = $db->prepare("UPDATE projects SET status = ? WHERE id = ?");
         $stmt->bind_param('si', $status, $projectId);
         if ($stmt->execute()) {
@@ -1140,6 +1195,10 @@ if ($action === 'create-task') {
 
         if ($projectId <= 0 || $title === '') {
             echo json_encode(['success' => false, 'error' => 'project_id and title are required']);
+            exit;
+        }
+        if (!adminOwnsProject($db, $projectId, $userId)) {
+            echo json_encode(['success' => false, 'error' => 'Only the project owner can create tasks.']);
             exit;
         }
 
@@ -1252,6 +1311,10 @@ if ($action === 'update-task') {
         }
 
         $isAssigned = ((int)$task['assigned_to'] === (int)$userId);
+        // Non-owner admins lose admin privileges on this task — treat as a regular user
+        if ($isAdmin && !adminOwnsProject($db, (int)$task['project_id'], $userId)) {
+            $isAdmin = false;
+        }
         if (!$isAdmin && !$isAssigned) {
             echo json_encode(['success' => false, 'error' => 'Access denied']);
             exit;
@@ -1307,6 +1370,16 @@ if ($action === 'delete-task') {
         $taskId = (int)($_POST['task_id'] ?? 0);
         if ($taskId <= 0) {
             echo json_encode(['success' => false, 'error' => 'Invalid task ID']);
+            exit;
+        }
+
+        // Verify the task belongs to a project owned by this admin
+        $tkCheck = $db->prepare("SELECT project_id FROM project_tasks WHERE id = ?");
+        $tkCheck->bind_param('i', $taskId);
+        $tkCheck->execute();
+        $tkRow = $tkCheck->get_result()->fetch_assoc();
+        if (!$tkRow || !adminOwnsProject($db, (int)$tkRow['project_id'], $userId)) {
+            echo json_encode(['success' => false, 'error' => 'Only the project owner can delete tasks.']);
             exit;
         }
 

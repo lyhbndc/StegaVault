@@ -55,12 +55,9 @@ while ($row = $activityResult->fetch_assoc()) {
     $activityLogs[] = $row;
 }
 
-// Get projects created by this admin
+// Get recent projects (all admins see all projects)
 $projects = [];
-$stmt = $db->prepare("SELECT * FROM projects WHERE created_by = ? ORDER BY created_at DESC LIMIT 3");
-$stmt->bind_param('i', $user['id']);
-$stmt->execute();
-$projectsResult = $stmt->get_result();
+$projectsResult = $db->query("SELECT * FROM projects ORDER BY created_at DESC LIMIT 3");
 if ($projectsResult) {
     while ($row = $projectsResult->fetch_assoc()) {
         $projects[] = $row;
