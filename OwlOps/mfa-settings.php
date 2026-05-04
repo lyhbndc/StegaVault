@@ -32,7 +32,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Two-Factor Authentication - OwlOps</title>
+    <title>Multi-Factor Authentication - OwlOps</title>
     <script>if(localStorage.getItem('owlops-theme')==='dark')document.documentElement.classList.add('dark');</script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -148,7 +148,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
         <!-- Header -->
         <header>
             <h2 class="text-4xl font-bold text-slate-900 dark:text-white font-display">MFA Settings</h2>
-            <p class="text-slate-600 dark:text-slate-400 mt-2">Manage two-factor authentication for your super admin account.</p>
+            <p class="text-slate-600 dark:text-slate-400 mt-2">Manage multi-factor authentication for your super admin account.</p>
         </header>
 
         <!-- Status Card -->
@@ -166,7 +166,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
                     <p class="text-slate-400 ml-14">
                         <?php
                         if ($mfaEnabled) {
-                            echo 'Your super admin account is protected with two-factor authentication.';
+                            echo 'Your super admin account is protected with multi-factor authentication.';
                         } else {
                             echo 'Add an extra layer of security to your super admin account.';
                         }
@@ -186,7 +186,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
         <div class="rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-6 lg:p-8">
             <?php if (!$mfaEnabled): ?>
                 <!-- SETUP SECTION -->
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Enable Two-Factor Authentication</h3>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Enable Multi-Factor Authentication</h3>
 
                 <div class="space-y-8">
                     <!-- Step 1 -->
@@ -275,7 +275,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
                         <div class="flex items-start gap-4">
                             <span class="material-symbols-outlined text-3xl text-emerald-500 flex-shrink-0">check_circle</span>
                             <div>
-                                <p class="font-semibold text-emerald-400 mb-1">Two-Factor Authentication is Active</p>
+                                <p class="font-semibold text-emerald-400 mb-1">Multi-Factor Authentication is Active</p>
                                 <p class="text-sm text-slate-300">Your super admin account is protected. You'll need your authenticator app code each time you log in.</p>
                             </div>
                         </div>
@@ -296,7 +296,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
 
                     <button onclick="disableMfa()" class="w-full py-4 px-6 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold rounded-xl border border-red-500/30 transition-all flex items-center justify-center gap-3 text-lg">
                         <span class="material-symbols-outlined">lock_open</span>
-                        <span>Disable Two-Factor Authentication</span>
+                        <span>Disable Multi-Factor Authentication</span>
                     </button>
                 </div>
 
@@ -434,7 +434,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
         }
 
         async function disableMfa() {
-            if (!confirm('Are you sure you want to disable Two-Factor Authentication? This reduces the security of your super admin account.')) {
+            if (!confirm('Are you sure you want to disable Multi-Factor Authentication? This reduces the security of your super admin account.')) {
                 return;
             }
 

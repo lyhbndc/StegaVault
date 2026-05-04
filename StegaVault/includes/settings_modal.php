@@ -123,7 +123,7 @@
 
             <hr class="border-slate-200 dark:border-slate-800" />
 
-            <!-- Two Factor Auth - Link to Dedicated Page -->
+            <!-- Multi-Factor Auth - Link to Dedicated Page -->
             <div>
                 <div class="flex items-center gap-2 mb-3">
                     <span class="material-symbols-outlined text-primary text-[16px]">phonelink_lock</span>

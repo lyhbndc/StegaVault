@@ -133,7 +133,7 @@ $mfaEnabled = $user['is_mfa_enabled'] ?? false;
                     <p class="text-slate-400 ml-14">
                         <?php 
                         if ($mfaEnabled) {
-                            echo 'Your account is protected with two-factor authentication.';
+                            echo 'Your account is protected with multi-factor authentication.';
                         } else {
                             echo 'Add an extra layer of security to your account.';
                         }
