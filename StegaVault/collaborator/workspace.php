@@ -825,15 +825,8 @@ $userId = $user['id'];
 
             const btnDelete = document.getElementById('cmFileDeleteBtn');
             const divDelete = document.getElementById('cmFileDivider');
-            if (btnDelete && divDelete) {
-                if (isMine) {
-                    btnDelete.style.display = 'flex';
-                    divDelete.style.display = 'block';
-                } else {
-                    btnDelete.style.display = 'none';
-                    divDelete.style.display = 'none';
-                }
-            }
+            if (btnDelete) btnDelete.style.display = 'none';
+            if (divDelete) divDelete.style.display = 'none';
 
             menu.classList.remove('hidden');
 

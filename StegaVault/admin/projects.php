@@ -21,7 +21,8 @@ $user = [
     'role' => $_SESSION['role']
 ];
 
-// Get all projects with task progress stats
+// Get projects created by this admin only
+$adminId = (int)$_SESSION['user_id'];
 $stmt = $db->prepare("SELECT p.*, u.name as creator_name,
                       COUNT(DISTINCT pm.user_id) as member_count,
                       COALESCE((SELECT ROUND(AVG(progress)) FROM project_tasks WHERE project_id = p.id), 0) as avg_progress,
@@ -30,8 +31,10 @@ $stmt = $db->prepare("SELECT p.*, u.name as creator_name,
                       FROM projects p
                       LEFT JOIN users u ON p.created_by = u.id
                       LEFT JOIN project_members pm ON p.id = pm.project_id
+                      WHERE p.created_by = ?
                       GROUP BY p.id, u.name
                       ORDER BY p.created_at DESC");
+$stmt->bind_param('i', $adminId);
 $stmt->execute();
 $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -58,8 +61,8 @@ if (isset($_GET['project_id'])) {
                           COALESCE((SELECT ROUND(AVG(progress)) FROM project_tasks WHERE project_id = p.id), 0) as avg_progress,
                           (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id) as task_count,
                           (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id AND status = 'completed') as completed_tasks
-                          FROM projects p WHERE p.id = ?");
-    $stmt->bind_param('i', $projectId);
+                          FROM projects p WHERE p.id = ? AND p.created_by = ?");
+    $stmt->bind_param('ii', $projectId, $adminId);
     $stmt->execute();
     $selectedProject = $stmt->get_result()->fetch_assoc();
 
@@ -1510,6 +1513,7 @@ endif; ?>
                     const prev = sel.value;
                     sel.innerHTML = '<option value="">— Unassigned —</option>';
                     Object.entries(selectedMemberNames).forEach(([mid, m]) => {
+                        if (parseInt(mid) === currentUserId) return;
                         const opt = document.createElement('option');
                         opt.value = mid;
                         opt.textContent = m.name + (m.role ? ' (' + m.role + ')' : '');
@@ -1531,6 +1535,7 @@ endif; ?>
 
                 let memberOptions = '<option value="">— Unassigned —</option>';
                 Object.entries(selectedMemberNames).forEach(([mid, m]) => {
+                    if (parseInt(mid) === currentUserId) return;
                     memberOptions += `<option value="${mid}">${escapeHtml(m.name)}${m.role ? ' (' + m.role + ')' : ''}</option>`;
                 });
 
@@ -1594,11 +1599,29 @@ endif; ?>
 
             async function createProject(event) {
                 event.preventDefault();
+
+                const tasksToCreate = collectPendingTasks();
+
+                // Every member must have at least one task assigned to them
+                if (selectedMemberIds.length > 0) {
+                    const membersWithoutTask = selectedMemberIds.filter(mid =>
+                        parseInt(mid) !== currentUserId &&
+                        !tasksToCreate.some(t => String(t.assignedTo) === String(mid))
+                    );
+                    if (membersWithoutTask.length > 0) {
+                        const names = membersWithoutTask.map(mid => selectedMemberNames[mid]?.name || 'Unknown').join(', ');
+                        showToast(`Every member must have at least one task assigned. Missing: ${names}`, 'error');
+                        return;
+                    }
+                    if (tasksToCreate.length === 0) {
+                        showToast('Please add at least one task before creating the project.', 'error');
+                        return;
+                    }
+                }
+
                 const formData = new FormData(event.target);
                 formData.append('action', 'create');
                 formData.append('members', JSON.stringify(selectedMemberIds));
-
-                const tasksToCreate = collectPendingTasks();
 
                 try {
                     const response = await fetch('../api/projects.php', {
@@ -2800,13 +2823,14 @@ endif; ?>
                     const members = data.data?.members || [];
                     sel.innerHTML = '<option value="">— Unassigned —</option>';
                     members.forEach(m => {
+                        if (parseInt(m.id) === currentUserId) return;
                         const opt = document.createElement('option');
                         opt.value = m.id;
                         opt.textContent = m.name + ' (' + (m.user_role || m.project_role || '') + ')';
                         sel.appendChild(opt);
                     });
-                    if (members.length === 0) {
-                        sel.innerHTML = '<option value="">No members in this project</option>';
+                    if (sel.options.length <= 1) {
+                        sel.innerHTML = '<option value="">No assignable members</option>';
                     }
                 } catch {
                     sel.innerHTML = '<option value="">— Unassigned —</option>';
@@ -2982,6 +3006,7 @@ endif; ?>
                     const members = data.data?.members || [];
                     sel.innerHTML = '<option value="">— Unassigned —</option>';
                     members.forEach(m => {
+                        if (parseInt(m.id) === currentUserId) return;
                         const opt = document.createElement('option');
                         opt.value = m.id;
                         opt.textContent = m.name + ' (' + (m.user_role || m.project_role || '') + ')';

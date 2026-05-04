@@ -365,8 +365,10 @@ if ($action === 'dashboard-projects') {
                        (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id) as task_count,
                        (SELECT COUNT(*) FROM project_tasks WHERE project_id = p.id AND status = 'completed') as completed_tasks
                 FROM projects p
+                WHERE p.created_by = ?
                 ORDER BY p.updated_at DESC
             ");
+            $stmt->bind_param('i', $userId);
         }
         else {
             $stmt = $db->prepare("
@@ -1006,13 +1008,9 @@ if ($action === 'delete-file') {
             exit;
         }
 
-        // Access check
-        $check = $db->prepare("SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?");
-        $check->bind_param('ii', $projectId, $userId);
-        $check->execute();
-        $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
-        if ($check->get_result()->num_rows === 0 && !$isAdmin) {
-            echo json_encode(['success' => false, 'error' => 'Access denied']);
+        // Admin only
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+            echo json_encode(['success' => false, 'error' => 'Only admins can delete files.']);
             exit;
         }
 
@@ -1145,6 +1143,11 @@ if ($action === 'create-task') {
             exit;
         }
 
+        if ($assignedTo !== null && $assignedTo === (int)$userId) {
+            echo json_encode(['success' => false, 'error' => 'You cannot assign a task to yourself.']);
+            exit;
+        }
+
         $stmt = $db->prepare("INSERT INTO project_tasks (project_id, title, description, assigned_to, created_by, priority, due_date, required_file_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param('isssiiss', $projectId, $title, $description, $assignedTo, $userId, $priority, $dueDate, $requiredFileType);
 
@@ -1270,6 +1273,11 @@ if ($action === 'update-task') {
         $assignedTo       = $isAdmin && isset($_POST['assigned_to']) && is_numeric($_POST['assigned_to']) ? (int)$_POST['assigned_to'] : $task['assigned_to'];
         $dueDate          = $isAdmin ? (trim($_POST['due_date'] ?? '') ?: null) : $task['due_date'];
         $requiredFileType = $isAdmin && in_array($_POST['required_file_type'] ?? '', ['image', 'document', 'video', 'any']) ? $_POST['required_file_type'] : ($task['required_file_type'] ?? 'any');
+
+        if ($isAdmin && $assignedTo === (int)$userId) {
+            echo json_encode(['success' => false, 'error' => 'You cannot assign a task to yourself.']);
+            exit;
+        }
 
         $stmt = $db->prepare("UPDATE project_tasks SET title=?, description=?, assigned_to=?, priority=?, status=?, progress=?, due_date=?, required_file_type=? WHERE id=?");
         $stmt->bind_param('ssiisissi', $title, $description, $assignedTo, $priority, $status, $progress, $dueDate, $requiredFileType, $taskId);

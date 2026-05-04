@@ -13,6 +13,7 @@ require_once __DIR__ . '/../includes/Encryption.php';
 require_once __DIR__ . '/../includes/watermark.php';
 require_once __DIR__ . '/../includes/CryptoWatermark.php';
 require_once __DIR__ . '/../includes/PdfWatermark.php';
+require_once __DIR__ . '/../includes/VisibleWatermark.php';
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 if (!isset($_SESSION['user_id'])) {
@@ -152,6 +153,19 @@ if ($ownerId > 0) {
     }
 }
 
+$wmTs = time();
+
+// For images: apply the visible watermark BEFORE computing content_hash and
+// embedding LSB data. This ensures content_hash reflects the visibly-watermarked
+// pixels, so forensic tamper-detection works correctly on the final file.
+if ($isImage) {
+    VisibleWatermark::applyToImage($tempDecryptedPath, $tempDecryptedPath, [
+        'u_name' => $userName,
+        'u_role' => $_SESSION['role'] ?? 'unknown',
+        'ts'     => $wmTs,
+    ]);
+}
+
 $watermarkData = [
     'u_id' => $userId,
     'u_name' => $userName,
@@ -160,7 +174,7 @@ $watermarkData = [
     'f_owner_id' => $ownerId,
     'f_owner_name' => $ownerName,
     'f_owner_role' => $ownerRole,
-    'ts' => time(),
+    'ts' => $wmTs,
     'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
     'salt' => bin2hex(random_bytes(4)),
     'crypto' => $cryptoWatermark,
@@ -316,8 +330,21 @@ if ($isImage) {
         mkdir($watermarkedDir, 0755, true);
     }
 
-    $success = Watermark::embedDocumentWatermark($tempDecryptedPath, $watermarkedPath, $watermarkData);
-    @unlink($tempDecryptedPath); // always clean up temp
+    // Apply visible watermark for xlsx/docx before the forensic append
+    $visibleExts = ['xlsx', 'docx'];
+    if (in_array($ext, $visibleExts)) {
+        $visTmp = tempnam(sys_get_temp_dir(), 'sv_vis_');
+        $visOk  = VisibleWatermark::apply($tempDecryptedPath, $visTmp, $watermarkData, $ext);
+        $sourceForForensic = ($visOk && file_exists($visTmp) && filesize($visTmp) > 0)
+            ? $visTmp
+            : $tempDecryptedPath;
+        $success = Watermark::embedDocumentWatermark($sourceForForensic, $watermarkedPath, $watermarkData);
+        @unlink($tempDecryptedPath);
+        if (isset($visTmp)) @unlink($visTmp);
+    } else {
+        $success = Watermark::embedDocumentWatermark($tempDecryptedPath, $watermarkedPath, $watermarkData);
+        @unlink($tempDecryptedPath); // always clean up temp
+    }
 
     if (!$success) {
         http_response_code(500);
