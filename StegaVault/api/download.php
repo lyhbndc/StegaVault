@@ -251,6 +251,14 @@ if ($isImage) {
         die('Failed to watermark PDF: ' . ($pdfWmError ?? 'unknown error'));
     }
 
+    // Embed forensic signature after the TCPDF-rendered PDF.
+    // PDF readers ignore bytes after %%EOF, so this is safe and invisible to viewers.
+    // Watermark::extractDocumentWatermark() reads the last 16KB to find it.
+    $forensicPayload = "\n% [STEGAVAULT_DOC_WM]"
+        . base64_encode(json_encode($watermarkData))
+        . "[/STEGAVAULT_DOC_WM]\n";
+    file_put_contents($watermarkedPdfPath, $forensicPayload, FILE_APPEND);
+
     try {
         $watermarkId  = md5($userId . '_' . $fileId . '_' . time());
         $relativePath = 'tmp/' . basename($watermarkedPdfPath);

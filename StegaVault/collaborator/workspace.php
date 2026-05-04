@@ -235,6 +235,7 @@ $userId = $user['id'];
 
         // ─── Unified File Browser State ───────────────────────────────
         let _currentFolderId = null;
+        let _collabFileTypeHint = '';
         let _folderTrail = []; // [{id, name}, ...]
         let _paneFolders = [];
         let _paneFiles = [];
@@ -684,22 +685,48 @@ $userId = $user['id'];
             const panel = document.getElementById('collabTasksPanel');
             if (!panel) return;
             const mine = tasks.filter(t => String(t.assigned_to) === String(currentUserId));
+            const pendingMine = mine.filter(t => t.status !== 'completed');
+            const BASE_BTN = 'flex items-center gap-2 px-3.5 py-2 text-sm font-bold rounded-lg transition-all shadow-sm';
 
-            // Upload gate
             const uploadBtn = document.getElementById('collabUploadBtn');
+            const fileInput = document.getElementById('folderFileInput');
             if (uploadBtn) {
                 if (mine.length === 0) {
                     uploadBtn.disabled = true;
                     uploadBtn.title = 'You need an assigned task to upload files';
-                    uploadBtn.className = uploadBtn.className
-                        .replace('bg-primary hover:bg-primary/90 text-white', 'bg-slate-300 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed');
+                    uploadBtn.className = BASE_BTN + ' bg-slate-300 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed';
                     uploadBtn.onclick = null;
+                    _collabFileTypeHint = '';
+                } else if (pendingMine.length === 0) {
+                    uploadBtn.disabled = true;
+                    uploadBtn.title = 'All tasks completed — no further uploads required';
+                    uploadBtn.className = BASE_BTN + ' bg-emerald-200 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 cursor-not-allowed';
+                    uploadBtn.onclick = null;
+                    _collabFileTypeHint = '';
                 } else {
                     uploadBtn.disabled = false;
                     uploadBtn.title = '';
-                    uploadBtn.className = uploadBtn.className
-                        .replace('bg-slate-300 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed', 'bg-primary hover:bg-primary/90 text-white');
+                    uploadBtn.className = BASE_BTN + ' bg-primary hover:bg-primary/90 text-white';
                     uploadBtn.onclick = openFolderUploadModal;
+
+                    const reqTypes = [...new Set(pendingMine.map(t => t.required_file_type).filter(t => t && t !== 'any'))];
+                    const acceptMap = {
+                        image:    'image/png,image/jpeg,image/jpg,image/webp',
+                        document: 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,.pdf,.doc,.docx,.xls,.xlsx,.txt',
+                        video:    'video/mp4,video/quicktime,video/x-msvideo,video/mpeg'
+                    };
+                    const hintMap = {
+                        image:    'Images only (PNG, JPG, WEBP)',
+                        document: 'Documents only (PDF, Word, Excel)',
+                        video:    'Videos only (MP4, MOV, AVI)'
+                    };
+                    if (reqTypes.length === 1) {
+                        if (fileInput) fileInput.accept = acceptMap[reqTypes[0]] || '';
+                        _collabFileTypeHint = hintMap[reqTypes[0]] || '';
+                    } else {
+                        if (fileInput) fileInput.accept = '';
+                        _collabFileTypeHint = '';
+                    }
                 }
             }
 
@@ -1740,7 +1767,9 @@ $userId = $user['id'];
             _stagedUploadFiles = null;
             if (document.getElementById('folderDropZoneText')) {
                 document.getElementById('folderDropZoneText').textContent = 'Drag & drop or click to browse';
-                document.getElementById('folderDropZoneTextSub').classList.remove('hidden');
+                const subEl = document.getElementById('folderDropZoneTextSub');
+                subEl.classList.remove('hidden');
+                subEl.textContent = _collabFileTypeHint ? _collabFileTypeHint + ' · Max 100MB' : 'Images, Videos, PDFs, Docs · Max 100MB';
             }
             document.getElementById('folderFileInput').value = '';
             const p1 = document.getElementById('folderPdfPassword');

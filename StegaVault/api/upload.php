@@ -92,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ===================================================== */
     $uploaderRole = $_SESSION['role'] ?? 'employee';
     if ($uploaderRole !== 'admin' && $projectId) {
+        // Must have at least one assigned task
         $taskCheck = $db->prepare(
             "SELECT 1 FROM project_tasks WHERE project_id = ? AND assigned_to = ? LIMIT 1"
         );
@@ -100,6 +101,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($taskCheck->get_result()->num_rows === 0) {
             http_response_code(403);
             echo json_encode(['success' => false, 'error' => 'You need an assigned task in this project before you can upload files.']);
+            exit;
+        }
+        // Must have at least one non-completed task
+        $pendingCheck = $db->prepare(
+            "SELECT 1 FROM project_tasks WHERE project_id = ? AND assigned_to = ? AND status != 'completed' LIMIT 1"
+        );
+        $pendingCheck->bind_param('ii', $projectId, $userId);
+        $pendingCheck->execute();
+        if ($pendingCheck->get_result()->num_rows === 0) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'All your tasks are completed. No further uploads are required.']);
             exit;
         }
     }
@@ -149,6 +161,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => 'Invalid file type']);
         exit;
+    }
+
+    /* =====================================================
+       FILE-TYPE GATE  (non-admins only)
+    ===================================================== */
+    if ($uploaderRole !== 'admin' && $projectId) {
+        $fileCategory = 'document';
+        if (strpos($mimeType, 'image/') === 0) $fileCategory = 'image';
+        elseif (strpos($mimeType, 'video/') === 0) $fileCategory = 'video';
+
+        $typeStmt = $db->prepare("
+            SELECT COALESCE(required_file_type, 'any') AS rft
+            FROM project_tasks
+            WHERE project_id = ? AND assigned_to = ? AND status != 'completed'
+        ");
+        $typeStmt->bind_param('ii', $projectId, $userId);
+        $typeStmt->execute();
+        $taskTypes = array_column($typeStmt->get_result()->fetch_all(MYSQLI_ASSOC), 'rft');
+
+        $hasMatch  = false;
+        $strictTypes = [];
+        foreach ($taskTypes as $rft) {
+            if ($rft === 'any') { $hasMatch = true; break; }
+            if ($rft === $fileCategory) { $hasMatch = true; }
+            else { $strictTypes[] = $rft; }
+        }
+
+        if (!$hasMatch) {
+            $typeLabels = [
+                'image'    => 'an image file (PNG, JPG, WEBP)',
+                'document' => 'a document (PDF, Word, Excel)',
+                'video'    => 'a video file (MP4, MOV, AVI)',
+            ];
+            $unique = array_unique($strictTypes);
+            $reqStr = implode(' or ', array_filter(array_map(fn($t) => $typeLabels[$t] ?? null, $unique)));
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Your task requires ' . ($reqStr ?: 'a different file type') . '. Please upload the correct file type.']);
+            exit;
+        }
     }
 
     /* =====================================================

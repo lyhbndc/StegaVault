@@ -153,8 +153,10 @@ if (isset($_GET['project_id'])) {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-1.5">
                         <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Project Name *</label>
-                        <input name="name" required type="text" placeholder="e.g. Project Cipher X"
-                            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm" />
+                        <input id="projectNameInput" name="name" required type="text" placeholder="e.g. Project Cipher X"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
+                            oninput="document.getElementById('projectNameError').textContent=''" />
+                        <p id="projectNameError" class="text-red-500 text-xs min-h-[1rem]"></p>
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Description *</label>
@@ -1448,6 +1450,8 @@ endif; ?>
                 pendingTaskCounter = 0;
                 document.getElementById('memberSearchInput').value = '';
                 filterMemberList();
+                document.getElementById('projectNameError').textContent = '';
+                document.getElementById('projectNameInput').classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/40');
                 document.getElementById('selectedMembers').innerHTML = '<p class="text-center text-slate-400 dark:text-slate-500 text-xs py-4">No members selected</p>';
                 document.getElementById('memberCount').textContent = '0';
                 document.getElementById('pendingTasksList').innerHTML = '<p id="pendingTasksEmpty" class="text-xs text-slate-400 dark:text-slate-500 italic px-1">No tasks added yet. Tasks can be assigned to selected team members.</p>';
@@ -1620,7 +1624,14 @@ endif; ?>
                         showToast('Project created successfully!', 'success');
                         setTimeout(() => location.reload(), 1000);
                     } else {
-                        showToast('Error: ' + data.error, 'error');
+                        const isDuplicate = (data.error || '').toLowerCase().includes('already exists');
+                        if (isDuplicate) {
+                            document.getElementById('projectNameError').textContent = 'Project name already exists. Please choose a different name.';
+                            document.getElementById('projectNameInput').focus();
+                            document.getElementById('projectNameInput').classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/40');
+                        } else {
+                            showToast('Error: ' + data.error, 'error');
+                        }
                     }
                 } catch (error) {
                     showToast('Error: ' + error.message, 'error');
