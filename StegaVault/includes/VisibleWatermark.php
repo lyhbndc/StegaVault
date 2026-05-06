@@ -71,10 +71,11 @@ class VisibleWatermark
         $logoPath = __DIR__ . '/../PGMN_WatermarkBg.png';
 
         if (file_exists($logoPath)) {
-            // ── PGMN logo overlay — mirrors PdfWatermark behaviour ────────
+            // ── PGMN logo — bottom-right corner stamp ─────────────────────
             $logo = @imagecreatefrompng($logoPath);
             if ($logo) {
-                $logoSize = (int) (min($w, $h) * 0.55);
+                // 18% of the shorter side, minimum 60px
+                $logoSize = max(60, (int) (min($w, $h) * 0.18));
                 $resized  = imagecreatetruecolor($logoSize, $logoSize);
                 imagealphablending($resized, false);
                 imagesavealpha($resized, true);
@@ -84,12 +85,12 @@ class VisibleWatermark
                     $logoSize, $logoSize, imagesx($logo), imagesy($logo));
                 imagedestroy($logo);
 
-                // Reduce every pixel to ~20% opacity (alpha 102 out of 127)
+                // ~60% opaque (alpha 51 out of 127)
                 for ($ly = 0; $ly < $logoSize; $ly++) {
                     for ($lx = 0; $lx < $logoSize; $lx++) {
                         $c  = imagecolorat($resized, $lx, $ly);
                         $a  = ($c >> 24) & 0x7F;
-                        $na = max($a, 102); // at most 20% opaque
+                        $na = max($a, 51);
                         imagesetpixel($resized, $lx, $ly,
                             imagecolorallocatealpha($resized,
                                 ($c >> 16) & 0xFF,
@@ -98,20 +99,14 @@ class VisibleWatermark
                     }
                 }
 
-                // Rotate 45° with transparent background
-                $rotated = imagerotate($resized, -45,
-                    imagecolorallocatealpha($resized, 0, 0, 0, 127));
-                imagedestroy($resized);
-                imagesavealpha($rotated, true);
-
-                $rw = imagesx($rotated);
-                $rh = imagesy($rotated);
-                $dx = (int) (($w - $rw) / 2);
-                $dy = (int) (($h - $rh) / 2);
+                // Bottom-right with 1.5% padding from each edge
+                $padding = max(8, (int) (min($w, $h) * 0.015));
+                $dx = $w - $logoSize - $padding;
+                $dy = $h - $logoSize - $padding;
 
                 imagealphablending($img, true);
-                imagecopy($img, $rotated, $dx, $dy, 0, 0, $rw, $rh);
-                imagedestroy($rotated);
+                imagecopy($img, $resized, $dx, $dy, 0, 0, $logoSize, $logoSize);
+                imagedestroy($resized);
             }
         } else {
             // ── Text fallback (TTF if available, built-in font otherwise) ─
