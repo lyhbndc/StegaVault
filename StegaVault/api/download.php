@@ -338,6 +338,13 @@ if ($isImage) {
         $sourceForForensic = ($visOk && file_exists($visTmp) && filesize($visTmp) > 0)
             ? $visTmp
             : $tempDecryptedPath;
+
+        // Recompute content_hash from the visibly-watermarked file (before forensic
+        // tag is appended) so tamper detection hashes the same bytes on disk.
+        if ($sourceForForensic === $visTmp) {
+            $watermarkData['content_hash'] = Watermark::calculateDocumentHash($sourceForForensic);
+        }
+
         $success = Watermark::embedDocumentWatermark($sourceForForensic, $watermarkedPath, $watermarkData);
         @unlink($tempDecryptedPath);
         if (isset($visTmp)) @unlink($visTmp);

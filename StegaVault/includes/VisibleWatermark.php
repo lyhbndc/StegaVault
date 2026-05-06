@@ -81,8 +81,8 @@ class VisibleWatermark
             // ── PGMN logo — bottom-right corner stamp ─────────────────────
             $logo = @imagecreatefrompng($logoPath);
             if ($logo) {
-                // 18% of the shorter side, minimum 60px
-                $logoSize = max(60, (int) (min($w, $h) * 0.18));
+                // 22% of the shorter side, minimum 80px
+                $logoSize = max(80, (int) (min($w, $h) * 0.22));
                 $resized  = imagecreatetruecolor($logoSize, $logoSize);
                 imagealphablending($resized, false);
                 imagesavealpha($resized, true);
@@ -92,12 +92,12 @@ class VisibleWatermark
                     $logoSize, $logoSize, imagesx($logo), imagesy($logo));
                 imagedestroy($logo);
 
-                // ~60% opaque (alpha 51 out of 127)
+                // ~85% opaque (alpha 19 out of 127)
                 for ($ly = 0; $ly < $logoSize; $ly++) {
                     for ($lx = 0; $lx < $logoSize; $lx++) {
                         $c  = imagecolorat($resized, $lx, $ly);
                         $a  = ($c >> 24) & 0x7F;
-                        $na = max($a, 51);
+                        $na = max($a, 19);
                         imagesetpixel($resized, $lx, $ly,
                             imagecolorallocatealpha($resized,
                                 ($c >> 16) & 0xFF,
@@ -292,9 +292,9 @@ class VisibleWatermark
         $srcExt = strtolower(pathinfo($inputPath, PATHINFO_EXTENSION)) ?: 'mp4';
         $tmpOut = $outputPath . '.' . $srcExt;
 
-        // Scale logo to 12% of video width, bottom-right, 60% opacity
-        $filter = "[1:v]scale=iw*0.12:-1,format=rgba,colorchannelmixer=aa=0.6[logo];"
-                . "[0:v][logo]overlay=W-w-10:H-h-10:format=auto,format=yuv420p";
+        // Scale logo to 20% of video width, bottom-right, 85% opacity
+        $filter = "[1:v]scale=iw*0.20:-1,format=rgba,colorchannelmixer=aa=0.85[logo];"
+                . "[0:v][logo]overlay=W-w-15:H-h-15:format=auto,format=yuv420p";
 
         // libx264 + preset for mp4/mov; let FFmpeg choose codec for other containers
         $isMp4 = in_array($srcExt, ['mp4', 'mov']);
