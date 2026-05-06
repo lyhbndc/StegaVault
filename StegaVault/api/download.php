@@ -93,9 +93,9 @@ if ($decryptedContent === false) {
 
 // sys_get_temp_dir() works on both macOS (/tmp) and Windows (C:\Windows\Temp)
 $tmpBase = tempnam(sys_get_temp_dir(), 'sv_');
-// On some systems appending an extension creates a path we can't write to.
-// We'll write directly to the generated temp file.
-$tempDecryptedPath = $tmpBase;
+// Append the original file extension so tools like FFmpeg and GD can detect
+// the format from the filename rather than relying solely on magic bytes.
+$tempDecryptedPath = $tmpBase . ($ext ? '.' . $ext : '');
 
 if (file_put_contents($tempDecryptedPath, $decryptedContent) === false) {
     @unlink($tempDecryptedPath);

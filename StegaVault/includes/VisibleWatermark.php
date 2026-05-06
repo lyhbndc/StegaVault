@@ -275,28 +275,51 @@ class VisibleWatermark
     public static function applyToVideo(string $inputPath, string $outputPath, array $data): bool
     {
         $ffmpeg = self::findFfmpeg();
-        if (!$ffmpeg) return false;
+        if (!$ffmpeg) {
+            error_log('VisibleWatermark: FFmpeg not found');
+            return false;
+        }
 
         $logoPath = __DIR__ . '/../PGMN_WatermarkBg.png';
-        if (!file_exists($logoPath)) return false;
+        if (!file_exists($logoPath)) {
+            error_log('VisibleWatermark: Logo not found at ' . $logoPath);
+            return false;
+        }
 
-        // Scale logo to 12% of video width, 10px from each edge, ~60% opacity
-        // format=auto handles alpha in the PNG; yuv420p ensures broad compatibility
+        // FFmpeg determines the output container from the file extension.
+        // tempnam() produces no extension, so we add one to a side-path and
+        // rename it to $outputPath on success.
+        $srcExt = strtolower(pathinfo($inputPath, PATHINFO_EXTENSION)) ?: 'mp4';
+        $tmpOut = $outputPath . '.' . $srcExt;
+
+        // Scale logo to 12% of video width, bottom-right, 60% opacity
         $filter = "[1:v]scale=iw*0.12:-1,format=rgba,colorchannelmixer=aa=0.6[logo];"
                 . "[0:v][logo]overlay=W-w-10:H-h-10:format=auto,format=yuv420p";
 
-        $cmd = escapeshellcmd($ffmpeg)
+        // libx264 + preset for mp4/mov; let FFmpeg choose codec for other containers
+        $isMp4 = in_array($srcExt, ['mp4', 'mov']);
+        $vcArgs = $isMp4 ? ' -c:v libx264 -preset fast -crf 23' : '';
+
+        $cmd = escapeshellarg($ffmpeg)
             . ' -y'
             . ' -i ' . escapeshellarg($inputPath)
             . ' -i ' . escapeshellarg($logoPath)
             . ' -filter_complex ' . escapeshellarg($filter)
-            . ' -codec:a copy'
-            . ' -preset fast'
-            . ' ' . escapeshellarg($outputPath)
-            . ' 2>/dev/null';
+            . $vcArgs
+            . ' -c:a copy'
+            . ' ' . escapeshellarg($tmpOut)
+            . ' 2>&1';
 
         exec($cmd, $out, $rc);
-        return $rc === 0 && file_exists($outputPath) && filesize($outputPath) > 0;
+
+        if ($rc !== 0 || !file_exists($tmpOut) || filesize($tmpOut) === 0) {
+            error_log('VisibleWatermark FFmpeg failed (rc=' . $rc . '): ' . implode(' | ', $out));
+            @unlink($tmpOut);
+            return false;
+        }
+
+        rename($tmpOut, $outputPath);
+        return true;
     }
 
     private static function findFfmpeg(): ?string
