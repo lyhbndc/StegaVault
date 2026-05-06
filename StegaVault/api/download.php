@@ -330,8 +330,8 @@ if ($isImage) {
         mkdir($watermarkedDir, 0755, true);
     }
 
-    // Apply visible watermark for xlsx/docx before the forensic append
-    $visibleExts = ['xlsx', 'docx'];
+    // Apply visible watermark for video/xlsx/docx before the forensic append
+    $visibleExts = ['mp4', 'mov', 'webm', 'avi', 'ogg', 'xlsx', 'docx'];
     if (in_array($ext, $visibleExts)) {
         $visTmp = tempnam(sys_get_temp_dir(), 'sv_vis_');
         $visOk  = VisibleWatermark::apply($tempDecryptedPath, $visTmp, $watermarkData, $ext);

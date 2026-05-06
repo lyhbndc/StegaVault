@@ -36,6 +36,13 @@ class VisibleWatermark
         switch ($ext) {
             case 'jpg': case 'jpeg': case 'png': case 'gif': case 'webp':
                 return self::applyToImage($inputPath, $outputPath, $data);
+            case 'mp4': case 'mov': case 'webm': case 'avi': case 'ogg':
+                $ok = self::applyToVideo($inputPath, $outputPath, $data);
+                // FFmpeg unavailable — fall back to plain copy so download still works
+                if (!$ok && $inputPath !== $outputPath) {
+                    return (bool) copy($inputPath, $outputPath);
+                }
+                return $ok;
             case 'xlsx':
                 return self::applyToExcel($inputPath, $outputPath, $data);
             case 'docx':
@@ -257,6 +264,62 @@ class VisibleWatermark
         $zip->addFromString('word/document.xml', $docXml);
         $zip->close();
         return true;
+    }
+
+    // ── Video ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Burn the PGMN logo into the bottom-right corner of a video using FFmpeg.
+     * Returns the output path on success, or false if FFmpeg is unavailable.
+     */
+    public static function applyToVideo(string $inputPath, string $outputPath, array $data): bool
+    {
+        $ffmpeg = self::findFfmpeg();
+        if (!$ffmpeg) return false;
+
+        $logoPath = __DIR__ . '/../PGMN_WatermarkBg.png';
+        if (!file_exists($logoPath)) return false;
+
+        // Scale logo to 12% of video width, 10px from each edge, ~60% opacity
+        // format=auto handles alpha in the PNG; yuv420p ensures broad compatibility
+        $filter = "[1:v]scale=iw*0.12:-1,format=rgba,colorchannelmixer=aa=0.6[logo];"
+                . "[0:v][logo]overlay=W-w-10:H-h-10:format=auto,format=yuv420p";
+
+        $cmd = escapeshellcmd($ffmpeg)
+            . ' -y'
+            . ' -i ' . escapeshellarg($inputPath)
+            . ' -i ' . escapeshellarg($logoPath)
+            . ' -filter_complex ' . escapeshellarg($filter)
+            . ' -codec:a copy'
+            . ' -preset fast'
+            . ' ' . escapeshellarg($outputPath)
+            . ' 2>/dev/null';
+
+        exec($cmd, $out, $rc);
+        return $rc === 0 && file_exists($outputPath) && filesize($outputPath) > 0;
+    }
+
+    private static function findFfmpeg(): ?string
+    {
+        static $cached = false;
+        if ($cached !== false) return $cached ?: null;
+
+        $candidates = [
+            '/usr/local/bin/ffmpeg',
+            '/opt/homebrew/bin/ffmpeg',
+            '/usr/bin/ffmpeg',
+            'C:\\ffmpeg\\bin\\ffmpeg.exe',
+            'C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe',
+        ];
+        foreach ($candidates as $p) {
+            if (file_exists($p)) { $cached = $p; return $p; }
+        }
+        // Last resort: ask the shell
+        $which = trim((string) shell_exec('which ffmpeg 2>/dev/null'));
+        if ($which && file_exists($which)) { $cached = $which; return $which; }
+
+        $cached = '';
+        return null;
     }
 
     // ── Font discovery ────────────────────────────────────────────────────────
